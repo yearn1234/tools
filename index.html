@@ -3,8 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0e100f">
+<meta name="theme-color" content="#0e100f" id="metaTheme">
 <title>座標記錄器 · COORD LOGGER</title>
+<script>
+/* 套用上次選擇的主題，避免閃白 */
+try{var t=localStorage.getItem("coordlog.theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
@@ -13,36 +17,73 @@
   --bg:#0e100f;
   --surface:#151815;
   --surface-2:#1a1e1a;
+  --surface-3:#191d19;
   --line:#2a302a;
+  --line-strong:#3a423a;
+  --line-hover:#39413a;
   --ink:#f2efe8;
   --muted:#8b918a;
   --accent:#ff5f1f;
   --accent-soft:#ff834f;
   --lock:#b6f24a;
-  --radius:2px;
+  --on-accent:#12100e;
+  --on-lock:#10130a;
+  --on-ink:#0e100f;
+  --ghost:#3d443d;
+  --placeholder:#4c534c;
+  --stroke:#4b534b;
+  --topo:#404a40;
+  --header-bg:rgba(14,16,15,.88);
+  --meter-track:#1a1e1a;
+  --scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f4f1ea;
+  --surface:#ffffff;
+  --surface-2:#efece3;
+  --surface-3:#ffffff;
+  --line:#ddd8ca;
+  --line-strong:#cfc9ba;
+  --line-hover:#c9c3b4;
+  --ink:#17191b;
+  --muted:#6d716e;
+  --accent:#d94a00;
+  --accent-soft:#ef5a10;
+  --lock:#3f7d00;
+  --on-accent:#ffffff;
+  --on-lock:#ffffff;
+  --on-ink:#f4f1ea;
+  --ghost:#c6c1b4;
+  --placeholder:#9a958a;
+  --stroke:#b5b0a3;
+  --topo:#d7d2c4;
+  --header-bg:rgba(244,241,234,.92);
+  --meter-track:#efece3;
+  --scheme:light;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;color-scheme:var(--scheme)}
 body{
   background:var(--bg);color:var(--ink);
   font-family:"Noto Sans TC",sans-serif;
   line-height:1.6;min-height:100dvh;
   position:relative;overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
+  transition:background .3s ease,color .3s ease;
 }
-.topo{position:fixed;inset:0;width:100%;height:100%;color:#404a40;opacity:.55;pointer-events:none;z-index:0}
+.topo{position:fixed;inset:0;width:100%;height:100%;color:var(--topo);opacity:.55;pointer-events:none;z-index:0;transition:color .3s ease}
 .grain{
   position:fixed;inset:0;pointer-events:none;z-index:6;opacity:.05;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-::selection{background:var(--accent);color:#0e100f}
+::selection{background:var(--accent);color:var(--on-accent)}
 button,input,textarea{font-family:inherit}
 
 /* ---------- header ---------- */
 header{
   position:sticky;top:0;z-index:4;
-  background:rgba(14,16,15,.88);backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--line);
+  background:var(--header-bg);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);transition:background .3s ease;
 }
 .hd{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
 .mark{width:34px;height:34px;flex:none;border:1px solid var(--accent);display:grid;place-items:center;color:var(--accent)}
@@ -56,9 +97,10 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
 .icb{
   font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.08em;
   background:none;border:1px solid var(--line);color:var(--muted);
-  padding:7px 9px;cursor:pointer;border-radius:var(--radius);transition:.2s;
+  padding:7px 9px;cursor:pointer;border-radius:var(--radius);transition:.2s;white-space:nowrap;
 }
 .icb:hover{border-color:var(--accent);color:var(--accent)}
+.icb.theme{color:var(--ink);border-color:var(--line-strong)}
 
 /* ---------- layout ---------- */
 .wrap{max-width:1120px;margin:0 auto;padding:26px 20px 90px;position:relative;z-index:1}
@@ -69,7 +111,7 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
 }
 
 /* ---------- capture panel ---------- */
-.panel{position:relative;background:var(--surface);border:1px solid var(--line);padding:22px 20px 20px}
+.panel{position:relative;background:var(--surface);border:1px solid var(--line);padding:22px 20px 20px;transition:background .3s ease}
 .panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--accent);pointer-events:none}
 .panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
 .panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
@@ -98,7 +140,7 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
   font-size:clamp(26px,7.2vw,33px);letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;line-height:1.15;
 }
-.readout.idle .val{color:#3d443d}
+.readout.idle .val{color:var(--ghost)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .chip{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);padding:4px 8px}
 .chip b{color:var(--ink);font-weight:500}
@@ -106,7 +148,7 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
 .loc-row{display:flex;gap:8px;margin-top:14px}
 .cta{
   border:0;cursor:pointer;
-  background:var(--accent);color:#12100e;
+  background:var(--accent);color:var(--on-accent);
   font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
   padding:15px 12px;display:flex;align-items:center;justify-content:center;gap:9px;
   transition:letter-spacing .3s ease,background .2s ease;border-radius:var(--radius);
@@ -118,7 +160,7 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
 .cta.outline:hover{border-color:var(--accent);color:var(--accent);letter-spacing:.12em;background:transparent}
 .cta.outline.on{border-color:var(--lock);color:var(--lock)}
 .cta.full{width:100%;margin-top:14px;font-size:15px;padding:17px 14px}
-.cta.pending{background:var(--lock);animation:pulse 1.2s infinite}
+.cta.pending{background:var(--lock);color:var(--on-lock);animation:pulse 1.2s infinite}
 @keyframes pulse{50%{opacity:.72}}
 
 .sec-label{
@@ -126,7 +168,7 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
   margin-top:20px;padding-top:16px;border-top:1px solid var(--line);
   display:flex;justify-content:space-between;align-items:center;
 }
-.sec-label em{font-style:normal;color:#4c534c;letter-spacing:.1em}
+.sec-label em{font-style:normal;color:var(--placeholder);letter-spacing:.1em}
 
 /* ---------- category picker ---------- */
 .cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
@@ -144,7 +186,7 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
 /* ---------- photos ---------- */
 .cam{display:flex;gap:8px;margin-top:11px;align-items:flex-start;flex-wrap:wrap}
 .cam-btn{
-  width:74px;height:74px;flex:none;border:1px dashed #3a423a;background:var(--surface-2);
+  width:74px;height:74px;flex:none;border:1px dashed var(--line-strong);background:var(--surface-2);
   color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:4px;font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.1em;transition:.2s;border-radius:var(--radius);
 }
@@ -156,10 +198,10 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
 .st img{width:100%;height:100%;object-fit:cover;border:1px solid var(--line);display:block}
 .st button{
   position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;
-  background:#000;border:1px solid var(--accent);color:var(--accent);
+  background:#000;border:1px solid var(--accent);color:#ff834f;
   font-size:12px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;
 }
-.staged .none{font-family:"DM Mono",monospace;font-size:10px;color:#4c534c;letter-spacing:.1em;align-self:center}
+.staged .none{font-family:"DM Mono",monospace;font-size:10px;color:var(--placeholder);letter-spacing:.1em;align-self:center}
 
 /* ---------- inputs ---------- */
 .field{margin-top:11px}
@@ -169,14 +211,15 @@ input[type=text]{
   color:var(--ink);font-family:"DM Mono",monospace;font-size:14px;
   padding:11px 10px;border-radius:var(--radius);outline:none;transition:.2s;
 }
-input[type=text]::placeholder{color:#4c534c}
-input[type=text]:focus{border-color:var(--accent);background:#191d19}
+input[type=text]::placeholder{color:var(--placeholder)}
+input[type=text]:focus{border-color:var(--accent);background:var(--surface-3)}
 textarea{
   width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
   font-family:"Noto Sans TC",sans-serif;font-size:14px;padding:11px 10px;
   border-radius:var(--radius);outline:none;resize:vertical;min-height:56px;transition:.2s;
 }
-textarea:focus{border-color:var(--accent)}
+textarea::placeholder{color:var(--placeholder)}
+textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
 .form-acts{display:flex;gap:8px;margin-top:11px}
 .form-acts .cta{margin-top:0;flex:1;font-size:14px;padding:14px}
@@ -190,7 +233,7 @@ textarea:focus{border-color:var(--accent)}
 /* ---------- meter ---------- */
 .meter{display:flex;align-items:center;gap:9px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
 .meter span{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted);white-space:nowrap}
-.bar{flex:1;height:4px;background:var(--surface-2);border:1px solid var(--line);position:relative;overflow:hidden}
+.bar{flex:1;height:4px;background:var(--meter-track);border:1px solid var(--line);position:relative;overflow:hidden}
 .bar i{position:absolute;inset:0 auto 0 0;background:var(--lock);width:0;transition:width .4s ease}
 .bar i.hot{background:var(--accent)}
 
@@ -207,25 +250,25 @@ textarea:focus{border-color:var(--accent)}
 .fchip i{width:8px;height:8px;background:var(--c);border-radius:1px;flex:none}
 .fchip b{font-family:"DM Mono",monospace;font-weight:400;font-size:10px;opacity:.7}
 .fchip:hover{border-color:var(--ink);color:var(--ink)}
-.fchip.on{background:var(--ink);border-color:var(--ink);color:#0e100f}
+.fchip.on{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
 .fchip.on b{opacity:.6}
 .empty{border:1px dashed var(--line);padding:38px 22px;text-align:center;color:var(--muted)}
-.empty svg{width:26px;height:26px;color:#3d443d;margin-bottom:12px}
+.empty svg{width:26px;height:26px;color:var(--ghost);margin-bottom:12px}
 .empty p{font-size:13px;letter-spacing:.06em}
-.empty small{display:block;font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.14em;margin-top:7px;color:#4c534c}
+.empty small{display:block;font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.14em;margin-top:7px;color:var(--placeholder)}
 
 .point{
   background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--c,#2a302a);
-  margin-bottom:12px;position:relative;
+  margin-bottom:12px;position:relative;transition:background .3s ease;
   opacity:0;animation:up .5s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s);
 }
 @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.point:hover{border-color:#39413a;border-left-color:var(--c)}
+.point:hover{border-color:var(--line-hover);border-left-color:var(--c)}
 .point.editing{border-color:var(--accent);border-left-color:var(--accent);animation:none;opacity:1}
 .p-top{display:flex;gap:13px;align-items:flex-start;padding:15px 15px 0}
 .p-idx{
   font-family:"Syne",sans-serif;font-weight:800;font-size:26px;line-height:1;
-  color:transparent;-webkit-text-stroke:1px #4b534b;flex:none;letter-spacing:-.03em;
+  color:transparent;-webkit-text-stroke:1px var(--stroke);flex:none;letter-spacing:-.03em;
 }
 .p-id{flex:1;min-width:0}
 .p-id h3{font-size:15px;font-weight:700;letter-spacing:.04em;word-break:break-word}
@@ -234,11 +277,15 @@ textarea:focus{border-color:var(--accent)}
   font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.1em;
   border:1px solid var(--c);color:var(--c);padding:2px 7px;
 }
+:root[data-theme="light"] .tag{
+  color:color-mix(in srgb,var(--c) 62%,#111);
+  border-color:color-mix(in srgb,var(--c) 62%,#111);
+}
 .tag i{width:6px;height:6px;background:var(--c);border-radius:1px}
 .p-meta{font-family:"DM Mono",monospace;font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin-top:4px}
 .p-meta .acc{color:var(--lock)}
 .p-del,.p-edit{
-  background:none;border:0;color:#4c534c;cursor:pointer;font-size:17px;line-height:1;
+  background:none;border:0;color:var(--placeholder);cursor:pointer;font-size:17px;line-height:1;
   padding:2px 5px;transition:.2s;flex:none;font-family:"DM Mono",monospace;
 }
 .p-del:hover{color:var(--accent)}
@@ -256,12 +303,12 @@ textarea:focus{border-color:var(--accent)}
 
 /* ---------- inline edit ---------- */
 .edit-box{padding:14px 15px 15px;animation:up .3s ease}
-.edit-box .field:first-child{margin-top:0}
+.edit-box .field:first-of-type{margin-top:0}
 .edit-box .coord-ro{
-  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;color:#5c635c;
+  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;color:var(--muted);
   margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;
 }
-.edit-box .coord-ro b{color:var(--muted);font-weight:400}
+.edit-box .coord-ro b{color:var(--ink);font-weight:500}
 .edit-cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .edit-cats .cat{padding:6px 9px;font-size:11.5px}
 .edit-acts{display:flex;gap:8px;margin-top:14px}
@@ -269,17 +316,17 @@ textarea:focus{border-color:var(--accent)}
   flex:1;padding:12px;font-size:13.5px;font-weight:700;letter-spacing:.1em;cursor:pointer;
   border-radius:var(--radius);transition:.2s;
 }
-.btn-save{background:var(--lock);border:1px solid var(--lock);color:#10130a}
+.btn-save{background:var(--lock);border:1px solid var(--lock);color:var(--on-lock)}
 .btn-save:hover{letter-spacing:.16em}
 .btn-cancel{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:500}
 .btn-cancel:hover{border-color:var(--ink);color:var(--ink)}
-.edit-tip{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.12em;color:#4c534c;margin-top:10px}
+.edit-tip{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.12em;color:var(--placeholder);margin-top:10px}
 
 .photos{display:flex;flex-wrap:wrap;gap:7px;padding:12px 15px 0}
 .ph{width:66px;height:66px;object-fit:cover;border:1px solid var(--line);cursor:pointer;transition:.2s;animation:up .3s ease}
 .ph:hover{border-color:var(--accent)}
 .ph-add{
-  width:66px;height:66px;border:1px dashed #3a423a;background:transparent;color:#5c635c;
+  width:66px;height:66px;border:1px dashed var(--line-strong);background:transparent;color:var(--muted);
   cursor:pointer;font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.08em;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:.2s;border-radius:var(--radius);
 }
@@ -293,9 +340,9 @@ textarea:focus{border-color:var(--accent)}
   border-radius:var(--radius);transition:.2s;
 }
 .btn:hover{border-color:var(--ink);color:var(--ink)}
-.btn.acc{background:var(--accent);border-color:var(--accent);color:#12100e;font-weight:700}
-.btn.acc:hover{background:var(--accent-soft);border-color:var(--accent-soft);color:#12100e;letter-spacing:.12em}
-.btn.edit{border-color:#3d4a3d;color:var(--lock)}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.btn.acc:hover{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--on-accent);letter-spacing:.12em}
+.btn.edit{border-color:var(--line-strong);color:var(--lock)}
 .btn.edit:hover{border-color:var(--lock);color:var(--lock)}
 .btn svg{width:13px;height:13px}
 
@@ -304,27 +351,27 @@ textarea:focus{border-color:var(--accent)}
     align-items:center;justify-content:center;padding:56px 14px 76px;animation:fade .22s ease}
 .lb[hidden]{display:none}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-.lb img{max-width:100%;max-height:70vh;object-fit:contain;border:1px solid var(--line);background:#000}
-.lb figcaption{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--muted);margin-top:12px;text-align:center}
-.lb-x{position:absolute;top:14px;right:16px;background:none;border:1px solid var(--line);color:var(--ink);
+.lb img{max-width:100%;max-height:70vh;object-fit:contain;border:1px solid #2a302a;background:#000}
+.lb figcaption{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;color:#8b918a;margin-top:12px;text-align:center}
+.lb-x{position:absolute;top:14px;right:16px;background:none;border:1px solid #2a302a;color:#f2efe8;
       width:38px;height:38px;font-size:20px;cursor:pointer;border-radius:var(--radius)}
-.lb-x:hover{border-color:var(--accent);color:var(--accent)}
+.lb-x:hover{border-color:#ff5f1f;color:#ff5f1f}
 .lb-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(20,22,20,.8);
-          border:1px solid var(--line);color:var(--ink);width:42px;height:60px;font-size:22px;cursor:pointer}
-.lb-arrow:hover{border-color:var(--accent);color:var(--accent)}
+          border:1px solid #2a302a;color:#f2efe8;width:42px;height:60px;font-size:22px;cursor:pointer}
+.lb-arrow:hover{border-color:#ff5f1f;color:#ff5f1f}
 #lbPrev{left:10px}#lbNext{right:10px}
 .lb-acts{position:absolute;bottom:18px;display:flex;gap:8px}
 .lb-acts button,.lb-acts a{
   font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;background:transparent;
-  border:1px solid var(--line);color:var(--muted);padding:9px 14px;cursor:pointer;text-decoration:none;border-radius:var(--radius);
+  border:1px solid #2a302a;color:#8b918a;padding:9px 14px;cursor:pointer;text-decoration:none;border-radius:var(--radius);
 }
-.lb-acts button:hover{border-color:var(--accent);color:var(--accent)}
-.lb-acts a:hover{border-color:var(--ink);color:var(--ink)}
+.lb-acts button:hover{border-color:#ff5f1f;color:#ff5f1f}
+.lb-acts a:hover{border-color:#f2efe8;color:#f2efe8}
 
 /* ---------- toast ---------- */
 .toast{
   position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
-  background:#000;border:1px solid var(--accent);color:var(--ink);
+  background:#0b0b0b;border:1px solid var(--accent);color:#f2efe8;
   font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.08em;
   padding:11px 18px;z-index:30;opacity:0;pointer-events:none;transition:.28s;max-width:88vw;text-align:center;
 }
@@ -332,9 +379,9 @@ textarea:focus{border-color:var(--accent)}
 
 footer{
   max-width:1120px;margin:0 auto;padding:0 20px 40px;position:relative;z-index:1;
-  font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:#5c635c;line-height:1.9;
+  font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--muted);line-height:1.9;
 }
-footer b{color:var(--muted);font-weight:400}
+footer b{color:var(--ink);font-weight:500}
 </style>
 </head>
 <body>
@@ -370,6 +417,7 @@ footer b{color:var(--muted);font-weight:400}
     </div>
     <div class="count"><b id="count">0</b> 筆</div>
     <div class="tools">
+      <button class="icb theme" id="btnTheme" title="切換亮／暗背景">亮色模式</button>
       <button class="icb" id="btnExport">匯出</button>
       <button class="icb" id="btnImport">匯入</button>
       <input type="file" id="fileIn" accept="application/json" hidden>
@@ -470,7 +518,7 @@ footer b{color:var(--muted);font-weight:400}
         <button class="fill" id="btnFill">帶入目前</button>
         <button class="cta" id="btnSave">儲存這筆</button>
       </div>
-      <p class="hint">十進位格式（例：25.033, 121.565），可直接從 Google 地圖座標欄複製貼上。已存的紀錄可在右側卡片按「編輯」修改名稱與備註。</p>
+      <p class="hint">十進位格式（例：25.033, 121.565），可直接從 Google 地圖座標欄複製貼上。已存的紀錄可在右側卡片按「✎ 編輯」修改名稱、備註與分類。</p>
 
       <div class="meter">
         <span>本機空間</span>
@@ -495,7 +543,7 @@ footer b{color:var(--muted);font-weight:400}
 
 <footer>
   <b>資料只存在這台裝置的瀏覽器（localStorage）</b>，不會上傳伺服器。照片經壓縮後隨紀錄一併保存，本機空間約 5 MB，額滿時請「匯出」備份後再刪除。<br>
-  點卡片的「編輯」可修改<b>名稱、備註與分類</b>；取得 GPS 與相機需 <b>HTTPS 或 localhost</b>；清除瀏覽器資料會一併刪除，重要地點請記得備份。
+  右上角可切換<b>亮色／暗色背景</b>（會記住選擇）；取得 GPS 與相機需 <b>HTTPS 或 localhost</b>；清除瀏覽器資料會一併刪除，重要地點請記得備份。
 </footer>
 
 <!-- 照片檢視器 -->
@@ -519,15 +567,30 @@ footer b{color:var(--muted);font-weight:400}
 (function(){
 "use strict";
 
+/* ================= 主題切換 ================= */
+function currentTheme(){return document.documentElement.dataset.theme==="light"?"light":"dark";}
+function applyTheme(t){
+  document.documentElement.dataset.theme=t;
+  try{localStorage.setItem("coordlog.theme",t);}catch(e){}
+  const b=$("btnTheme");
+  if(b)b.textContent=(t==="light")?"暗色模式":"亮色模式";
+  const m=$("metaTheme");
+  if(m)m.setAttribute("content",t==="light"?"#f4f1ea":"#0e100f");
+}
+$("btnTheme").addEventListener("click",function(){
+  applyTheme(currentTheme()==="light"?"dark":"light");
+});
+applyTheme(currentTheme());
+
 /* ================= 分類定義 ================= */
 const CATS=[
   {id:"general",name:"一般",    color:"#8b918a"},
   {id:"power",  name:"電力設施",color:"#ffb020"},
   {id:"store",  name:"倉儲點",  color:"#4da3ff"},
   {id:"work",   name:"施工中",  color:"#ff5f1f"},
-  {id:"nature", name:"環境採集",color:"#7ed957"},
+  {id:"nature", name:"環境採集",color:"#5cb800"},
   {id:"risk",   name:"注意風險",color:"#ff4d6d"},
-  {id:"custom", name:"自訂",    color:"#c77dff"}
+  {id:"custom", name:"自訂",    color:"#a855f7"}
 ];
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
@@ -535,7 +598,7 @@ const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 let points=[], custom="自訂";
 let filter="all", selectedCat="general";
-let editingId=null;            // ★ 正在編輯的紀錄 id
+let editingId=null;
 let staged=[];
 let current=null;
 let watchId=null, pendingSave=false;
@@ -557,7 +620,21 @@ function catOf(id){
   const c=CATS.find(x=>x.id===id)||CATS[0];
   return c.id==="custom"?{id:c.id,name:custom,color:c.color}:c;
 }
+function validCat(id){return CATS.some(c=>c.id===id);}
 function when(ts){return new Date(ts).toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});}
+
+/* ★ 修復舊資料：分類壞掉的補回「一般」 */
+function normalize(){
+  let dirty=false;
+  points.forEach(p=>{
+    if(!p)return;
+    if(!validCat(p.cat)){p.cat="general";dirty=true;}
+    if(!Array.isArray(p.photos)){p.photos=[];dirty=true;}
+    if(typeof p.name!=="string"||!p.name.trim()){p.name="未命名地點";dirty=true;}
+    if(typeof p.note!=="string"){p.note="";dirty=true;}
+  });
+  return dirty;
+}
 
 function persist(){
   try{
@@ -579,10 +656,13 @@ function meter(){
 function load(){
   try{
     const raw=JSON.parse(localStorage.getItem(KEY)||"null");
-    if(raw&&Array.isArray(raw.points)){points=raw.points;custom=raw.custom||"自訂";return;}
-    const old=JSON.parse(localStorage.getItem(LEGACY)||"null");
-    if(Array.isArray(old))points=old;
-  }catch(e){}
+    if(raw&&Array.isArray(raw.points)){points=raw.points;custom=raw.custom||"自訂";}
+    else{
+      const old=JSON.parse(localStorage.getItem(LEGACY)||"null");
+      if(Array.isArray(old))points=old;
+    }
+  }catch(e){points=[];}
+  if(normalize()){try{persist();}catch(e){}}
 }
 function copy(text,msg){
   const done=()=>toast(msg||"已複製座標");
@@ -721,10 +801,11 @@ function clearComposer(){
 }
 function addPoint(d){
   const p=Object.assign({id:uid(),cat:selectedCat,photos:[],addr:"",note:"",acc:null,ts:Date.now()},d);
+  if(!validCat(p.cat))p.cat="general";
   if(!p.name)p.name="未命名地點 "+(points.length+1);
   points.unshift(p);
   if(!persist()){points.shift();render();return false}
-  clearComposer();render();toast("已記錄："+p.name);
+  clearComposer();render();toast("已記錄："+p.name+" · "+catOf(p.cat).name);
   return true;
 }
 function commitRecord(){
@@ -758,11 +839,11 @@ $("btnFill").addEventListener("click",function(){
   $("mLat").value=fmt(current.lat);$("mLng").value=fmt(current.lng);toast("已帶入目前座標");
 });
 
-/* ================= ★ 編輯名稱 / 備註 / 分類 ================= */
+/* ================= ★ 編輯名稱 / 備註 / 分類（已修正） ================= */
 function startEdit(id){
   editingId=id;
   render();
-  const box=list.querySelector('.point[data-id="'+id+'"] .edit-box input');
+  const box=list.querySelector('.point[data-id="'+id+'"] .edit-name');
   if(box){box.focus();box.select();}
 }
 function cancelEdit(){
@@ -774,20 +855,26 @@ function saveEdit(id){
   if(!box)return;
   const nameI=box.querySelector(".edit-name");
   const noteT=box.querySelector(".edit-note");
-  const catB=box.querySelector(".edit-cats .cat.on");
+  // ★ 修正：按鈕上的屬性是 data-editcat，要讀 dataset.editcat
+  const catB=box.querySelector(".edit-cats [data-editcat].on");
 
   const newName=nameI?nameI.value.trim():"";
   const newNote=noteT?noteT.value.trim():"";
-  const newCat=catB?catB.dataset.cat:p.cat;
+  const picked=catB?catB.dataset.editcat:null;
+  // ★ 保險：只接受已存在的分類 id，否則沿用原分類
+  const newCat=validCat(picked)?picked:(validCat(p.cat)?p.cat:"general");
+
   if(!newName){toast("名稱不可空白");if(nameI)nameI.focus();return}
 
-  // 備份，失敗可回復
   const bak={name:p.name,note:p.note,cat:p.cat};
   p.name=newName;p.note=newNote;p.cat=newCat;
   if(!persist()){Object.assign(p,bak);render();return}
 
-  editingId=null;render();
-  toast("已更新："+p.name);
+  editingId=null;
+  // 若目前篩選不含新分類，自動跳回「全部」，讓你看到結果
+  if(filter!=="all"&&p.cat!==filter)filter="all";
+  render();
+  toast("已更新："+p.name+" · "+catOf(p.cat).name);
 }
 
 /* ================= 反查地址 ================= */
@@ -806,7 +893,7 @@ async function fetchAddr(p){
 /* ================= 篩選與渲染 ================= */
 function counts(){
   const m={all:points.length};
-  points.forEach(p=>{m[p.cat]=(m[p.cat]||0)+1});
+  points.forEach(p=>{if(p)m[p.cat]=(m[p.cat]||0)+1});
   return m;
 }
 function renderFilters(){
@@ -823,7 +910,7 @@ function renderFilters(){
 }
 $("filters").addEventListener("click",e=>{
   const b=e.target.closest("[data-f]");if(!b)return;
-  filter=b.dataset.f;editingId=null;render();   // 切換分類時結束編輯
+  filter=b.dataset.f;editingId=null;render();
 });
 
 function render(){
@@ -831,13 +918,12 @@ function render(){
   $("logMeta").textContent=points.length?(points.length+" ENTRIES"):"NO ENTRIES";
   renderCats();renderFilters();meter();
 
-  // 編輯中的紀錄若被篩掉，取消編輯
   if(editingId){
     const ep=points.find(x=>x.id===editingId);
     if(!ep||(filter!=="all"&&ep.cat!==filter))editingId=null;
   }
 
-  const shown=points.filter(p=>filter==="all"||p.cat===filter);
+  const shown=points.filter(p=>p&&(filter==="all"||p.cat===filter));
   if(!shown.length){
     list.innerHTML='<div class="empty">'+
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>'+
@@ -865,7 +951,6 @@ function render(){
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>'+
         (nPhotos?"加照片":"＋ 照片")+'</button></div>';
 
-    /* ---- 編輯表單（卡片內展開） ---- */
     const editBox=
       '<div class="edit-box">'+
         '<div class="coord-ro"><b>座標（唯讀）</b> '+lat+', '+lng+
@@ -929,14 +1014,14 @@ list.addEventListener("click",function(e){
   }
 
   const el=e.target.closest("[data-act]");if(!el)return;
-  const card=el.closest(".point");const id=card.dataset.id;
-  const idx=points.findIndex(p=>p.id===id);if(idx<0)return;
+  const card=el.closest(".point");if(!card)return;
+  const id=card.dataset.id;
+  const idx=points.findIndex(p=>p&&p.id===id);if(idx<0)return;
   const p=points[idx],act=el.dataset.act;
   const text=fmt(p.lat)+", "+fmt(p.lng);
 
   if(act==="copy"){copy(text,"已複製："+text);return}
 
-  /* ★ 編輯流程 */
   if(act==="edit"){startEdit(id);return}
   if(act==="cancelEdit"){cancelEdit();return}
   if(act==="saveEdit"){saveEdit(id);return}
@@ -961,7 +1046,6 @@ list.addEventListener("click",function(e){
   }
 });
 
-/* 編輯中：Enter 儲存、Esc 取消（避免 Esc 被輸入框吃掉時用 ctrl+Enter 也可） */
 list.addEventListener("keydown",function(e){
   if(!editingId)return;
   const box=e.target.closest(".edit-box");if(!box)return;
@@ -973,13 +1057,13 @@ list.addEventListener("keydown",function(e){
 
 /* ================= 照片檢視器 ================= */
 function openLb(pid,i){
-  const p=points.find(x=>x.id===pid);if(!p||!(p.photos||[]).length)return;
+  const p=points.find(x=>x&&x.id===pid);if(!p||!(p.photos||[]).length)return;
   lbState={id:pid,i:Math.max(0,Math.min(i,p.photos.length-1))};
   $("lb").hidden=false;paintLb();
   document.body.style.overflow="hidden";
 }
 function paintLb(){
-  const p=points.find(x=>x.id===lbState.id);
+  const p=points.find(x=>x&&x.id===lbState.id);
   if(!p||!(p.photos||[]).length){closeLb();return}
   lbState.i=(lbState.i+p.photos.length)%p.photos.length;
   $("lbImg").src=p.photos[lbState.i];
@@ -995,7 +1079,7 @@ $("lbPrev").addEventListener("click",()=>{lbState.i--;paintLb()});
 $("lbNext").addEventListener("click",()=>{lbState.i++;paintLb()});
 $("lb").addEventListener("click",e=>{if(e.target===$("lb"))closeLb()});
 $("lbDel").addEventListener("click",function(){
-  const p=points.find(x=>x.id===lbState.id);if(!p)return;
+  const p=points.find(x=>x&&x.id===lbState.id);if(!p)return;
   if(!confirm("刪除這張照片？"))return;
   p.photos.splice(lbState.i,1);
   if(!persist()){toast("刪除失敗");return}
@@ -1012,8 +1096,9 @@ document.addEventListener("keydown",e=>{
 /* ================= 匯出 / 匯入 ================= */
 $("btnExport").addEventListener("click",function(){
   if(!points.length){toast("沒有可匯出的紀錄");return}
-  const data=points.map(p=>({
-    name:p.name,cat:p.cat,lat:p.lat,lng:p.lng,note:p.note||"",addr:p.addr||"",
+  const data=points.filter(Boolean).map(p=>({
+    name:p.name,cat:validCat(p.cat)?p.cat:"general",lat:p.lat,lng:p.lng,
+    note:p.note||"",addr:p.addr||"",
     time:new Date(p.ts).toISOString(),photos:p.photos||[]
   }));
   const blob=new Blob([JSON.stringify({custom:custom,points:data},null,2)],{type:"application/json"});
@@ -1021,7 +1106,7 @@ $("btnExport").addEventListener("click",function(){
   a.download="座標紀錄-"+new Date().toISOString().slice(0,10)+".json";
   document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),3000);
-  toast("已匯出 "+points.length+" 筆"+(data.some(d=>d.photos.length)?"（含照片）":""));
+  toast("已匯出 "+data.length+" 筆"+(data.some(d=>d.photos.length)?"（含照片）":""));
 });
 $("btnImport").addEventListener("click",()=>$("fileIn").click());
 $("fileIn").addEventListener("change",function(){
@@ -1039,14 +1124,17 @@ $("fileIn").addEventListener("change",function(){
         if(!isFinite(lat)||!isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return;
         points.unshift({
           id:uid(),
-          cat:CATS.some(c=>c.id===o.cat)?o.cat:"general",
-          name:o.name||"匯入地點",note:o.note||"",addr:o.addr||"",
+          cat:validCat(o.cat)?o.cat:"general",
+          name:(typeof o.name==="string"&&o.name.trim())?o.name:"匯入地點",
+          note:typeof o.note==="string"?o.note:"",
+          addr:typeof o.addr==="string"?o.addr:"",
           lat:lat,lng:lng,acc:null,
           photos:Array.isArray(o.photos)?o.photos.filter(s=>typeof s==="string"&&s.startsWith("data:image")):[],
           ts:o.time?Date.parse(o.time)||Date.now():Date.now()
         });
         n++;
       });
+      normalize();
       if(!persist()){toast("匯入失敗：空間不足");render();return}
       editingId=null;render();toast(n?("已匯入 "+n+" 筆"):"檔案格式不符");
     }catch(e){toast("檔案格式不符")}
