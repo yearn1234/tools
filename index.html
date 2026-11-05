@@ -4,14 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0e100f" id="metaTheme">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>座標記錄器 · COORD LOGGER</title>
 
-<!-- ① 主題（防呆：失敗不影響後續） -->
+<!-- ① 主題（防呆） -->
 <script>
 try{var t=localStorage.getItem("coordlog.theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}
 </script>
 
-<!-- ② 錯誤攔截：任何 JS 錯誤立刻顯示在畫面頂部紅條 -->
+<!-- ② 錯誤攔截 -->
 <script>
 (function(){
   function show(m){
@@ -89,6 +91,8 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
   border:1px solid var(--line);color:var(--muted);padding:7px 9px;cursor:pointer;border-radius:2px;transition:.2s;white-space:nowrap}
 .icb:hover{border-color:var(--accent);color:var(--accent)}
 .icb.theme{color:var(--ink);border-color:var(--line-strong)}
+.icb.install{border-color:var(--lock);color:var(--lock)}
+.icb.install:hover{background:var(--lock);color:var(--on-lock);border-color:var(--lock)}
 
 .wrap{max-width:1120px;margin:0 auto;padding:26px 20px 90px;position:relative;z-index:1}
 .grid{display:grid;gap:30px}
@@ -273,7 +277,6 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .btn.acc:hover{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--on-accent);letter-spacing:.12em}
 .btn.edit{border-color:var(--line-strong);color:var(--lock)}
 .btn.edit:hover{border-color:var(--lock);color:var(--lock)}
-/* ★ 導航王按鈕 */
 .btn.king{background:var(--ink);border-color:var(--ink);color:var(--on-ink);font-weight:700}
 .btn.king:hover{background:var(--accent);border-color:var(--accent);color:var(--on-accent);letter-spacing:.12em}
 .btn svg{width:13px;height:13px}
@@ -343,6 +346,7 @@ footer b{color:var(--ink);font-weight:500}
     </div>
     <div class="count"><b id="count">0</b> 筆</div>
     <div class="tools">
+      <button class="icb install" id="btnInstall" hidden>安裝App</button>
       <button class="icb theme" id="btnTheme" title="切換亮／暗背景">亮色模式</button>
       <button class="icb" id="btnExport">匯出</button>
       <button class="icb" id="btnImport">匯入</button>
@@ -439,12 +443,12 @@ footer b{color:var(--ink);font-weight:500}
         <button class="fill" id="btnFill">帶入目前</button>
         <button class="cta" id="btnSave">儲存這筆</button>
       </div>
-      <p class="hint">十進位格式（例：25.033, 121.565）。已存的紀錄可在右側卡片按「✎ 編輯」修改名稱、備註與分類；按「導航王」會複製座標並嘗試開啟導航王。</p>
+      <p class="hint">十進位格式（例：25.033, 121.565）。已存的紀錄可在右側卡片按「✎ 編輯」修改名稱、備註與分類；按「導航王」會複製座標並開啟導航王 3D 設為目的地。</p>
 
       <div class="meter">
         <span>本機空間</span>
         <div class="bar"><i id="meterFill"></i></div>
-        <span id="meterTxt">0.00 / 5 MB</span>
+        <span id="meterTxt">計算中…</span>
       </div>
     </div>
   </section>
@@ -462,8 +466,8 @@ footer b{color:var(--ink);font-weight:500}
 </div>
 
 <footer>
-  <b>資料只存在這台裝置的瀏覽器（localStorage）</b>，不會上傳伺服器；額滿請「匯出」備份。<br>
-  右上角切換<b>亮色／暗色</b>。定位與相機需 <b>HTTPS 或 localhost</b> 開啟；「導航王」按鈕請用 <b>Chrome</b> 開啟頁面（`intent:` 連結僅 Chrome／Edge 支援）。
+  <b>資料存於本機瀏覽器（IndexedDB，空間上限遠大於舊版 5MB）</b>，不上傳伺服器；重要資料仍請定期「匯出」備份。<br>
+  右上角切換<b>亮色／暗色</b>；開啟「持續定位」時會<b>自動防止螢幕休眠</b>。若以 HTTPS 開啟，可按「安裝App」加到主畫面並<b>離線使用</b>。
   <span id="dbg">初始化中…</span>
 </footer>
 
@@ -500,16 +504,15 @@ const CATS=[
   {id:"risk",   name:"注意風險",color:"#ff4d6d",colorLight:"#c0143c"},
   {id:"custom", name:"自訂",    color:"#a855f7",colorLight:"#7c3aed"}
 ];
-const KEY="coordlog.v2";
+const KEY="coordlog.v2";        // 舊版 localStorage（僅供遷移）
 const LEGACY="coordlog.v1";
-const VER="v5";
-const MAXEDGE=900, QUALITY=.7, QUOTA=5;
+const VER="v7";
+const MAXEDGE=900, QUALITY=.7, QUOTA=5;   // QUOTA 僅供 localStorage 退路顯示
 
-/* ★ 導航王 Android 套件名稱（官方無公開 URL scheme，故以 intent 指定 package 嘗試喚起） */
 const KING_PKGS=[
-  "com.kingwaytek.naviking3d",             // 樂客導航王全3D Pro
+  "com.kingwaytek.naviking3d",             // 樂客導航王全3D Pro（你的版本）
   "com.kingwaytek.naviking.telemetrics",   // 導航王 TM
-  "com.kingwaytek.naviking3d.google.std"   // 樂客導航王全3D
+  "com.kingwaytek.naviking3d.google.std"   // 樂客導航王全3D（體驗後內購版）
 ];
 
 let points=[], custom="自訂";
@@ -521,7 +524,14 @@ let watchId=null, pendingSave=false;
 let photoTarget=null;
 let lbState={id:null,i:0};
 
-/* 防呆綁定：元素不存在只警告，不中斷整個腳本 */
+/* ★ v7 新增狀態 */
+let db=null;                 // IndexedDB 連線（null＝退回 localStorage）
+let storageMode="載入中";      // IndexedDB / localStorage / 載入中
+let lastBytes=0;             // 最近一次序列化大小
+let wakeLock=null;           // 螢幕常亮鎖
+let swState="SW 未註冊";      // Service Worker 狀態
+let deferredPrompt=null;     // PWA 安裝提示
+
 function on(id,ev,fn){
   const el=$(id);
   if(el)el.addEventListener(ev,fn);
@@ -533,8 +543,8 @@ function currentTheme(){return document.documentElement.dataset.theme==="light"?
 function updateDbg(msg){
   const d=$("dbg");
   if(d)d.textContent=(msg?msg+" · ":"")+"腳本 "+VER+" ✓ · "+points.length+" 筆 · "+
-    (currentTheme()==="light"?"亮色":"暗色")+" · "+CATS.length+" 分類 · "+
-    (location.protocol==="file:"?"file://（定位可能被封鎖）":location.protocol.replace(":",""));
+    (currentTheme()==="light"?"亮色":"暗色")+" · 儲存 "+storageMode+" · "+swState+
+    (location.protocol==="file:"?" · file://（離線與定位可能受限）":"");
 }
 function applyTheme(t){
   document.documentElement.dataset.theme=t;
@@ -575,38 +585,137 @@ function normalize(){
     if(typeof p.addr!=="string")p.addr="";
   });
 }
-function persist(){
-  try{
-    localStorage.setItem(KEY,JSON.stringify({v:2,points:points,custom:custom}));
-    meter();updateDbg();return true;
-  }catch(e){
-    toast("本機空間已滿：請刪除部分照片，或先匯出備份");
-    meter();return false;
-  }
+
+/* =========================================================
+   ★★★ 儲存層：IndexedDB（主）＋ localStorage（退路）
+   ========================================================= */
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    if(!("indexedDB" in window)){rej(new Error("此瀏覽器不支援 IndexedDB"));return;}
+    let rq;
+    try{rq=indexedDB.open("coordlog",1);}catch(e){rej(e);return;}
+    rq.onupgradeneeded=function(){
+      const d=rq.result;
+      if(!d.objectStoreNames.contains("kv"))d.createObjectStore("kv");
+    };
+    rq.onsuccess=function(){res(rq.result);};
+    rq.onerror=function(){rej(rq.error||new Error("idb open failed"));};
+    rq.onblocked=function(){rej(new Error("idb blocked"));};
+  });
 }
-function meter(){
-  let len=0;
-  try{len=(localStorage.getItem(KEY)||"").length;}catch(e){}
-  const mb=len/1024/1024;
-  const mt=$("meterTxt");if(mt)mt.textContent=mb.toFixed(2)+" / "+QUOTA+" MB";
-  const f=$("meterFill");
-  if(f){f.style.width=Math.min(100,mb/QUOTA*100).toFixed(1)+"%";f.classList.toggle("hot",mb/QUOTA>.8);}
+function idbGet(){
+  return new Promise((res,rej)=>{
+    try{
+      const tx=db.transaction("kv","readonly");
+      const rq=tx.objectStore("kv").get("state");
+      rq.onsuccess=function(){res(rq.result||null);};
+      rq.onerror=function(){rej(rq.error);};
+    }catch(e){rej(e);}
+  });
 }
-function load(){
-  points=[];custom="自訂";
+function idbPut(state){
+  return new Promise((res,rej)=>{
+    try{
+      const tx=db.transaction("kv","readwrite");
+      tx.objectStore("kv").put(state,"state");
+      tx.oncomplete=function(){res();};
+      tx.onerror=function(){rej(tx.error||new Error("idb write failed"));};
+      tx.onabort=function(){rej(tx.error||new Error("idb abort"));};
+    }catch(e){rej(e);}
+  });
+}
+/* 舊版 localStorage 資料 → 統一狀態物件 */
+function readLegacyLS(){
   const read=k=>{try{return JSON.parse(localStorage.getItem(k)||"null");}catch(e){return null;}};
   const raw=read(KEY);
-  if(Array.isArray(raw))points=raw;
-  else if(raw&&Array.isArray(raw.points)){
-    points=raw.points;
-    if(typeof raw.custom==="string"&&raw.custom.trim())custom=raw.custom.trim().slice(0,10);
-  }else{
-    const old=read(LEGACY);
-    if(Array.isArray(old))points=old;
+  if(Array.isArray(raw))return {v:3,points:raw,custom:"自訂"};
+  if(raw&&Array.isArray(raw.points)){
+    return {v:3,points:raw.points,
+            custom:(typeof raw.custom==="string"&&raw.custom.trim())?raw.custom:"自訂"};
   }
+  const old=read(LEGACY);
+  if(Array.isArray(old))return {v:3,points:old,custom:"自訂"};
+  return null;
+}
+function applyState(state){
+  points=(state&&Array.isArray(state.points))?state.points:[];
+  custom=(state&&typeof state.custom==="string"&&state.custom.trim())
+         ?state.custom.trim().slice(0,10):"自訂";
   points=points.filter(p=>p&&typeof p==="object");
   normalize();
 }
+async function storageInit(){
+  try{
+    db=await idbOpen();
+    storageMode="IndexedDB";
+    let state=null;
+    try{state=await idbGet();}catch(e){state=null;}
+    if(!state){
+      state=readLegacyLS();               // 從舊版遷移
+      if(state){try{await idbPut(state);}catch(e){}}
+    }
+    applyState(state);
+  }catch(e){
+    db=null;
+    storageMode="localStorage";
+    if(window.__err)window.__err("IndexedDB 不可用，退回 localStorage："+((e&&e.message)||e));
+    applyState(readLegacyLS());
+  }
+}
+function persist(){
+  const state={v:3,points:points,custom:custom};
+  let json;
+  try{json=JSON.stringify(state);}
+  catch(e){toast("資料序列化失敗");return false;}
+  lastBytes=json.length;
+
+  if(db){
+    /* IDB：背景寫入，失敗（多為空間滿）用 toast 通知 */
+    idbPut(state).catch(function(err){
+      const n=err&&err.name;
+      toast(n==="QuotaExceededError"
+        ?"本機空間已滿：請刪除部分照片，或先匯出備份"
+        :("儲存失敗："+((err&&err.message)||"")));
+      updateStorageInfo();
+    });
+  }else{
+    try{localStorage.setItem(KEY,json);}
+    catch(e){
+      toast("本機空間已滿：請刪除部分照片，或先匯出備份");
+      updateStorageInfo();return false;
+    }
+  }
+  updateStorageInfo();
+  return true;
+}
+async function updateStorageInfo(){
+  const mt=$("meterTxt"),f=$("meterFill");
+  if(db&&navigator.storage&&navigator.storage.estimate){
+    try{
+      const e=await navigator.storage.estimate();
+      const used=e.usage||0,quota=e.quota||0;
+      const um=used/1048576,qm=quota/1048576;
+      if(mt)mt.textContent=um.toFixed(2)+" MB / "+
+        (qm>=1024?(qm/1024).toFixed(1)+" GB":qm.toFixed(0)+" MB");
+      if(f){
+        const pct=quota>0?(used/quota)*100:0;
+        f.style.width=Math.min(100,pct).toFixed(1)+"%";
+        f.classList.toggle("hot",pct>80);
+      }
+      return;
+    }catch(e){}
+  }
+  const mb=lastBytes/1048576;
+  if(mt)mt.textContent=db
+    ? mb.toFixed(2)+" MB（IDB）"
+    : mb.toFixed(2)+" / "+QUOTA+" MB";
+  if(f){
+    const pct=db?Math.min(100,mb*2):Math.min(100,mb/QUOTA*100);
+    f.style.width=pct.toFixed(1)+"%";
+    f.classList.toggle("hot",!db&&mb/QUOTA>.8);
+  }
+}
+
 function copy(text,msg){
   const done=()=>toast(msg||"已複製座標");
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done).catch(fb);}else fb();
@@ -617,60 +726,60 @@ function copy(text,msg){
   }
 }
 
-/* ========== ★ 導航王：複製座標 + 嘗試喚起 ========== */
+/* ========== ★ 導航王（geo 連結，已實測可用） ========== */
 function openNaviKing(p){
   const lat=fmt(p.lat),lng=fmt(p.lng);
   const coord=lat+", "+lng;
-
-  /* 第一步永遠先複製，保證有退路 */
   copy(coord,"座標已複製："+coord);
-
-  /* 非 Android（iOS／桌面）沒有可驗證的 scheme，直接走手動貼上 */
   if(!/Android/i.test(navigator.userAgent)){
     setTimeout(()=>toast("請開啟導航王，在搜尋欄貼上座標 "+coord),350);
     return;
   }
-
   let i=0;
   const step=function(){
     if(i>=KING_PKGS.length){
-      /* 頁面還在前景 = 全部失敗 */
       if(document.visibilityState==="visible"){
         toast("未能跳轉導航王，座標已複製 "+coord+"，請手動開啟導航王貼上");
       }
       return;
     }
     try{
-      const a=document.createElement("a"); 
-	  
-// 版本一：完全照他們的格式（geo 主體是 0,0，座標放 q）
-a.href="intent:geo:0,0?q="+lat+","+lng+
-       "#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
-
-// 版本二
-//a.href="intent:geo:"+lat+","+lng+"?q="+lat+","+lng+
-       //"#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";	   
-	  
-	  //a.href="intent:geo:"+lat+","+lng+"?q="+lat+","+lng+
-             //"#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
-      //a.href="intent:geo:"+lat+","+lng+
-             //"#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
+      const a=document.createElement("a");
+      a.href="intent:geo:0,0?q="+lat+","+lng+
+             "#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
       document.body.appendChild(a);a.click();a.remove();
     }catch(e){if(window.__err)window.__err("intent："+e.message);}
     i++;
-    /* 1 秒後檢查頁面是否已離開前景：是＝跳轉成功 */
     setTimeout(function(){
       if(document.visibilityState==="hidden"){
-        toast("已送出座標給導航王 ✓（座標同時已複製）");
-      }else{
-        step();
-      }
+        toast("已開啟導航王並帶入座標 ✓（座標同時已複製）");
+      }else{step();}
     },1000);
   };
-
-  setTimeout(()=>toast("座標已複製 ✓ 嘗試開啟導航王…"),350);
+  setTimeout(()=>toast("座標已複製 ✓ 開啟導航王…"),350);
   setTimeout(step,500);
 }
+
+/* ========== ★ 螢幕常亮（配合持續定位） ========== */
+async function startWake(){
+  try{
+    if(!("wakeLock" in navigator))return false;
+    wakeLock=await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release",function(){wakeLock=null;});
+    return true;
+  }catch(e){return false;}
+}
+function stopWake(){
+  if(wakeLock){try{wakeLock.release();}catch(e){} wakeLock=null;}
+}
+document.addEventListener("visibilitychange",async function(){
+  /* 手機切回前景時，若仍在持續定位就重新拿鎖 */
+  if(document.visibilityState==="visible"&&watchId!=null&&!wakeLock){
+    const ok=await startWake();
+    if(ok)toast("已恢復螢幕常亮");
+  }
+});
+window.addEventListener("pagehide",stopWake);
 
 /* ========== 定位 ========== */
 function setStatus(cls,txt){
@@ -711,15 +820,20 @@ function locate(){
   }catch(e){onErr({code:0,message:e.message});}
 }
 on("btnLocate","click",locate);
-on("btnWatch","click",function(){
+on("btnWatch","click",async function(){
   if(!navigator.geolocation){toast("此瀏覽器不支援定位");return}
   if(watchId!=null){
     navigator.geolocation.clearWatch(watchId);watchId=null;
-    this.textContent="持續定位";this.classList.remove("on");setStatus("","待命");toast("已停止持續定位");
+    stopWake();
+    this.textContent="持續定位";this.classList.remove("on");
+    setStatus("","待命");toast("已停止持續定位（螢幕可正常休眠）");
   }else{
     try{
       watchId=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,timeout:20000,maximumAge:1000});
-      this.textContent="停止定位";this.classList.add("on");setStatus("","定位中…");toast("持續定位已開啟");
+      this.textContent="停止定位";this.classList.add("on");
+      setStatus("","定位中…");
+      const woken=await startWake();
+      toast("持續定位已開啟"+(woken?" · 螢幕保持常亮":""));
     }catch(e){onErr({code:0,message:e.message});}
   }
 });
@@ -914,7 +1028,7 @@ on("filters","click",e=>{
 function render(){
   const c1=$("count");if(c1)c1.textContent=points.length;
   const lm=$("logMeta");if(lm)lm.textContent=points.length?(points.length+" ENTRIES"):"NO ENTRIES";
-  renderCats();renderFilters();meter();updateDbg();
+  renderCats();renderFilters();updateStorageInfo();updateDbg();
 
   if(editingId){
     const ep=points.find(x=>x.id===editingId);
@@ -1014,7 +1128,6 @@ if(list){
     const text=fmt(p.lat)+", "+fmt(p.lng);
 
     if(act==="copy"){copy(text,"已複製："+text);return}
-    /* ★ 導航王 */
     if(act==="king"){openNaviKing(p);return}
     if(act==="edit"){startEdit(id);return}
     if(act==="cancelEdit"){cancelEdit();return}
@@ -1133,17 +1246,109 @@ on("fileIn","change",function(){
   rd.readAsText(f);this.value="";
 });
 
-/* ========== init（分段防呆） ========== */
-try{load();}catch(e){if(window.__err)window.__err("load："+e.message);}
-try{renderCats();renderStaged();render();meter();}catch(e){if(window.__err)window.__err("render："+e.message);}
-try{
-  if(points.length)toast("已載入 "+points.length+" 筆紀錄");
-  else updateDbg("尚無紀錄");
-}catch(e){}
-setTimeout(function(){
-  try{locate();}
-  catch(e){if(window.__err)window.__err("locate："+e.message);}
-},400);
+/* =========================================================
+   ★★★ PWA：圖示＋manifest＋Service Worker＋安裝按鈕
+   ========================================================= */
+function buildIcon(size){
+  const cv=document.createElement("canvas");cv.width=cv.height=size;
+  const g=cv.getContext("2d");
+  g.fillStyle="#0e100f";g.fillRect(0,0,size,size);
+  const c=size/2,r=size*0.28,lw=Math.max(2,Math.round(size*0.035));
+  g.strokeStyle="#ff5f1f";g.lineWidth=lw;g.lineCap="round";
+  g.beginPath();g.arc(c,c,r,0,Math.PI*2);g.stroke();
+  g.beginPath();g.arc(c,c,r*0.4,0,Math.PI*2);g.stroke();
+  g.beginPath();
+  g.moveTo(c,c-r*1.55);g.lineTo(c,c-r*0.72);
+  g.moveTo(c,c+r*0.72);g.lineTo(c,c+r*1.55);
+  g.moveTo(c-r*1.55,c);g.lineTo(c-r*0.72,c);
+  g.moveTo(c+r*0.72,c);g.lineTo(c+r*1.55,c);
+  g.stroke();
+  g.fillStyle="#ff5f1f";g.beginPath();g.arc(c,c,r*0.16,0,Math.PI*2);g.fill();
+  return cv.toDataURL("image/png");
+}
+function injectManifest(){
+  try{
+    const pageUrl=location.href.split("#")[0].split("?")[0];
+    const dirUrl=pageUrl.substring(0,pageUrl.lastIndexOf("/")+1);
+    const manifest={
+      name:"座標記錄器 COORD LOGGER",
+      short_name:"座標記錄器",
+      description:"現場座標紀錄與導航王跳轉工具",
+      start_url:pageUrl,
+      scope:dirUrl,
+      display:"standalone",
+      orientation:"portrait",
+      background_color:"#0e100f",
+      theme_color:"#0e100f",
+      lang:"zh-Hant",
+      icons:[
+        {src:buildIcon(192),sizes:"192x192",type:"image/png",purpose:"any"},
+        {src:buildIcon(512),sizes:"512x512",type:"image/png",purpose:"any"},
+        {src:buildIcon(512),sizes:"512x512",type:"image/png",purpose:"maskable"}
+      ]
+    };
+    const blob=new Blob([JSON.stringify(manifest)],{type:"application/manifest+json"});
+    let link=document.querySelector('link[rel="manifest"]');
+    if(!link){link=document.createElement("link");link.rel="manifest";document.head.appendChild(link);}
+    link.href=URL.createObjectURL(blob);
+  }catch(e){if(window.__err)window.__err("manifest："+e.message);}
+}
+function registerSW(){
+  if(!("serviceWorker" in navigator)){swState="SW 不支援";updateDbg();return;}
+  if(location.protocol!=="https:"&&location.protocol!=="http:"){
+    swState="SW 需 https";updateDbg();return;   // file:// 無法註冊
+  }
+  navigator.serviceWorker.register("sw.js",{scope:"./"}).then(function(){
+    swState="SW 已啟用";updateDbg();
+  }).catch(function(err){
+    swState="SW 失敗";updateDbg();
+    if(window.__err)window.__err("sw.js 註冊失敗（請確認檔案在同目錄）："+((err&&err.message)||err));
+  });
+}
+window.addEventListener("beforeinstallprompt",function(e){
+  e.preventDefault();deferredPrompt=e;
+  const b=$("btnInstall");if(b)b.hidden=false;
+});
+on("btnInstall","click",async function(){
+  if(!deferredPrompt){toast("請用 Chrome 開啟 HTTPS 網址後再試");return;}
+  deferredPrompt.prompt();
+  try{
+    const r=await deferredPrompt.userChoice;
+    if(r&&r.outcome==="accepted")toast("已加入主畫面 ✓");
+  }catch(e){}
+  deferredPrompt=null;
+  const b=$("btnInstall");if(b)b.hidden=true;
+});
+window.addEventListener("appinstalled",function(){
+  toast("已安裝到主畫面 ✓");
+  const b=$("btnInstall");if(b)b.hidden=true;
+});
+
+/* =========================================================
+   ★★★ init（分段防呆，改為 async）
+   ========================================================= */
+(async function(){
+  try{await storageInit();}
+  catch(e){if(window.__err)window.__err("storageInit："+e.message);applyState(null);storageMode="localStorage";}
+
+  try{renderCats();renderStaged();render();}
+  catch(e){if(window.__err)window.__err("render："+e.message);}
+
+  try{await updateStorageInfo();}catch(e){}
+
+  try{injectManifest();registerSW();}
+  catch(e){if(window.__err)window.__err("pwa："+e.message);}
+
+  try{
+    if(points.length)toast("已載入 "+points.length+" 筆紀錄（"+storageMode+"）");
+    else updateDbg("尚無紀錄");
+  }catch(e){}
+
+  setTimeout(function(){
+    try{locate();}
+    catch(e){if(window.__err)window.__err("locate："+e.message);}
+  },400);
+})();
 
 })();
 </script>
