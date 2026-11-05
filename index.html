@@ -221,6 +221,7 @@ textarea:focus{border-color:var(--accent)}
 }
 @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .point:hover{border-color:#39413a;border-left-color:var(--c)}
+.point.editing{border-color:var(--accent);border-left-color:var(--accent);animation:none;opacity:1}
 .p-top{display:flex;gap:13px;align-items:flex-start;padding:15px 15px 0}
 .p-idx{
   font-family:"Syne",sans-serif;font-weight:800;font-size:26px;line-height:1;
@@ -236,8 +237,12 @@ textarea:focus{border-color:var(--accent)}
 .tag i{width:6px;height:6px;background:var(--c);border-radius:1px}
 .p-meta{font-family:"DM Mono",monospace;font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin-top:4px}
 .p-meta .acc{color:var(--lock)}
-.p-del{background:none;border:0;color:#4c534c;cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;transition:.2s;flex:none}
+.p-del,.p-edit{
+  background:none;border:0;color:#4c534c;cursor:pointer;font-size:17px;line-height:1;
+  padding:2px 5px;transition:.2s;flex:none;font-family:"DM Mono",monospace;
+}
 .p-del:hover{color:var(--accent)}
+.p-edit:hover{color:var(--lock)}
 .p-coords{
   display:block;width:calc(100% - 30px);margin:11px 15px 0;text-align:left;cursor:pointer;
   background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
@@ -248,6 +253,28 @@ textarea:focus{border-color:var(--accent)}
 .p-addr{font-size:12.5px;color:var(--muted);padding:9px 15px 0;line-height:1.5;display:flex;gap:7px;align-items:flex-start}
 .p-addr svg{width:12px;height:12px;flex:none;margin-top:4px;color:var(--accent)}
 .p-addr.loading{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em}
+
+/* ---------- inline edit ---------- */
+.edit-box{padding:14px 15px 15px;animation:up .3s ease}
+.edit-box .field:first-child{margin-top:0}
+.edit-box .coord-ro{
+  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;color:#5c635c;
+  margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;
+}
+.edit-box .coord-ro b{color:var(--muted);font-weight:400}
+.edit-cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.edit-cats .cat{padding:6px 9px;font-size:11.5px}
+.edit-acts{display:flex;gap:8px;margin-top:14px}
+.edit-acts button{
+  flex:1;padding:12px;font-size:13.5px;font-weight:700;letter-spacing:.1em;cursor:pointer;
+  border-radius:var(--radius);transition:.2s;
+}
+.btn-save{background:var(--lock);border:1px solid var(--lock);color:#10130a}
+.btn-save:hover{letter-spacing:.16em}
+.btn-cancel{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:500}
+.btn-cancel:hover{border-color:var(--ink);color:var(--ink)}
+.edit-tip{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.12em;color:#4c534c;margin-top:10px}
+
 .photos{display:flex;flex-wrap:wrap;gap:7px;padding:12px 15px 0}
 .ph{width:66px;height:66px;object-fit:cover;border:1px solid var(--line);cursor:pointer;transition:.2s;animation:up .3s ease}
 .ph:hover{border-color:var(--accent)}
@@ -268,6 +295,8 @@ textarea:focus{border-color:var(--accent)}
 .btn:hover{border-color:var(--ink);color:var(--ink)}
 .btn.acc{background:var(--accent);border-color:var(--accent);color:#12100e;font-weight:700}
 .btn.acc:hover{background:var(--accent-soft);border-color:var(--accent-soft);color:#12100e;letter-spacing:.12em}
+.btn.edit{border-color:#3d4a3d;color:var(--lock)}
+.btn.edit:hover{border-color:var(--lock);color:var(--lock)}
 .btn svg{width:13px;height:13px}
 
 /* ---------- lightbox ---------- */
@@ -441,7 +470,7 @@ footer b{color:var(--muted);font-weight:400}
         <button class="fill" id="btnFill">帶入目前</button>
         <button class="cta" id="btnSave">儲存這筆</button>
       </div>
-      <p class="hint">十進位格式（例：25.033, 121.565），可直接從 Google 地圖座標欄複製貼上。拍照會自動壓縮後存進本機。</p>
+      <p class="hint">十進位格式（例：25.033, 121.565），可直接從 Google 地圖座標欄複製貼上。已存的紀錄可在右側卡片按「編輯」修改名稱與備註。</p>
 
       <div class="meter">
         <span>本機空間</span>
@@ -466,7 +495,7 @@ footer b{color:var(--muted);font-weight:400}
 
 <footer>
   <b>資料只存在這台裝置的瀏覽器（localStorage）</b>，不會上傳伺服器。照片經壓縮後隨紀錄一併保存，本機空間約 5 MB，額滿時請「匯出」備份後再刪除。<br>
-  取得 GPS 與相機需 <b>HTTPS 或 localhost</b>；清除瀏覽器資料會一併刪除，重要地點請記得備份。
+  點卡片的「編輯」可修改<b>名稱、備註與分類</b>；取得 GPS 與相機需 <b>HTTPS 或 localhost</b>；清除瀏覽器資料會一併刪除，重要地點請記得備份。
 </footer>
 
 <!-- 照片檢視器 -->
@@ -502,14 +531,15 @@ const CATS=[
 ];
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const MAXEDGE=900, QUALITY=.7, QUOTA=5; // MB
+const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 let points=[], custom="自訂";
 let filter="all", selectedCat="general";
-let staged=[];               // 待存照片（dataURL）
-let current=null;            // 目前定位
+let editingId=null;            // ★ 正在編輯的紀錄 id
+let staged=[];
+let current=null;
 let watchId=null, pendingSave=false;
-let photoTarget=null;        // null=暫存, 否則=點位id
+let photoTarget=null;
 let lbState={id:null,i:0};
 
 const $=id=>document.getElementById(id);
@@ -550,11 +580,10 @@ function load(){
   try{
     const raw=JSON.parse(localStorage.getItem(KEY)||"null");
     if(raw&&Array.isArray(raw.points)){points=raw.points;custom=raw.custom||"自訂";return;}
-    const old=JSON.parse(localStorage.getItem(LEGACY)||"null"); // 舊版遷移
+    const old=JSON.parse(localStorage.getItem(LEGACY)||"null");
     if(Array.isArray(old))points=old;
   }catch(e){}
 }
-
 function copy(text,msg){
   const done=()=>toast(msg||"已複製座標");
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done).catch(fb);}else fb();
@@ -658,7 +687,6 @@ async function handleFiles(files){
     try{add.push(await fileToDataURL(f))}catch(e){toast("照片處理失敗")}
   }
   if(!add.length)return;
-
   if(photoTarget){
     const p=points.find(x=>x.id===photoTarget);
     if(p){
@@ -730,6 +758,38 @@ $("btnFill").addEventListener("click",function(){
   $("mLat").value=fmt(current.lat);$("mLng").value=fmt(current.lng);toast("已帶入目前座標");
 });
 
+/* ================= ★ 編輯名稱 / 備註 / 分類 ================= */
+function startEdit(id){
+  editingId=id;
+  render();
+  const box=list.querySelector('.point[data-id="'+id+'"] .edit-box input');
+  if(box){box.focus();box.select();}
+}
+function cancelEdit(){
+  editingId=null;render();
+}
+function saveEdit(id){
+  const p=points.find(x=>x.id===id);if(!p)return;
+  const box=list.querySelector('.point[data-id="'+id+'"]');
+  if(!box)return;
+  const nameI=box.querySelector(".edit-name");
+  const noteT=box.querySelector(".edit-note");
+  const catB=box.querySelector(".edit-cats .cat.on");
+
+  const newName=nameI?nameI.value.trim():"";
+  const newNote=noteT?noteT.value.trim():"";
+  const newCat=catB?catB.dataset.cat:p.cat;
+  if(!newName){toast("名稱不可空白");if(nameI)nameI.focus();return}
+
+  // 備份，失敗可回復
+  const bak={name:p.name,note:p.note,cat:p.cat};
+  p.name=newName;p.note=newNote;p.cat=newCat;
+  if(!persist()){Object.assign(p,bak);render();return}
+
+  editingId=null;render();
+  toast("已更新："+p.name);
+}
+
 /* ================= 反查地址 ================= */
 async function fetchAddr(p){
   p._loading=true;render();
@@ -763,13 +823,19 @@ function renderFilters(){
 }
 $("filters").addEventListener("click",e=>{
   const b=e.target.closest("[data-f]");if(!b)return;
-  filter=b.dataset.f;render();
+  filter=b.dataset.f;editingId=null;render();   // 切換分類時結束編輯
 });
 
 function render(){
   $("count").textContent=points.length;
   $("logMeta").textContent=points.length?(points.length+" ENTRIES"):"NO ENTRIES";
   renderCats();renderFilters();meter();
+
+  // 編輯中的紀錄若被篩掉，取消編輯
+  if(editingId){
+    const ep=points.find(x=>x.id===editingId);
+    if(!ep||(filter!=="all"&&ep.cat!==filter))editingId=null;
+  }
 
   const shown=points.filter(p=>filter==="all"||p.cat===filter);
   if(!shown.length){
@@ -785,9 +851,12 @@ function render(){
     const gDir="https://www.google.com/maps/dir/?api=1&destination="+lat+","+lng+"&travelmode=driving";
     const gView="https://www.google.com/maps/search/?api=1&query="+lat+","+lng;
     const nPhotos=(p.photos||[]).length;
+    const isEdit=editingId===p.id;
+
     const addr=p._loading
       ? '<p class="p-addr loading">查詢地址中…</p>'
       : (p.addr?'<p class="p-addr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg><span>'+esc(p.addr)+'</span></p>':"");
+
     const photos='<div class="photos">'+
       (nPhotos
         ? p.photos.map((src,k)=>'<img class="ph" data-act="view" data-i="'+k+'" src="'+src+'" alt="'+esc(p.name)+' 現場照 '+(k+1)+'">').join("")
@@ -796,7 +865,28 @@ function render(){
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>'+
         (nPhotos?"加照片":"＋ 照片")+'</button></div>';
 
-    return '<article class="point" style="--c:'+c.color+';--d:'+(Math.min(i,8)*0.045).toFixed(2)+'s" data-id="'+p.id+'">'+
+    /* ---- 編輯表單（卡片內展開） ---- */
+    const editBox=
+      '<div class="edit-box">'+
+        '<div class="coord-ro"><b>座標（唯讀）</b> '+lat+', '+lng+
+          (p.acc?' · ±'+Math.round(p.acc)+'m':'')+'</div>'+
+        '<div class="field"><label>地點名稱</label>'+
+          '<input class="edit-name" type="text" value="'+esc(p.name)+'" maxlength="60" placeholder="地點名稱"></div>'+
+        '<div class="field"><label>備註</label>'+
+          '<textarea class="edit-note" maxlength="500" placeholder="要留給自己的提示…">'+esc(p.note||"")+'</textarea></div>'+
+        '<div class="field"><label>分類</label>'+
+          '<div class="edit-cats">'+CATS.map(cc=>{
+            const nm=cc.id==="custom"?custom:cc.name;
+            return '<button type="button" class="cat'+(p.cat===cc.id?" on":"")+'" data-editcat="'+cc.id+'" style="--c:'+cc.color+'"><i></i>'+esc(nm)+'</button>';
+          }).join("")+'</div></div>'+
+        '<div class="edit-acts">'+
+          '<button type="button" class="btn-save" data-act="saveEdit">儲存變更</button>'+
+          '<button type="button" class="btn-cancel" data-act="cancelEdit">取消</button>'+
+        '</div>'+
+        '<p class="edit-tip">ENTER 儲存 · ESC 取消 · 座標如需修改請刪除後重建</p>'+
+      '</div>';
+
+    const normalTop=
       '<div class="p-top">'+
         '<div class="p-idx">'+String(points.indexOf(p)+1).padStart(2,"0")+'</div>'+
         '<div class="p-id"><h3>'+esc(p.name)+
@@ -805,22 +895,39 @@ function render(){
           (p.acc?' · <span class="acc">±'+Math.round(p.acc)+'m</span>':"")+
           (nPhotos?' · 📷 '+nPhotos:"")+
           (p.note?' · '+esc(p.note):"")+'</div></div>'+
+        '<button class="p-edit" data-act="edit" title="編輯名稱與備註" aria-label="編輯">✎</button>'+
         '<button class="p-del" data-act="del" title="刪除" aria-label="刪除">×</button>'+
-      '</div>'+
-      '<button class="p-coords" data-act="copy">'+lat+', '+lng+'</button>'+
-      addr+photos+
-      '<div class="p-acts">'+
-        '<a class="btn acc" href="'+gDir+'" target="_blank" rel="noopener">'+
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a>'+
-        '<a class="btn" href="'+gView+'" target="_blank" rel="noopener">Google 地圖</a>'+
-        '<button class="btn" data-act="copy">複製</button>'+
-        '<button class="btn" data-act="addr">補地址</button>'+
-        '<button class="btn" data-act="share">分享</button>'+
-      '</div></article>';
+      '</div>';
+
+    return '<article class="point'+(isEdit?" editing":"")+'" style="--c:'+c.color+';--d:'+(Math.min(i,8)*0.045).toFixed(2)+'s" data-id="'+p.id+'">'+
+      normalTop+
+      (isEdit
+        ? editBox
+        : '<button class="p-coords" data-act="copy">'+lat+', '+lng+'</button>'+
+          addr+photos+
+          '<div class="p-acts">'+
+            '<a class="btn acc" href="'+gDir+'" target="_blank" rel="noopener">'+
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a>'+
+            '<a class="btn" href="'+gView+'" target="_blank" rel="noopener">Google 地圖</a>'+
+            '<button class="btn" data-act="copy">複製</button>'+
+            '<button class="btn edit" data-act="edit">編輯</button>'+
+            '<button class="btn" data-act="addr">補地址</button>'+
+            '<button class="btn" data-act="share">分享</button>'+
+          '</div>')+
+    '</article>';
   }).join("");
 }
 
 list.addEventListener("click",function(e){
+  /* 編輯表單內：切換分類 */
+  const ec=e.target.closest("[data-editcat]");
+  if(ec){
+    const box=ec.closest(".edit-cats");
+    box.querySelectorAll(".cat").forEach(x=>x.classList.remove("on"));
+    ec.classList.add("on");
+    return;
+  }
+
   const el=e.target.closest("[data-act]");if(!el)return;
   const card=el.closest(".point");const id=card.dataset.id;
   const idx=points.findIndex(p=>p.id===id);if(idx<0)return;
@@ -828,9 +935,16 @@ list.addEventListener("click",function(e){
   const text=fmt(p.lat)+", "+fmt(p.lng);
 
   if(act==="copy"){copy(text,"已複製："+text);return}
+
+  /* ★ 編輯流程 */
+  if(act==="edit"){startEdit(id);return}
+  if(act==="cancelEdit"){cancelEdit();return}
+  if(act==="saveEdit"){saveEdit(id);return}
+
   if(act==="del"){
     const np=(p.photos||[]).length;
     if(confirm("刪除「"+p.name+"」"+(np?("（含 "+np+" 張照片）"):"")+"？")){
+      if(editingId===id)editingId=null;
       points.splice(idx,1);persist();render();toast("已刪除");
     }
     return;
@@ -845,6 +959,16 @@ list.addEventListener("click",function(e){
     else copy(p.name+"\n"+text+"\n"+url,"已複製分享內容");
     return;
   }
+});
+
+/* 編輯中：Enter 儲存、Esc 取消（避免 Esc 被輸入框吃掉時用 ctrl+Enter 也可） */
+list.addEventListener("keydown",function(e){
+  if(!editingId)return;
+  const box=e.target.closest(".edit-box");if(!box)return;
+  if(e.key==="Enter"&&(e.target.classList.contains("edit-name")||e.ctrlKey||e.metaKey)){
+    e.preventDefault();saveEdit(editingId);
+  }
+  if(e.key==="Escape"){e.preventDefault();cancelEdit();}
 });
 
 /* ================= 照片檢視器 ================= */
@@ -924,7 +1048,7 @@ $("fileIn").addEventListener("change",function(){
         n++;
       });
       if(!persist()){toast("匯入失敗：空間不足");render();return}
-      render();toast(n?("已匯入 "+n+" 筆"):"檔案格式不符");
+      editingId=null;render();toast(n?("已匯入 "+n+" 筆"):"檔案格式不符");
     }catch(e){toast("檔案格式不符")}
   };
   rd.readAsText(f);this.value="";
