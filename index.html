@@ -992,14 +992,31 @@ function saveEdit(id){
 /* ========== 地址 ========== */
 async function fetchAddr(p){
   p._loading=true;render();
+  let ctl=null;
   try{
+    /* ★ 加 12 秒逾時，避免無限等待 */
+    if("AbortController" in window){
+      ctl=new AbortController();
+      setTimeout(function(){try{ctl.abort();}catch(e){}},12000);
+    }
     const url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+p.lat+"&lon="+p.lng+"&zoom=18&accept-language=zh-TW";
-    const r=await fetch(url,{headers:{Accept:"application/json"}});
+    const r=await fetch(url,{
+      headers:{Accept:"application/json"},
+      signal:ctl?ctl.signal:undefined
+    });
     if(!r.ok)throw new Error("HTTP "+r.status);
     const d=await r.json();
-    p.addr=(d.display_name||"").trim();persist();render();
-    toast(p.addr?"已取得地址":"查無地址");
-  }catch(e){p._loading=false;render();toast("地址查詢失敗（"+(e.message||"網路錯誤")+"）")}
+    p.addr=(d.display_name||"").trim();
+    p._loading=false;                 /* ★ 修正：成功也要清除載入狀態 */
+    persist();render();
+    toast(p.addr?"已取得地址 ✓":"查無地址");
+  }catch(e){
+    p._loading=false;                 /* 失敗本來就有，保留 */
+    render();
+    toast((e&&e.name==="AbortError")
+      ?"地址查詢逾時（12 秒無回應，可能離線或網路不穩）"
+      :"地址查詢失敗（"+(e.message||"網路錯誤")+"）");
+  }
 }
 
 /* ========== 篩選與渲染 ========== */
