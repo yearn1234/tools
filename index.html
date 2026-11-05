@@ -641,9 +641,11 @@ function openNaviKing(p){
       return;
     }
     try{
-      const a=document.createElement("a");
-      a.href="intent:geo:"+lat+","+lng+
+      const a=document.createElement("a"); 
+	  a.href="intent:geo:"+lat+","+lng+"?q="+lat+","+lng+
              "#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
+      //a.href="intent:geo:"+lat+","+lng+
+             //"#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
       document.body.appendChild(a);a.click();a.remove();
     }catch(e){if(window.__err)window.__err("intent："+e.message);}
     i++;
