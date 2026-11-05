@@ -515,13 +515,13 @@ const $=id=>document.getElementById(id);
 const list=$("list");
 
 const CATS=[
-  {id:"general",name:"一般",    color:"#8b918a",colorLight:"#626764"},
-  {id:"power",  name:"電力設施",color:"#ffb020",colorLight:"#9a6200"},
-  {id:"store",  name:"倉儲點",  color:"#4da3ff",colorLight:"#1667c4"},
-  {id:"work",   name:"施工中",  color:"#ff5f1f",colorLight:"#c24100"},
-  {id:"nature", name:"環境採集",color:"#5cb800",colorLight:"#3f7d00"},
-  {id:"risk",   name:"注意風險",color:"#ff4d6d",colorLight:"#c0143c"},
-  {id:"custom", name:"自訂",    color:"#a855f7",colorLight:"#7c3aed"}
+  {id:"general",name:"一般", color:"#8b918a",colorLight:"#626764"},
+  {id:"power",name:"車站", color:"#ffb020",colorLight:"#9a6200"},
+  {id:"custom1",name:"禁限建(01-06)",color:"#4da3ff",colorLight:"#1667c4"},
+  {id:"custom2",name:"禁限建(06-09)",color:"#ff5f1f",colorLight:"#c24100"},
+  {id:"custom3",name:"禁限建(09-11)",color:"#5cb800",colorLight:"#3f7d00"},
+  {id:"custom4",name:"塔吊巡檢",color:"#ff4d6d",colorLight:"#c0143c"},
+  {id:"custom", name:"自訂",color:"#a855f7",colorLight:"#7c3aed"}
 ];
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
@@ -570,7 +570,7 @@ function updateDbg(msg){
 function applyTheme(t){
   document.documentElement.dataset.theme=t;
   try{localStorage.setItem("coordlog.theme",t);}catch(e){}
-  const b=$("btnTheme");if(b)b.textContent=(t==="light")?"暗色模式":"亮色模式";
+  const b=$("btnTheme");if(b)b.textContent=(t==="light")?"暗色":"亮色";
   const m=$("metaTheme");if(m)m.setAttribute("content",t==="light"?"#f4f1ea":"#0e100f");
   updateDbg();
 }
@@ -1246,11 +1246,12 @@ function render(){
         : '<button class="p-coords" data-act="copy" title="點一下複製座標">'+lat+', '+lng+'</button>'+addr+photos+
           '<div class="p-acts">'+
             '<a class="btn acc" href="'+gDir+'" target="_blank" rel="noopener">'+
-              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a>'+
+			  'G導航</a>'+
+              <!--'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a>'+-->
             '<button class="btn king" data-act="king">導航王</button>'+
-            '<a class="btn" href="'+gView+'" target="_blank" rel="noopener">Google 地圖</a>'+
+            '<a class="btn" href="'+gView+'" target="_blank" rel="noopener">地圖</a>'+
             '<button class="btn edit" data-act="edit">編輯</button>'+
-            '<button class="btn" data-act="addr">補地址</button>'+
+            '<button class="btn" data-act="addr">地址</button>'+
             '<button class="btn" data-act="share">分享</button>'+
           '</div>')+
     '</article>';
