@@ -642,8 +642,17 @@ function openNaviKing(p){
     }
     try{
       const a=document.createElement("a"); 
-	  a.href="intent:geo:"+lat+","+lng+"?q="+lat+","+lng+
-             "#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
+	  
+// 版本一：完全照他們的格式（geo 主體是 0,0，座標放 q）
+a.href="intent:geo:0,0?q="+lat+","+lng+
+       "#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
+
+// 版本二
+//a.href="intent:geo:"+lat+","+lng+"?q="+lat+","+lng+
+       //"#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";	   
+	  
+	  //a.href="intent:geo:"+lat+","+lng+"?q="+lat+","+lng+
+             //"#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
       //a.href="intent:geo:"+lat+","+lng+
              //"#Intent;action=android.intent.action.VIEW;package="+KING_PKGS[i]+";end";
       document.body.appendChild(a);a.click();a.remove();
