@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e100f">
+<title>座標記錄器 · COORD LOGGER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e100f;
+  --surface:#151815;
+  --surface-2:#1a1e1a;
+  --line:#2a302a;
+  --ink:#f2efe8;
+  --muted:#8b918a;
+  --accent:#ff5f1f;
+  --accent-soft:#ff834f;
+  --lock:#b6f24a;
+  --radius:2px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans TC",sans-serif;
+  line-height:1.6;min-height:100dvh;
+  position:relative;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.topo{position:fixed;inset:0;width:100%;height:100%;color:#404a40;opacity:.55;pointer-events:none;z-index:0}
+.grain{
+  position:fixed;inset:0;pointer-events:none;z-index:6;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+::selection{background:var(--accent);color:#0e100f}
+button,input,textarea{font-family:inherit}
+
+/* ---------- header ---------- */
+header{
+  position:sticky;top:0;z-index:4;
+  background:rgba(14,16,15,.88);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.hd{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
+.mark{width:34px;height:34px;flex:none;border:1px solid var(--accent);display:grid;place-items:center;color:var(--accent)}
+.mark svg{width:16px;height:16px}
+.titles{flex:1;min-width:0}
+.kicker{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.34em;color:var(--accent);text-transform:uppercase}
+h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
+.count{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
+.count b{color:var(--ink);font-weight:500;font-size:15px}
+.tools{display:flex;gap:6px}
+.icb{
+  font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.08em;
+  background:none;border:1px solid var(--line);color:var(--muted);
+  padding:7px 9px;cursor:pointer;border-radius:var(--radius);transition:.2s;
+}
+.icb:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1120px;margin:0 auto;padding:26px 20px 90px;position:relative;z-index:1}
+.grid{display:grid;gap:30px}
+@media(min-width:960px){
+  .grid{grid-template-columns:minmax(340px,410px) 1fr;gap:34px;align-items:start}
+  .capture{position:sticky;top:86px}
+}
+
+/* ---------- capture panel ---------- */
+.panel{position:relative;background:var(--surface);border:1px solid var(--line);padding:22px 20px 20px}
+.panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--accent);pointer-events:none}
+.panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.p-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px}
+.p-head span{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.22em;color:var(--muted)}
+.status{display:inline-flex;align-items:center;gap:6px;color:var(--muted)!important}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex:none}
+.status.on{color:var(--lock)!important}
+.status.on .dot{background:var(--lock);animation:blink 1.4s infinite}
+.status.err{color:var(--accent)!important}
+.status.err .dot{background:var(--accent)}
+@keyframes blink{50%{opacity:.25}}
+
+.readout{position:relative;overflow:hidden;padding-bottom:2px}
+.readout.locked::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent,rgba(182,242,74,.16),transparent);
+  animation:sweep .7s ease-out forwards;
+}
+@keyframes sweep{from{transform:translateY(-100%)}to{transform:translateY(100%)}}
+.row{display:flex;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.row:last-of-type{border-bottom:0}
+.row .lbl{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--muted);width:34px;flex:none}
+.row .val{
+  font-family:"DM Mono",monospace;font-weight:500;
+  font-size:clamp(26px,7.2vw,33px);letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.15;
+}
+.readout.idle .val{color:#3d443d}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);padding:4px 8px}
+.chip b{color:var(--ink);font-weight:500}
+
+.loc-row{display:flex;gap:8px;margin-top:14px}
+.cta{
+  border:0;cursor:pointer;
+  background:var(--accent);color:#12100e;
+  font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
+  padding:15px 12px;display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:letter-spacing .3s ease,background .2s ease;border-radius:var(--radius);
+}
+.cta:hover{letter-spacing:.16em;background:var(--accent-soft)}
+.cta:active{transform:translateY(1px)}
+.cta svg{width:17px;height:17px;flex:none}
+.cta.outline{background:transparent;color:var(--ink);border:1px solid var(--line);flex:1;font-weight:500;font-size:13px;padding:13px 10px}
+.cta.outline:hover{border-color:var(--accent);color:var(--accent);letter-spacing:.12em;background:transparent}
+.cta.outline.on{border-color:var(--lock);color:var(--lock)}
+.cta.full{width:100%;margin-top:14px;font-size:15px;padding:17px 14px}
+.cta.pending{background:var(--lock);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.72}}
+
+.sec-label{
+  font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.24em;color:var(--muted);
+  margin-top:20px;padding-top:16px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.sec-label em{font-style:normal;color:#4c534c;letter-spacing:.1em}
+
+/* ---------- category picker ---------- */
+.cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.cat{
+  font-size:12.5px;letter-spacing:.03em;background:var(--surface-2);
+  border:1px solid var(--line);color:var(--muted);padding:7px 11px;
+  cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+  border-radius:var(--radius);transition:.18s;
+}
+.cat i{width:9px;height:9px;background:var(--c);flex:none;border-radius:1px}
+.cat:hover{border-color:var(--c);color:var(--ink)}
+.cat.on{border-color:var(--c);color:var(--ink);box-shadow:inset 0 0 0 1px var(--c)}
+.cat .pen{font-family:"DM Mono",monospace;font-size:10px;opacity:.55;margin-left:2px}
+
+/* ---------- photos ---------- */
+.cam{display:flex;gap:8px;margin-top:11px;align-items:flex-start;flex-wrap:wrap}
+.cam-btn{
+  width:74px;height:74px;flex:none;border:1px dashed #3a423a;background:var(--surface-2);
+  color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.1em;transition:.2s;border-radius:var(--radius);
+}
+.cam-btn:hover{border-color:var(--accent);color:var(--accent)}
+.cam-btn svg{width:20px;height:20px}
+.cam-btn.ghost{width:64px;height:74px;font-size:9px}
+.staged{display:flex;flex-wrap:wrap;gap:7px;flex:1;min-width:0}
+.st{position:relative;width:60px;height:60px;flex:none;animation:up .35s ease}
+.st img{width:100%;height:100%;object-fit:cover;border:1px solid var(--line);display:block}
+.st button{
+  position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;
+  background:#000;border:1px solid var(--accent);color:var(--accent);
+  font-size:12px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;
+}
+.staged .none{font-family:"DM Mono",monospace;font-size:10px;color:#4c534c;letter-spacing:.1em;align-self:center}
+
+/* ---------- inputs ---------- */
+.field{margin-top:11px}
+label{display:block;font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.16em;color:var(--muted);margin-bottom:5px}
+input[type=text]{
+  width:100%;background:var(--surface-2);border:1px solid var(--line);
+  color:var(--ink);font-family:"DM Mono",monospace;font-size:14px;
+  padding:11px 10px;border-radius:var(--radius);outline:none;transition:.2s;
+}
+input[type=text]::placeholder{color:#4c534c}
+input[type=text]:focus{border-color:var(--accent);background:#191d19}
+textarea{
+  width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+  font-family:"Noto Sans TC",sans-serif;font-size:14px;padding:11px 10px;
+  border-radius:var(--radius);outline:none;resize:vertical;min-height:56px;transition:.2s;
+}
+textarea:focus{border-color:var(--accent)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.form-acts{display:flex;gap:8px;margin-top:11px}
+.form-acts .cta{margin-top:0;flex:1;font-size:14px;padding:14px}
+.form-acts .fill{
+  flex:none;background:transparent;border:1px solid var(--line);color:var(--muted);
+  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;padding:0 14px;cursor:pointer;transition:.2s;
+}
+.form-acts .fill:hover{border-color:var(--accent);color:var(--accent)}
+.hint{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.55}
+
+/* ---------- meter ---------- */
+.meter{display:flex;align-items:center;gap:9px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.meter span{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted);white-space:nowrap}
+.bar{flex:1;height:4px;background:var(--surface-2);border:1px solid var(--line);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--lock);width:0;transition:width .4s ease}
+.bar i.hot{background:var(--accent)}
+
+/* ---------- log ---------- */
+.log-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:13px}
+.log-head h2{font-family:"Syne",sans-serif;font-size:13px;letter-spacing:.28em;font-weight:700}
+.log-head span{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.16em;color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.fchip{
+  font-size:11.5px;background:transparent;border:1px solid var(--line);color:var(--muted);
+  padding:5px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  border-radius:var(--radius);transition:.18s;font-family:"Noto Sans TC",sans-serif;
+}
+.fchip i{width:8px;height:8px;background:var(--c);border-radius:1px;flex:none}
+.fchip b{font-family:"DM Mono",monospace;font-weight:400;font-size:10px;opacity:.7}
+.fchip:hover{border-color:var(--ink);color:var(--ink)}
+.fchip.on{background:var(--ink);border-color:var(--ink);color:#0e100f}
+.fchip.on b{opacity:.6}
+.empty{border:1px dashed var(--line);padding:38px 22px;text-align:center;color:var(--muted)}
+.empty svg{width:26px;height:26px;color:#3d443d;margin-bottom:12px}
+.empty p{font-size:13px;letter-spacing:.06em}
+.empty small{display:block;font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.14em;margin-top:7px;color:#4c534c}
+
+.point{
+  background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--c,#2a302a);
+  margin-bottom:12px;position:relative;
+  opacity:0;animation:up .5s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s);
+}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.point:hover{border-color:#39413a;border-left-color:var(--c)}
+.p-top{display:flex;gap:13px;align-items:flex-start;padding:15px 15px 0}
+.p-idx{
+  font-family:"Syne",sans-serif;font-weight:800;font-size:26px;line-height:1;
+  color:transparent;-webkit-text-stroke:1px #4b534b;flex:none;letter-spacing:-.03em;
+}
+.p-id{flex:1;min-width:0}
+.p-id h3{font-size:15px;font-weight:700;letter-spacing:.04em;word-break:break-word}
+.tag{
+  display:inline-flex;align-items:center;gap:5px;margin-left:8px;vertical-align:2px;
+  font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+  border:1px solid var(--c);color:var(--c);padding:2px 7px;
+}
+.tag i{width:6px;height:6px;background:var(--c);border-radius:1px}
+.p-meta{font-family:"DM Mono",monospace;font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin-top:4px}
+.p-meta .acc{color:var(--lock)}
+.p-del{background:none;border:0;color:#4c534c;cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;transition:.2s;flex:none}
+.p-del:hover{color:var(--accent)}
+.p-coords{
+  display:block;width:calc(100% - 30px);margin:11px 15px 0;text-align:left;cursor:pointer;
+  background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+  font-family:"DM Mono",monospace;font-size:15.5px;letter-spacing:-.01em;
+  padding:11px 12px;font-variant-numeric:tabular-nums;transition:.2s;border-radius:var(--radius);
+}
+.p-coords:hover{border-color:var(--accent);color:var(--accent)}
+.p-addr{font-size:12.5px;color:var(--muted);padding:9px 15px 0;line-height:1.5;display:flex;gap:7px;align-items:flex-start}
+.p-addr svg{width:12px;height:12px;flex:none;margin-top:4px;color:var(--accent)}
+.p-addr.loading{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em}
+.photos{display:flex;flex-wrap:wrap;gap:7px;padding:12px 15px 0}
+.ph{width:66px;height:66px;object-fit:cover;border:1px solid var(--line);cursor:pointer;transition:.2s;animation:up .3s ease}
+.ph:hover{border-color:var(--accent)}
+.ph-add{
+  width:66px;height:66px;border:1px dashed #3a423a;background:transparent;color:#5c635c;
+  cursor:pointer;font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.08em;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:.2s;border-radius:var(--radius);
+}
+.ph-add:hover{border-color:var(--accent);color:var(--accent)}
+.ph-add svg{width:15px;height:15px}
+.p-acts{display:flex;flex-wrap:wrap;gap:7px;padding:13px 15px 15px;margin-top:12px;border-top:1px dashed var(--line)}
+.btn{
+  font-family:"Noto Sans TC",sans-serif;font-size:12.5px;font-weight:500;letter-spacing:.06em;
+  background:transparent;border:1px solid var(--line);color:var(--muted);
+  padding:8px 13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+  border-radius:var(--radius);transition:.2s;
+}
+.btn:hover{border-color:var(--ink);color:var(--ink)}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:#12100e;font-weight:700}
+.btn.acc:hover{background:var(--accent-soft);border-color:var(--accent-soft);color:#12100e;letter-spacing:.12em}
+.btn svg{width:13px;height:13px}
+
+/* ---------- lightbox ---------- */
+.lb{position:fixed;inset:0;z-index:20;background:rgba(6,7,6,.96);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:56px 14px 76px;animation:fade .22s ease}
+.lb[hidden]{display:none}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.lb img{max-width:100%;max-height:70vh;object-fit:contain;border:1px solid var(--line);background:#000}
+.lb figcaption{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--muted);margin-top:12px;text-align:center}
+.lb-x{position:absolute;top:14px;right:16px;background:none;border:1px solid var(--line);color:var(--ink);
+      width:38px;height:38px;font-size:20px;cursor:pointer;border-radius:var(--radius)}
+.lb-x:hover{border-color:var(--accent);color:var(--accent)}
+.lb-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(20,22,20,.8);
+          border:1px solid var(--line);color:var(--ink);width:42px;height:60px;font-size:22px;cursor:pointer}
+.lb-arrow:hover{border-color:var(--accent);color:var(--accent)}
+#lbPrev{left:10px}#lbNext{right:10px}
+.lb-acts{position:absolute;bottom:18px;display:flex;gap:8px}
+.lb-acts button,.lb-acts a{
+  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;background:transparent;
+  border:1px solid var(--line);color:var(--muted);padding:9px 14px;cursor:pointer;text-decoration:none;border-radius:var(--radius);
+}
+.lb-acts button:hover{border-color:var(--accent);color:var(--accent)}
+.lb-acts a:hover{border-color:var(--ink);color:var(--ink)}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
+  background:#000;border:1px solid var(--accent);color:var(--ink);
+  font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.08em;
+  padding:11px 18px;z-index:30;opacity:0;pointer-events:none;transition:.28s;max-width:88vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+footer{
+  max-width:1120px;margin:0 auto;padding:0 20px 40px;position:relative;z-index:1;
+  font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:#5c635c;line-height:1.9;
+}
+footer b{color:var(--muted);font-weight:400}
+</style>
+</head>
+<body>
+
+<svg class="topo" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <g fill="none" stroke="currentColor" stroke-width="1">
+    <ellipse cx="392" cy="408" rx="34" ry="26"/>
+    <ellipse cx="398" cy="402" rx="72" ry="56" transform="rotate(6 398 402)"/>
+    <ellipse cx="404" cy="396" rx="114" ry="86" transform="rotate(-4 404 396)"/>
+    <ellipse cx="412" cy="388" rx="158" ry="118" transform="rotate(8 412 388)"/>
+    <ellipse cx="420" cy="380" rx="206" ry="152" transform="rotate(-6 420 380)"/>
+    <ellipse cx="430" cy="372" rx="258" ry="190" transform="rotate(4 430 372)"/>
+    <ellipse cx="442" cy="362" rx="314" ry="232" transform="rotate(-8 442 362)"/>
+    <ellipse cx="456" cy="352" rx="374" ry="278" transform="rotate(5 456 352)"/>
+    <ellipse cx="472" cy="340" rx="438" ry="328" transform="rotate(-3 472 340)"/>
+    <ellipse cx="490" cy="328" rx="506" ry="382"/>
+    <path d="M0 140 C160 100 300 190 430 150 S700 90 800 130"/>
+    <path d="M0 660 C180 700 320 610 470 655 S690 720 800 675"/>
+  </g>
+</svg>
+<div class="grain"></div>
+
+<header>
+  <div class="hd">
+    <div class="mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="7"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/>
+      </svg>
+    </div>
+    <div class="titles">
+      <div class="kicker">Coord Logger</div>
+      <h1>座標記錄器</h1>
+    </div>
+    <div class="count"><b id="count">0</b> 筆</div>
+    <div class="tools">
+      <button class="icb" id="btnExport">匯出</button>
+      <button class="icb" id="btnImport">匯入</button>
+      <input type="file" id="fileIn" accept="application/json" hidden>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="grid">
+
+  <!-- ============ 左：定位面板 ============ -->
+  <section class="capture">
+    <div class="panel">
+      <div class="p-head">
+        <span>Live Fix</span>
+        <span class="status" id="status"><i class="dot"></i><span id="statusTxt">待命</span></span>
+      </div>
+
+      <div class="readout idle" id="readout">
+        <div class="row"><span class="lbl">LAT</span><span class="val" id="lat">--.------</span></div>
+        <div class="row"><span class="lbl">LNG</span><span class="val" id="lng">--.------</span></div>
+      </div>
+
+      <div class="chips">
+        <span class="chip">精度 <b id="acc">--</b></span>
+        <span class="chip">海拔 <b id="alt">--</b></span>
+        <span class="chip">方位 <b id="head">--</b></span>
+        <span class="chip">WGS-84</span>
+      </div>
+
+      <div class="loc-row">
+        <button class="cta outline" id="btnLocate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/>
+            <path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>
+          </svg>
+          取得目前位置
+        </button>
+        <button class="cta outline" id="btnWatch" style="flex:.85">持續定位</button>
+      </div>
+
+      <!-- 分類 -->
+      <div class="sec-label">Category · 分類標籤<em id="catNow"></em></div>
+      <div class="cats" id="cats"></div>
+
+      <!-- 現場照片 -->
+      <div class="sec-label">Photos · 現場照片<em id="stagedNow">0 張</em></div>
+      <div class="cam">
+        <button class="cam-btn" id="btnShoot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2l1.3-2h8l1.3 2h2.2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-9z"/>
+            <circle cx="12" cy="13" r="3.4"/>
+          </svg>
+          拍照
+        </button>
+        <button class="cam-btn ghost" id="btnPick">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 16l5-5 4 4 3-3 6 6"/>
+          </svg>
+          相簿
+        </button>
+        <div class="staged" id="staged"><span class="none">尚未拍攝</span></div>
+      </div>
+      <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+      <input type="file" id="pickIn" accept="image/*" multiple hidden>
+
+      <!-- 名稱 / 備註 -->
+      <div class="sec-label">Detail · 名稱與備註</div>
+      <div class="field">
+        <label>地點名稱</label>
+        <input id="mName" type="text" placeholder="例如：三號電塔、倉庫後門">
+      </div>
+      <div class="field">
+        <label>備註</label>
+        <textarea id="mNote" placeholder="要留給自己的提示…"></textarea>
+      </div>
+
+      <button class="cta full" id="btnRecord">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/>
+        </svg>
+        <span id="recLabel">記錄目前位置</span>
+      </button>
+
+      <!-- 手動輸入 -->
+      <div class="sec-label">Manual · 手動輸入座標</div>
+      <div class="fields">
+        <div class="field" style="margin-top:0">
+          <label>緯度 LAT</label>
+          <input id="mLat" type="text" inputmode="decimal" placeholder="25.033000">
+        </div>
+        <div class="field" style="margin-top:0">
+          <label>經度 LNG</label>
+          <input id="mLng" type="text" inputmode="decimal" placeholder="121.565400">
+        </div>
+      </div>
+      <div class="form-acts">
+        <button class="fill" id="btnFill">帶入目前</button>
+        <button class="cta" id="btnSave">儲存這筆</button>
+      </div>
+      <p class="hint">十進位格式（例：25.033, 121.565），可直接從 Google 地圖座標欄複製貼上。拍照會自動壓縮後存進本機。</p>
+
+      <div class="meter">
+        <span>本機空間</span>
+        <div class="bar"><i id="meterFill"></i></div>
+        <span id="meterTxt">0.00 / 5 MB</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 右：紀錄清單 ============ -->
+  <section>
+    <div class="log-head">
+      <h2>FIELD LOG</h2>
+      <span id="logMeta">NO ENTRIES</span>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div id="list"></div>
+  </section>
+
+</div>
+</div>
+
+<footer>
+  <b>資料只存在這台裝置的瀏覽器（localStorage）</b>，不會上傳伺服器。照片經壓縮後隨紀錄一併保存，本機空間約 5 MB，額滿時請「匯出」備份後再刪除。<br>
+  取得 GPS 與相機需 <b>HTTPS 或 localhost</b>；清除瀏覽器資料會一併刪除，重要地點請記得備份。
+</footer>
+
+<!-- 照片檢視器 -->
+<div class="lb" id="lb" hidden>
+  <button class="lb-x" id="lbClose" aria-label="關閉">×</button>
+  <button class="lb-arrow" id="lbPrev" aria-label="上一張">‹</button>
+  <figure>
+    <img id="lbImg" alt="現場照片">
+    <figcaption id="lbCap"></figcaption>
+  </figure>
+  <button class="lb-arrow" id="lbNext" aria-label="下一張">›</button>
+  <div class="lb-acts">
+    <button id="lbDel">刪除這張</button>
+    <a id="lbOpen" target="_blank" rel="noopener">開啟原圖</a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= 分類定義 ================= */
+const CATS=[
+  {id:"general",name:"一般",    color:"#8b918a"},
+  {id:"power",  name:"電力設施",color:"#ffb020"},
+  {id:"store",  name:"倉儲點",  color:"#4da3ff"},
+  {id:"work",   name:"施工中",  color:"#ff5f1f"},
+  {id:"nature", name:"環境採集",color:"#7ed957"},
+  {id:"risk",   name:"注意風險",color:"#ff4d6d"},
+  {id:"custom", name:"自訂",    color:"#c77dff"}
+];
+const KEY="coordlog.v2";
+const LEGACY="coordlog.v1";
+const MAXEDGE=900, QUALITY=.7, QUOTA=5; // MB
+
+let points=[], custom="自訂";
+let filter="all", selectedCat="general";
+let staged=[];               // 待存照片（dataURL）
+let current=null;            // 目前定位
+let watchId=null, pendingSave=false;
+let photoTarget=null;        // null=暫存, 否則=點位id
+let lbState={id:null,i:0};
+
+const $=id=>document.getElementById(id);
+const list=$("list");
+
+/* ================= 工具 ================= */
+function toast(msg){
+  const t=$("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2400);
+}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function fmt(n,d){return Number(n).toFixed(d==null?6:d);}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function catOf(id){
+  const c=CATS.find(x=>x.id===id)||CATS[0];
+  return c.id==="custom"?{id:c.id,name:custom,color:c.color}:c;
+}
+function when(ts){return new Date(ts).toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});}
+
+function persist(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify({v:2,points:points,custom:custom}));
+    meter();return true;
+  }catch(e){
+    toast("本機空間已滿：請刪除部分照片，或先匯出備份");
+    meter();return false;
+  }
+}
+function meter(){
+  const len=(localStorage.getItem(KEY)||"").length;
+  const mb=len/1024/1024;
+  $("meterTxt").textContent=mb.toFixed(2)+" / "+QUOTA+" MB";
+  const f=$("meterFill");
+  f.style.width=Math.min(100,mb/QUOTA*100).toFixed(1)+"%";
+  f.classList.toggle("hot",mb/QUOTA>.8);
+}
+function load(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(raw&&Array.isArray(raw.points)){points=raw.points;custom=raw.custom||"自訂";return;}
+    const old=JSON.parse(localStorage.getItem(LEGACY)||"null"); // 舊版遷移
+    if(Array.isArray(old))points=old;
+  }catch(e){}
+}
+
+function copy(text,msg){
+  const done=()=>toast(msg||"已複製座標");
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done).catch(fb);}else fb();
+  function fb(){
+    const ta=document.createElement("textarea");ta.value=text;
+    ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);
+    ta.select();try{document.execCommand("copy");done()}catch(e){toast("複製失敗")}ta.remove();
+  }
+}
+
+/* ================= 定位 ================= */
+function setStatus(cls,txt){
+  const s=$("status");s.className="status"+(cls?" "+cls:"");
+  $("statusTxt").textContent=txt;
+}
+function onPos(pos){
+  const c=pos.coords;
+  current={lat:c.latitude,lng:c.longitude,acc:c.accuracy,alt:c.altitude,head:c.heading,ts:Date.now()};
+  $("lat").textContent=fmt(c.latitude);
+  $("lng").textContent=fmt(c.longitude);
+  $("acc").textContent=c.accuracy?Math.round(c.accuracy)+" m":"--";
+  $("alt").textContent=(c.altitude!=null)?Math.round(c.altitude)+" m":"--";
+  $("head").textContent=(c.heading!=null&&!isNaN(c.heading))?Math.round(c.heading)+"°":"--";
+  $("readout").classList.remove("idle");
+  const r=$("readout");r.classList.remove("locked");void r.offsetWidth;r.classList.add("locked");
+  setStatus("on","已鎖定 "+new Date().toLocaleTimeString("zh-TW",{hour12:false}));
+  if(pendingSave){pendingSave=false;setRecLabel();commitRecord();}
+}
+function onErr(err){
+  const m={1:"定位被拒絕（請允許權限）",2:"無法取得位置訊號",3:"定位逾時（再試一次）"}[err.code]||"定位失敗";
+  setStatus("err",m);toast(m);
+  if(pendingSave){pendingSave=false;setRecLabel();}
+}
+function locate(){
+  if(!navigator.geolocation){setStatus("err","此瀏覽器不支援定位");return}
+  setStatus("","定位中…");
+  navigator.geolocation.getCurrentPosition(onPos,onErr,{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+$("btnLocate").addEventListener("click",locate);
+$("btnWatch").addEventListener("click",function(){
+  if(!navigator.geolocation){toast("此瀏覽器不支援定位");return}
+  if(watchId!=null){
+    navigator.geolocation.clearWatch(watchId);watchId=null;
+    this.textContent="持續定位";this.classList.remove("on");setStatus("","待命");toast("已停止持續定位");
+  }else{
+    watchId=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,timeout:20000,maximumAge:1000});
+    this.textContent="停止定位";this.classList.add("on");setStatus("","定位中…");toast("持續定位已開啟");
+  }
+});
+
+/* ================= 分類選單 ================= */
+function renderCats(){
+  $("cats").innerHTML=CATS.map(c=>{
+    const nm=c.id==="custom"?custom:c.name;
+    const pen=c.id==="custom"?'<span class="pen" data-rename="1" title="重新命名">✎</span>':"";
+    return '<button class="cat'+(selectedCat===c.id?" on":"")+'" data-cat="'+c.id+'" style="--c:'+c.color+'">'+
+           '<i></i>'+esc(nm)+pen+'</button>';
+  }).join("");
+  $("catNow").textContent="▸ "+catOf(selectedCat).name;
+}
+$("cats").addEventListener("click",function(e){
+  const pen=e.target.closest("[data-rename]");
+  const btn=e.target.closest("[data-cat]");if(!btn)return;
+  if(pen){
+    e.stopPropagation();
+    const v=prompt("自訂分類名稱：",custom);
+    if(v&&v.trim()){custom=v.trim().slice(0,10);persist();renderCats();render();}
+    return;
+  }
+  selectedCat=btn.dataset.cat;renderCats();
+});
+
+/* ================= 照片 ================= */
+async function fileToDataURL(file){
+  let src,w,h;
+  try{
+    const bmp=await createImageBitmap(file,{imageOrientation:"from-image"});
+    src=bmp;w=bmp.width;h=bmp.height;
+  }catch(e){
+    src=await new Promise((res,rej)=>{
+      const im=new Image(),u=URL.createObjectURL(file);
+      im.onload=()=>{URL.revokeObjectURL(u);res(im)};
+      im.onerror=()=>{URL.revokeObjectURL(u);rej()};
+      im.src=u;
+    });
+    w=src.naturalWidth;h=src.naturalHeight;
+  }
+  if(Math.max(w,h)>MAXEDGE){
+    const s=MAXEDGE/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);
+  }
+  const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+  cv.getContext("2d").drawImage(src,0,0,w,h);
+  if(src.close)src.close();
+  return cv.toDataURL("image/jpeg",QUALITY);
+}
+async function handleFiles(files){
+  if(!files||!files.length)return;
+  const add=[];
+  for(const f of files){
+    if(!f.type.startsWith("image/"))continue;
+    try{add.push(await fileToDataURL(f))}catch(e){toast("照片處理失敗")}
+  }
+  if(!add.length)return;
+
+  if(photoTarget){
+    const p=points.find(x=>x.id===photoTarget);
+    if(p){
+      const old=p.photos?p.photos.slice():[];
+      p.photos=old.concat(add);
+      if(!persist()){p.photos=old;render();return}
+      render();toast("已加入 "+add.length+" 張照片");
+    }
+  }else{
+    staged=staged.concat(add);renderStaged();
+  }
+}
+function renderStaged(){
+  $("stagedNow").textContent=staged.length+" 張";
+  $("staged").innerHTML=staged.length
+    ? staged.map((src,i)=>'<span class="st"><img src="'+src+'" alt="待存照片'+(i+1)+'"><button data-st="'+i+'" aria-label="移除">×</button></span>').join("")
+    : '<span class="none">尚未拍攝</span>';
+}
+$("staged").addEventListener("click",e=>{
+  const b=e.target.closest("[data-st]");if(!b)return;
+  staged.splice(+b.dataset.st,1);renderStaged();
+});
+$("btnShoot").addEventListener("click",()=>{photoTarget=null;$("camIn").click()});
+$("btnPick").addEventListener("click",()=>{photoTarget=null;$("pickIn").click()});
+$("camIn").addEventListener("change",function(){handleFiles(this.files);this.value=""});
+$("pickIn").addEventListener("change",function(){handleFiles(this.files);this.value=""});
+
+/* ================= 新增紀錄 ================= */
+function clearComposer(){
+  $("mName").value="";$("mNote").value="";
+  staged=[];renderStaged();
+}
+function addPoint(d){
+  const p=Object.assign({id:uid(),cat:selectedCat,photos:[],addr:"",note:"",acc:null,ts:Date.now()},d);
+  if(!p.name)p.name="未命名地點 "+(points.length+1);
+  points.unshift(p);
+  if(!persist()){points.shift();render();return false}
+  clearComposer();render();toast("已記錄："+p.name);
+  return true;
+}
+function commitRecord(){
+  addPoint({
+    lat:current.lat,lng:current.lng,acc:current.acc,
+    name:$("mName").value.trim(),note:$("mNote").value.trim(),
+    cat:selectedCat,photos:staged.slice()
+  });
+}
+function setRecLabel(){
+  const b=$("btnRecord");
+  $("recLabel").textContent=pendingSave?"定位中…完成即記錄":"記錄目前位置";
+  b.classList.toggle("pending",pendingSave);
+}
+$("btnRecord").addEventListener("click",function(){
+  if(!current){
+    pendingSave=true;setRecLabel();locate();toast("定位中，鎖定後自動記錄…");return;
+  }
+  commitRecord();
+});
+$("btnSave").addEventListener("click",function(){
+  const lat=parseFloat($("mLat").value),lng=parseFloat($("mLng").value);
+  if(!isFinite(lat)||lat<-90||lat>90){toast("緯度需介於 -90 ～ 90");$("mLat").focus();return}
+  if(!isFinite(lng)||lng<-180||lng>180){toast("經度需介於 -180 ～ 180");$("mLng").focus();return}
+  addPoint({lat:lat,lng:lng,name:$("mName").value.trim(),note:$("mNote").value.trim(),
+            cat:selectedCat,photos:staged.slice(),
+            acc:current&&Math.abs(current.lat-lat)<1e-6&&Math.abs(current.lng-lng)<1e-6?current.acc:null});
+});
+$("btnFill").addEventListener("click",function(){
+  if(!current){toast("先按「取得目前位置」");return}
+  $("mLat").value=fmt(current.lat);$("mLng").value=fmt(current.lng);toast("已帶入目前座標");
+});
+
+/* ================= 反查地址 ================= */
+async function fetchAddr(p){
+  p._loading=true;render();
+  try{
+    const url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+p.lat+"&lon="+p.lng+"&zoom=18&accept-language=zh-TW";
+    const r=await fetch(url,{headers:{Accept:"application/json"}});
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    p.addr=(d.display_name||"").trim();persist();render();
+    toast(p.addr?"已取得地址":"查無地址");
+  }catch(e){p._loading=false;render();toast("地址查詢失敗（網路或配額限制）")}
+}
+
+/* ================= 篩選與渲染 ================= */
+function counts(){
+  const m={all:points.length};
+  points.forEach(p=>{m[p.cat]=(m[p.cat]||0)+1});
+  return m;
+}
+function renderFilters(){
+  const m=counts();
+  let h='<button class="fchip'+(filter==="all"?" on":"")+'" data-f="all">全部 <b>'+m.all+'</b></button>';
+  h+=CATS.map(c=>{
+    const n=m[c.id]||0;
+    if(!n&&filter!==c.id)return "";
+    const nm=c.id==="custom"?custom:c.name;
+    return '<button class="fchip'+(filter===c.id?" on":"")+'" data-f="'+c.id+'" style="--c:'+c.color+'">'+
+           '<i></i>'+esc(nm)+' <b>'+n+'</b></button>';
+  }).join("");
+  $("filters").innerHTML=h;
+}
+$("filters").addEventListener("click",e=>{
+  const b=e.target.closest("[data-f]");if(!b)return;
+  filter=b.dataset.f;render();
+});
+
+function render(){
+  $("count").textContent=points.length;
+  $("logMeta").textContent=points.length?(points.length+" ENTRIES"):"NO ENTRIES";
+  renderCats();renderFilters();meter();
+
+  const shown=points.filter(p=>filter==="all"||p.cat===filter);
+  if(!shown.length){
+    list.innerHTML='<div class="empty">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>'+
+      '<p>'+(points.length?"此分類尚無紀錄":"尚無紀錄，先定位或手動輸入一筆座標")+'</p>'+
+      '<small>TAP “取得目前位置” TO START</small></div>';
+    return;
+  }
+  list.innerHTML=shown.map((p,i)=>{
+    const c=catOf(p.cat);
+    const lat=fmt(p.lat),lng=fmt(p.lng);
+    const gDir="https://www.google.com/maps/dir/?api=1&destination="+lat+","+lng+"&travelmode=driving";
+    const gView="https://www.google.com/maps/search/?api=1&query="+lat+","+lng;
+    const nPhotos=(p.photos||[]).length;
+    const addr=p._loading
+      ? '<p class="p-addr loading">查詢地址中…</p>'
+      : (p.addr?'<p class="p-addr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg><span>'+esc(p.addr)+'</span></p>':"");
+    const photos='<div class="photos">'+
+      (nPhotos
+        ? p.photos.map((src,k)=>'<img class="ph" data-act="view" data-i="'+k+'" src="'+src+'" alt="'+esc(p.name)+' 現場照 '+(k+1)+'">').join("")
+        : "")+
+      '<button class="ph-add" data-act="addph">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>'+
+        (nPhotos?"加照片":"＋ 照片")+'</button></div>';
+
+    return '<article class="point" style="--c:'+c.color+';--d:'+(Math.min(i,8)*0.045).toFixed(2)+'s" data-id="'+p.id+'">'+
+      '<div class="p-top">'+
+        '<div class="p-idx">'+String(points.indexOf(p)+1).padStart(2,"0")+'</div>'+
+        '<div class="p-id"><h3>'+esc(p.name)+
+          '<span class="tag" style="--c:'+c.color+'"><i></i>'+esc(c.name)+'</span></h3>'+
+          '<div class="p-meta">'+when(p.ts)+
+          (p.acc?' · <span class="acc">±'+Math.round(p.acc)+'m</span>':"")+
+          (nPhotos?' · 📷 '+nPhotos:"")+
+          (p.note?' · '+esc(p.note):"")+'</div></div>'+
+        '<button class="p-del" data-act="del" title="刪除" aria-label="刪除">×</button>'+
+      '</div>'+
+      '<button class="p-coords" data-act="copy">'+lat+', '+lng+'</button>'+
+      addr+photos+
+      '<div class="p-acts">'+
+        '<a class="btn acc" href="'+gDir+'" target="_blank" rel="noopener">'+
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a>'+
+        '<a class="btn" href="'+gView+'" target="_blank" rel="noopener">Google 地圖</a>'+
+        '<button class="btn" data-act="copy">複製</button>'+
+        '<button class="btn" data-act="addr">補地址</button>'+
+        '<button class="btn" data-act="share">分享</button>'+
+      '</div></article>';
+  }).join("");
+}
+
+list.addEventListener("click",function(e){
+  const el=e.target.closest("[data-act]");if(!el)return;
+  const card=el.closest(".point");const id=card.dataset.id;
+  const idx=points.findIndex(p=>p.id===id);if(idx<0)return;
+  const p=points[idx],act=el.dataset.act;
+  const text=fmt(p.lat)+", "+fmt(p.lng);
+
+  if(act==="copy"){copy(text,"已複製："+text);return}
+  if(act==="del"){
+    const np=(p.photos||[]).length;
+    if(confirm("刪除「"+p.name+"」"+(np?("（含 "+np+" 張照片）"):"")+"？")){
+      points.splice(idx,1);persist();render();toast("已刪除");
+    }
+    return;
+  }
+  if(act==="addr"){fetchAddr(p);return}
+  if(act==="addph"){photoTarget=p.id;$("camIn").click();return}
+  if(act==="view"){openLb(p.id,+el.dataset.i);return}
+  if(act==="share"){
+    const url="https://www.google.com/maps/search/?api=1&query="+text;
+    const payload={title:p.name,text:p.name+"\n"+catOf(p.cat).name+"\n"+text+(p.addr?"\n"+p.addr:""),url:url};
+    if(navigator.share){navigator.share(payload).catch(()=>{})}
+    else copy(p.name+"\n"+text+"\n"+url,"已複製分享內容");
+    return;
+  }
+});
+
+/* ================= 照片檢視器 ================= */
+function openLb(pid,i){
+  const p=points.find(x=>x.id===pid);if(!p||!(p.photos||[]).length)return;
+  lbState={id:pid,i:Math.max(0,Math.min(i,p.photos.length-1))};
+  $("lb").hidden=false;paintLb();
+  document.body.style.overflow="hidden";
+}
+function paintLb(){
+  const p=points.find(x=>x.id===lbState.id);
+  if(!p||!(p.photos||[]).length){closeLb();return}
+  lbState.i=(lbState.i+p.photos.length)%p.photos.length;
+  $("lbImg").src=p.photos[lbState.i];
+  $("lbCap").textContent=p.name+" · "+(lbState.i+1)+" / "+p.photos.length;
+  $("lbOpen").href=p.photos[lbState.i];
+  const multi=p.photos.length>1;
+  $("lbPrev").style.display=multi?"":"none";
+  $("lbNext").style.display=multi?"":"none";
+}
+function closeLb(){$("lb").hidden=true;document.body.style.overflow=""}
+$("lbClose").addEventListener("click",closeLb);
+$("lbPrev").addEventListener("click",()=>{lbState.i--;paintLb()});
+$("lbNext").addEventListener("click",()=>{lbState.i++;paintLb()});
+$("lb").addEventListener("click",e=>{if(e.target===$("lb"))closeLb()});
+$("lbDel").addEventListener("click",function(){
+  const p=points.find(x=>x.id===lbState.id);if(!p)return;
+  if(!confirm("刪除這張照片？"))return;
+  p.photos.splice(lbState.i,1);
+  if(!persist()){toast("刪除失敗");return}
+  if(!p.photos.length){closeLb()}else{paintLb()}
+  render();toast("照片已刪除");
+});
+document.addEventListener("keydown",e=>{
+  if($("lb").hidden)return;
+  if(e.key==="Escape")closeLb();
+  if(e.key==="ArrowLeft"){lbState.i--;paintLb()}
+  if(e.key==="ArrowRight"){lbState.i++;paintLb()}
+});
+
+/* ================= 匯出 / 匯入 ================= */
+$("btnExport").addEventListener("click",function(){
+  if(!points.length){toast("沒有可匯出的紀錄");return}
+  const data=points.map(p=>({
+    name:p.name,cat:p.cat,lat:p.lat,lng:p.lng,note:p.note||"",addr:p.addr||"",
+    time:new Date(p.ts).toISOString(),photos:p.photos||[]
+  }));
+  const blob=new Blob([JSON.stringify({custom:custom,points:data},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="座標紀錄-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+  toast("已匯出 "+points.length+" 筆"+(data.some(d=>d.photos.length)?"（含照片）":""));
+});
+$("btnImport").addEventListener("click",()=>$("fileIn").click());
+$("fileIn").addEventListener("change",function(){
+  const f=this.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=function(){
+    try{
+      const raw=JSON.parse(rd.result);
+      const arr=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.points)?raw.points:null);
+      if(!arr)throw 0;
+      if(raw.custom)custom=String(raw.custom).slice(0,10);
+      let n=0;
+      arr.forEach(o=>{
+        const lat=parseFloat(o.lat!=null?o.lat:o.LAT),lng=parseFloat(o.lng!=null?o.lng:o.LNG);
+        if(!isFinite(lat)||!isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return;
+        points.unshift({
+          id:uid(),
+          cat:CATS.some(c=>c.id===o.cat)?o.cat:"general",
+          name:o.name||"匯入地點",note:o.note||"",addr:o.addr||"",
+          lat:lat,lng:lng,acc:null,
+          photos:Array.isArray(o.photos)?o.photos.filter(s=>typeof s==="string"&&s.startsWith("data:image")):[],
+          ts:o.time?Date.parse(o.time)||Date.now():Date.now()
+        });
+        n++;
+      });
+      if(!persist()){toast("匯入失敗：空間不足");render();return}
+      render();toast(n?("已匯入 "+n+" 筆"):"檔案格式不符");
+    }catch(e){toast("檔案格式不符")}
+  };
+  rd.readAsText(f);this.value="";
+});
+
+/* ================= init ================= */
+load();renderCats();renderStaged();render();meter();
+if(navigator.geolocation)setTimeout(locate,400);
+})();
+</script>
+</body>
+</html>
