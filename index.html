@@ -50,7 +50,7 @@ try{var t=localStorage.getItem("coordlog.theme");if(t)document.documentElement.d
   --accent:#ff5f1f;--accent-soft:#ff834f;--lock:#b6f24a;
   --on-accent:#12100e;--on-lock:#10130a;--on-ink:#0e100f;
   --ghost:#3d443d;--placeholder:#4c534c;--stroke:#4b534b;--topo:#404a40;
-  --header-bg:rgba(14,16,15,.88);--meter-track:#1a1e1a;--glow:rgba(182,242,74,.16);
+  --header-bg:rgba(14,16,15,.9);--meter-track:#1a1e1a;--glow:rgba(182,242,74,.16);
   --scheme:dark;
 }
 :root[data-theme="light"]{
@@ -60,10 +60,11 @@ try{var t=localStorage.getItem("coordlog.theme");if(t)document.documentElement.d
   --accent:#d94a00;--accent-soft:#ef5a10;--lock:#3f7d00;
   --on-accent:#ffffff;--on-lock:#ffffff;--on-ink:#f4f1ea;
   --ghost:#a5a094;--placeholder:#9a958a;--stroke:#b5b0a3;--topo:#d7d2c4;
-  --header-bg:rgba(244,241,234,.92);--meter-track:#efece3;--glow:rgba(63,125,0,.14);
+  --header-bg:rgba(244,241,234,.93);--meter-track:#efece3;--glow:rgba(63,125,0,.14);
   --scheme:light;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%;color-scheme:var(--scheme)}
 body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",sans-serif;line-height:1.6;
   min-height:100dvh;position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased;
@@ -74,85 +75,185 @@ body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",sans-serif
 ::selection{background:var(--accent);color:var(--on-accent)}
 button,input,textarea{font-family:inherit}
 
+/* ================= Header + GPS 常駐條 ================= */
 header{position:sticky;top:0;z-index:4;background:var(--header-bg);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);transition:background .3s}
-.hd{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
-.mark{width:34px;height:34px;flex:none;border:1px solid var(--accent);display:grid;place-items:center;color:var(--accent)}
-.mark svg{width:16px;height:16px}
+.hd{max-width:760px;margin:0 auto;padding:11px 16px;display:flex;align-items:center;gap:11px}
+.mark{width:30px;height:30px;flex:none;border:1px solid var(--accent);display:grid;place-items:center;color:var(--accent)}
+.mark svg{width:15px;height:15px}
 .titles{flex:1;min-width:0}
-.kicker{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.34em;color:var(--accent);text-transform:uppercase}
-h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
-.count{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.1em;white-space:nowrap}
-.count b{color:var(--ink);font-weight:500;font-size:15px}
-.tools{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.icb{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.08em;background:none;
-  border:1px solid var(--line);color:var(--muted);padding:7px 9px;cursor:pointer;border-radius:2px;transition:.2s;white-space:nowrap}
+.kicker{font-family:"DM Mono",monospace;font-size:8.5px;letter-spacing:.3em;color:var(--accent);text-transform:uppercase}
+h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
+.count{font-family:"DM Mono",monospace;font-size:10px;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
+.count b{color:var(--ink);font-weight:500;font-size:14px}
+.tools{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.icb{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.06em;background:none;
+  border:1px solid var(--line);color:var(--muted);padding:6px 8px;cursor:pointer;border-radius:2px;transition:.2s;white-space:nowrap}
 .icb:hover{border-color:var(--accent);color:var(--accent)}
 .icb.theme{color:var(--ink);border-color:var(--line-strong)}
 .icb.install{border-color:var(--lock);color:var(--lock)}
-.icb.install:hover{background:var(--lock);color:var(--on-lock);border-color:var(--lock)}
+.icb.install:hover{background:var(--lock);color:var(--on-lock)}
 
-.wrap{max-width:1120px;margin:0 auto;padding:26px 20px 90px;position:relative;z-index:1}
-.grid{display:grid;gap:30px}
-@media(min-width:960px){
-  .grid{grid-template-columns:minmax(340px,410px) 1fr;gap:34px;align-items:start}
-  .capture{position:sticky;top:86px}
-}
-
-.panel{position:relative;background:var(--surface);border:1px solid var(--line);padding:22px 20px 20px;transition:background .3s}
-.panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--accent);pointer-events:none}
-.panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
-.panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
-.p-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px}
-.p-head span{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.22em;color:var(--muted)}
-.status{display:inline-flex;align-items:center;gap:6px;color:var(--muted)!important}
+.gps{border-top:1px dashed var(--line)}
+.gps-main{max-width:760px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.gps-main:active{background:var(--surface-2)}
+.status{display:inline-flex;align-items:center;gap:5px;font-family:"DM Mono",monospace;font-size:9.5px;
+  letter-spacing:.1em;color:var(--muted);flex:none;white-space:nowrap}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex:none}
-.status.on{color:var(--lock)!important}
+.status.on{color:var(--lock)}
 .status.on .dot{background:var(--lock);animation:blink 1.4s infinite}
-.status.err{color:var(--accent)!important}
+.status.err{color:var(--accent)}
 .status.err .dot{background:var(--accent)}
 @keyframes blink{50%{opacity:.25}}
-
-.readout{position:relative;overflow:hidden;padding-bottom:2px}
-.readout.locked::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,transparent,var(--glow),transparent);animation:sweep .7s ease-out forwards}
-@keyframes sweep{from{transform:translateY(-100%)}to{transform:translateY(100%)}}
-.row{display:flex;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line)}
-.row:last-of-type{border-bottom:0}
-.row .lbl{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--muted);width:34px;flex:none}
-.row .val{font-family:"DM Mono",monospace;font-weight:500;font-size:clamp(26px,7.2vw,33px);
-  letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
-.readout.idle .val{color:var(--ghost)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.chip{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);padding:4px 8px}
+.readout{position:relative;flex:none}
+.readout.locked::after{content:"";position:absolute;inset:-3px -6px;
+  background:linear-gradient(90deg,transparent,var(--glow),transparent);animation:sweep .7s ease-out forwards}
+@keyframes sweep{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.gps-coords{font-family:"DM Mono",monospace;font-weight:500;font-size:13px;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.gps-coords.idle{color:var(--ghost)}
+.live-addr{flex:1;min-width:0;font-size:11.5px;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.live-addr.on{color:var(--ink)}
+.live-addr.err{color:var(--accent)}
+.caret{font-family:"DM Mono",monospace;font-size:10px;color:var(--placeholder);flex:none}
+.gps-detail{max-width:760px;margin:0 auto;padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);padding:3px 7px}
 .chip b{color:var(--ink);font-weight:500}
+.ghost-btn{background:transparent;border:1px solid var(--line);color:var(--muted);
+  font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;padding:5px 10px;cursor:pointer;border-radius:2px;transition:.2s}
+.ghost-btn:hover{border-color:var(--accent);color:var(--accent)}
+.ghost-btn.on{border-color:var(--lock);color:var(--lock)}
 
-.live-addr{margin-top:11px;font-size:12.5px;line-height:1.55;color:var(--muted);
-  border-left:2px solid var(--line-strong);padding:2px 0 2px 10px;min-height:22px;word-break:break-word}
-.live-addr.on{color:var(--ink);border-left-color:var(--accent)}
-.live-addr.err{color:var(--accent);border-left-color:var(--accent)}
+/* ================= 主列表 ================= */
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 120px;position:relative;z-index:1}
+.log-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:12px}
+.log-head h2{font-family:"Syne",sans-serif;font-size:12.5px;letter-spacing:.26em;font-weight:700}
+.log-head span{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.fchip{font-size:11.5px;background:transparent;border:1px solid var(--line);color:var(--muted);
+  padding:5px 9px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border-radius:2px;
+  transition:.18s;font-family:"Noto Sans TC",sans-serif}
+.fchip i{width:8px;height:8px;background:var(--c);border-radius:1px;flex:none}
+.fchip b{font-family:"DM Mono",monospace;font-weight:400;font-size:10px;opacity:.7}
+.fchip:hover{border-color:var(--ink);color:var(--ink)}
+.fchip.on{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.fchip.on b{opacity:.6}
+.empty{border:1px dashed var(--line);padding:44px 22px;text-align:center;color:var(--muted)}
+.empty svg{width:26px;height:26px;color:var(--ghost);margin-bottom:12px}
+.empty p{font-size:13px;letter-spacing:.06em}
+.empty small{display:block;font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.14em;margin-top:7px;color:var(--placeholder)}
 
-.loc-row{display:flex;gap:8px;margin-top:14px}
-.cta{border:0;cursor:pointer;background:var(--accent);color:var(--on-accent);
-  font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
-  padding:15px 12px;display:flex;align-items:center;justify-content:center;gap:9px;
-  transition:letter-spacing .3s ease,background .2s ease;border-radius:2px}
-.cta:hover{letter-spacing:.16em;background:var(--accent-soft)}
-.cta:active{transform:translateY(1px)}
-.cta svg{width:17px;height:17px;flex:none}
-.cta.outline{background:transparent;color:var(--ink);border:1px solid var(--line);flex:1;font-weight:500;font-size:13px;padding:13px 10px}
-.cta.outline:hover{border-color:var(--accent);color:var(--accent);letter-spacing:.12em;background:transparent}
-.cta.outline.on{border-color:var(--lock);color:var(--lock)}
-.cta.full{width:100%;margin-top:14px;font-size:15px;padding:17px 14px}
-.cta.pending{background:var(--lock);color:var(--on-lock);animation:pulse 1.2s infinite}
-@keyframes pulse{50%{opacity:.72}}
+.point{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--cl,var(--c));
+  margin-bottom:11px;position:relative;transition:background .3s;
+  opacity:0;animation:up .5s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.point:hover{border-color:var(--line-hover);border-left-color:var(--cl,var(--c))}
+.point.editing{border-color:var(--accent);border-left-color:var(--accent)!important;animation:none;opacity:1}
+.p-top{display:flex;gap:11px;align-items:flex-start;padding:13px 13px 0}
+.p-idx{font-family:"Syne",sans-serif;font-weight:800;font-size:23px;line-height:1;
+  color:transparent;-webkit-text-stroke:1px var(--stroke);flex:none;letter-spacing:-.03em}
+.p-id{flex:1;min-width:0}
+.p-id h3{font-size:14.5px;font-weight:700;letter-spacing:.04em;word-break:break-word}
+.tag{display:inline-flex;align-items:center;gap:5px;margin-left:7px;vertical-align:2px;
+  font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.08em;
+  border:1px solid var(--cl,var(--c));color:var(--cl,var(--c));padding:2px 6px}
+.tag i{width:6px;height:6px;background:var(--c);border-radius:1px}
+.p-meta{font-family:"DM Mono",monospace;font-size:10px;color:var(--muted);letter-spacing:.04em;margin-top:3px}
+.p-meta .acc{color:var(--lock)}
+.p-del,.p-edit{background:none;border:0;color:var(--placeholder);cursor:pointer;font-size:16px;line-height:1;
+  padding:2px 4px;transition:.2s;flex:none;font-family:"DM Mono",monospace}
+.p-del:hover{color:var(--accent)}
+.p-edit:hover{color:var(--lock)}
+.p-coords{display:block;width:calc(100% - 26px);margin:10px 13px 0;text-align:left;cursor:pointer;
+  background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+  font-family:"DM Mono",monospace;font-size:14.5px;letter-spacing:-.01em;padding:10px 11px;
+  font-variant-numeric:tabular-nums;transition:.2s;border-radius:2px}
+.p-coords:hover{border-color:var(--accent);color:var(--accent)}
+.p-addr{font-size:12px;color:var(--muted);padding:8px 13px 0;line-height:1.5;
+  display:flex;gap:6px;align-items:flex-start}
+.p-addr svg{width:11px;height:11px;flex:none;margin-top:4px;color:var(--accent)}
+.p-addr span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.p-addr.loading{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.08em}
+.photos{display:flex;flex-wrap:wrap;gap:6px;padding:10px 13px 0}
+.ph{width:58px;height:58px;object-fit:cover;border:1px solid var(--line);cursor:pointer;transition:.2s}
+.ph:hover{border-color:var(--accent)}
+.ph-add{width:58px;height:58px;border:1px dashed var(--line-strong);background:transparent;color:var(--muted);
+  cursor:pointer;font-family:"DM Mono",monospace;font-size:8.5px;letter-spacing:.06em;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:.2s;border-radius:2px}
+.ph-add:hover{border-color:var(--accent);color:var(--accent)}
+.ph-add svg{width:14px;height:14px}
+.p-acts{display:flex;flex-wrap:wrap;gap:6px;padding:11px 13px 13px;margin-top:11px;border-top:1px dashed var(--line)}
+.p-more{display:flex;flex-wrap:wrap;gap:6px;padding:0 13px 13px;margin-top:-4px}
+.btn{font-family:"Noto Sans TC",sans-serif;font-size:12px;font-weight:500;letter-spacing:.05em;
+  background:transparent;border:1px solid var(--line);color:var(--muted);padding:7px 12px;cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;gap:5px;border-radius:2px;transition:.2s}
+.btn:hover{border-color:var(--ink);color:var(--ink)}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.btn.acc:hover{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--on-accent);letter-spacing:.1em}
+.btn.edit{border-color:var(--line-strong);color:var(--lock)}
+.btn.edit:hover{border-color:var(--lock);color:var(--lock)}
+.btn.king{background:var(--ink);border-color:var(--ink);color:var(--on-ink);font-weight:700}
+.btn.king:hover{background:var(--accent);border-color:var(--accent);color:var(--on-accent);letter-spacing:.1em}
+.btn svg{width:12px;height:12px}
 
-.sec-label{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.24em;color:var(--muted);
-  margin-top:20px;padding-top:16px;border-top:1px solid var(--line);
+/* 編輯表單 */
+.edit-box{padding:12px 13px 13px;animation:up .3s ease}
+.edit-box .field:first-of-type{margin-top:0}
+.edit-box .coord-ro{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.05em;color:var(--muted);
+  margin-top:9px;margin-bottom:0;display:flex;gap:8px;flex-wrap:wrap}
+.edit-box .coord-ro b{color:var(--ink);font-weight:500}
+.edit-cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.edit-cats .cat{padding:6px 9px;font-size:11.5px}
+.edit-acts{display:flex;gap:8px;margin-top:13px}
+.edit-acts button{flex:1;padding:12px;font-size:13px;font-weight:700;letter-spacing:.09em;cursor:pointer;border-radius:2px;transition:.2s}
+.btn-save{background:var(--lock);border:1px solid var(--lock);color:var(--on-lock)}
+.btn-save:hover{letter-spacing:.14em}
+.btn-cancel{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:500}
+.btn-cancel:hover{border-color:var(--ink);color:var(--ink)}
+.edit-tip{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.1em;color:var(--placeholder);margin-top:9px}
+
+/* ================= FAB ================= */
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:5;
+  background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
+  padding:15px 19px;font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  box-shadow:0 8px 26px rgba(0,0,0,.5);transition:letter-spacing .3s ease,background .2s ease}
+.fab:hover{letter-spacing:.16em;background:var(--accent-soft)}
+.fab:active{transform:translateY(1px)}
+.fab svg{width:17px;height:17px}
+body.sheet-open .fab{display:none}
+
+/* ================= 底部面板 ================= */
+.sheet-bd{position:fixed;inset:0;background:rgba(5,6,5,.72);z-index:10;opacity:0;transition:opacity .25s ease}
+.sheet-bd.open{opacity:1}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--surface);
+  border-top:1px solid var(--line-strong);max-height:88dvh;display:flex;flex-direction:column;
+  transform:translateY(101%);transition:transform .32s cubic-bezier(.2,.85,.25,1);
+  padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -14px 40px rgba(0,0,0,.5)}
+.sheet.open{transform:none}
+@media(min-width:720px){
+  .sheet{left:50%;width:560px;max-width:94vw;transform:translate(-50%,101%)}
+  .sheet.open{transform:translate(-50%,0)}
+}
+.sheet-grip{width:38px;height:3px;background:var(--line-strong);margin:9px auto 0;border-radius:2px;flex:none}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;
+  padding:9px 16px 11px;border-bottom:1px solid var(--line);flex:none}
+.sheet-head h2{font-family:"Syne",sans-serif;font-size:12.5px;letter-spacing:.24em;font-weight:700}
+.sheet-head .fix{font-family:"DM Mono",monospace;font-size:10.5px;color:var(--muted);
+  letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.sheet-x{background:none;border:1px solid var(--line);color:var(--muted);width:30px;height:30px;
+  font-size:16px;cursor:pointer;border-radius:2px;flex:none;transition:.2s}
+.sheet-x:hover{border-color:var(--accent);color:var(--accent)}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px calc(20px + env(safe-area-inset-bottom))}
+
+.sec-label{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.22em;color:var(--muted);
+  margin-top:17px;padding-top:14px;border-top:1px solid var(--line);
   display:flex;justify-content:space-between;align-items:center;gap:8px}
-.sec-label em{font-style:normal;color:var(--placeholder);letter-spacing:.1em;text-align:right}
+.sec-label:first-child{border-top:0;margin-top:8px;padding-top:6px}
+.sec-label em{font-style:normal;color:var(--placeholder);letter-spacing:.08em;text-align:right}
 
-.cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .cat{font-size:12.5px;letter-spacing:.03em;background:var(--surface-2);border:1px solid var(--line);
   color:var(--muted);padding:7px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
   border-radius:2px;transition:.18s}
@@ -161,143 +262,73 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
 .cat.on{border-color:var(--cl,var(--c));color:var(--ink);box-shadow:inset 0 0 0 1px var(--cl,var(--c))}
 .cat .pen{font-family:"DM Mono",monospace;font-size:10px;opacity:.55;margin-left:2px}
 
-.cam{display:flex;gap:8px;margin-top:11px;align-items:flex-start;flex-wrap:wrap}
-.cam-btn{width:74px;height:74px;flex:none;border:1px dashed var(--line-strong);background:var(--surface-2);
+.cam{display:flex;gap:8px;margin-top:10px;align-items:flex-start;flex-wrap:wrap}
+.cam-btn{width:70px;height:70px;flex:none;border:1px dashed var(--line-strong);background:var(--surface-2);
   color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.1em;transition:.2s;border-radius:2px}
+  gap:4px;font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.08em;transition:.2s;border-radius:2px}
 .cam-btn:hover{border-color:var(--accent);color:var(--accent)}
-.cam-btn svg{width:20px;height:20px}
-.cam-btn.ghost{width:64px;height:74px;font-size:9px}
+.cam-btn svg{width:19px;height:19px}
+.cam-btn.ghost{width:60px;height:70px;font-size:8.5px}
 .staged{display:flex;flex-wrap:wrap;gap:7px;flex:1;min-width:0}
-.st{position:relative;width:60px;height:60px;flex:none;animation:up .35s ease}
+.st{position:relative;width:58px;height:58px;flex:none;animation:up .35s ease}
 .st img{width:100%;height:100%;object-fit:cover;border:1px solid var(--line);display:block}
 .st button{position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;
   background:#111;border:1px solid #ff834f;color:#ff834f;font-size:12px;line-height:1;cursor:pointer;
   display:grid;place-items:center;padding:0}
-.staged .none{font-family:"DM Mono",monospace;font-size:10px;color:var(--placeholder);letter-spacing:.1em;align-self:center}
+.staged .none{font-family:"DM Mono",monospace;font-size:10px;color:var(--placeholder);letter-spacing:.08em;align-self:center}
 
-.field{margin-top:11px}
-label{display:block;font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.16em;color:var(--muted);margin-bottom:5px}
+.field{margin-top:10px}
+label{display:block;font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted);margin-bottom:5px}
 input[type=text]{width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
   font-family:"DM Mono",monospace;font-size:14px;padding:11px 10px;border-radius:2px;outline:none;transition:.2s}
 input[type=text]::placeholder{color:var(--placeholder)}
 input[type=text]:focus{border-color:var(--accent);background:var(--surface-3)}
 textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
   font-family:"Noto Sans TC",sans-serif;font-size:14px;padding:11px 10px;border-radius:2px;
-  outline:none;resize:vertical;min-height:56px;transition:.2s}
+  outline:none;resize:vertical;min-height:52px;transition:.2s}
 textarea::placeholder{color:var(--placeholder)}
 textarea:focus{border-color:var(--accent);background:var(--surface-3)}
-.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
-.form-acts{display:flex;gap:8px;margin-top:11px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.form-acts{display:flex;gap:8px;margin-top:10px}
 .form-acts .cta{margin-top:0;flex:1;font-size:14px;padding:14px}
 .form-acts .fill{flex:none;background:transparent;border:1px solid var(--line);color:var(--muted);
-  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;padding:0 14px;cursor:pointer;transition:.2s}
+  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;padding:0 14px;cursor:pointer;transition:.2s}
 .form-acts .fill:hover{border-color:var(--accent);color:var(--accent)}
-.hint{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.55}
-
 .addr-row{display:flex;gap:8px}
 .addr-row input{flex:1;min-width:0;font-family:"Noto Sans TC",sans-serif}
 .addr-row .mini{flex:none;background:transparent;border:1px solid var(--line);color:var(--muted);
-  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;padding:0 14px;cursor:pointer;
+  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;padding:0 14px;cursor:pointer;
   border-radius:2px;transition:.2s}
 .addr-row .mini:hover{border-color:var(--accent);color:var(--accent)}
 .addr-row .mini:disabled{opacity:.5;cursor:wait}
+.hint{font-size:11.5px;color:var(--muted);margin-top:9px;line-height:1.55}
 
-.meter{display:flex;align-items:center;gap:9px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
-.meter span{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted);white-space:nowrap}
+.cta{border:0;cursor:pointer;background:var(--accent);color:var(--on-accent);
+  font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
+  padding:15px 12px;display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:letter-spacing .3s ease,background .2s ease;border-radius:2px}
+.cta:hover{letter-spacing:.16em;background:var(--accent-soft)}
+.cta:active{transform:translateY(1px)}
+.cta svg{width:17px;height:17px;flex:none}
+.cta.full{width:100%;margin-top:14px;font-size:15px;padding:17px 14px}
+.cta.pending{background:var(--lock);color:var(--on-lock);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.72}}
+.keep{display:flex;align-items:center;gap:8px;margin-top:11px;
+  font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.06em;color:var(--muted);cursor:pointer}
+.keep input{accent-color:var(--lock);width:15px;height:15px;cursor:pointer}
+
+.meter{display:flex;align-items:center;gap:9px;margin-top:16px;padding-top:13px;border-top:1px dashed var(--line)}
+.meter span{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.12em;color:var(--muted);white-space:nowrap}
 .bar{flex:1;height:4px;background:var(--meter-track);border:1px solid var(--line);position:relative;overflow:hidden}
 .bar i{position:absolute;inset:0 auto 0 0;background:var(--lock);width:0;transition:width .4s ease}
 .bar i.hot{background:var(--accent)}
 
-.log-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:13px}
-.log-head h2{font-family:"Syne",sans-serif;font-size:13px;letter-spacing:.28em;font-weight:700}
-.log-head span{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.16em;color:var(--muted)}
-.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
-.fchip{font-size:11.5px;background:transparent;border:1px solid var(--line);color:var(--muted);
-  padding:5px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border-radius:2px;
-  transition:.18s;font-family:"Noto Sans TC",sans-serif}
-.fchip i{width:8px;height:8px;background:var(--c);border-radius:1px;flex:none}
-.fchip b{font-family:"DM Mono",monospace;font-weight:400;font-size:10px;opacity:.7}
-.fchip:hover{border-color:var(--ink);color:var(--ink)}
-.fchip.on{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
-.fchip.on b{opacity:.6}
-.empty{border:1px dashed var(--line);padding:38px 22px;text-align:center;color:var(--muted)}
-.empty svg{width:26px;height:26px;color:var(--ghost);margin-bottom:12px}
-.empty p{font-size:13px;letter-spacing:.06em}
-.empty small{display:block;font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.14em;margin-top:7px;color:var(--placeholder)}
-
-.point{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--cl,var(--c));
-  margin-bottom:12px;position:relative;transition:background .3s;
-  opacity:0;animation:up .5s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
-@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.point:hover{border-color:var(--line-hover);border-left-color:var(--cl,var(--c))}
-.point.editing{border-color:var(--accent);border-left-color:var(--accent)!important;animation:none;opacity:1}
-.p-top{display:flex;gap:13px;align-items:flex-start;padding:15px 15px 0}
-.p-idx{font-family:"Syne",sans-serif;font-weight:800;font-size:26px;line-height:1;
-  color:transparent;-webkit-text-stroke:1px var(--stroke);flex:none;letter-spacing:-.03em}
-.p-id{flex:1;min-width:0}
-.p-id h3{font-size:15px;font-weight:700;letter-spacing:.04em;word-break:break-word}
-.tag{display:inline-flex;align-items:center;gap:5px;margin-left:8px;vertical-align:2px;
-  font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.1em;
-  border:1px solid var(--cl,var(--c));color:var(--cl,var(--c));padding:2px 7px}
-.tag i{width:6px;height:6px;background:var(--c);border-radius:1px}
-.p-meta{font-family:"DM Mono",monospace;font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin-top:4px}
-.p-meta .acc{color:var(--lock)}
-.p-del,.p-edit{background:none;border:0;color:var(--placeholder);cursor:pointer;font-size:17px;line-height:1;
-  padding:2px 5px;transition:.2s;flex:none;font-family:"DM Mono",monospace}
-.p-del:hover{color:var(--accent)}
-.p-edit:hover{color:var(--lock)}
-.p-coords{display:block;width:calc(100% - 30px);margin:11px 15px 0;text-align:left;cursor:pointer;
-  background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
-  font-family:"DM Mono",monospace;font-size:15.5px;letter-spacing:-.01em;padding:11px 12px;
-  font-variant-numeric:tabular-nums;transition:.2s;border-radius:2px}
-.p-coords:hover{border-color:var(--accent);color:var(--accent)}
-.p-addr{font-size:12.5px;color:var(--muted);padding:9px 15px 0;line-height:1.5;display:flex;gap:7px;align-items:flex-start}
-.p-addr svg{width:12px;height:12px;flex:none;margin-top:4px;color:var(--accent)}
-.p-addr.loading{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em}
-
-.edit-box{padding:14px 15px 15px;animation:up .3s ease}
-.edit-box .field:first-of-type{margin-top:0}
-.edit-box .coord-ro{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;color:var(--muted);
-  margin-top:10px;margin-bottom:0;display:flex;gap:8px;flex-wrap:wrap}
-.edit-box .coord-ro b{color:var(--ink);font-weight:500}
-.edit-cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.edit-cats .cat{padding:6px 9px;font-size:11.5px}
-.edit-acts{display:flex;gap:8px;margin-top:14px}
-.edit-acts button{flex:1;padding:12px;font-size:13.5px;font-weight:700;letter-spacing:.1em;cursor:pointer;border-radius:2px;transition:.2s}
-.btn-save{background:var(--lock);border:1px solid var(--lock);color:var(--on-lock)}
-.btn-save:hover{letter-spacing:.16em}
-.btn-cancel{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:500}
-.btn-cancel:hover{border-color:var(--ink);color:var(--ink)}
-.edit-tip{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.12em;color:var(--placeholder);margin-top:10px}
-
-.photos{display:flex;flex-wrap:wrap;gap:7px;padding:12px 15px 0}
-.ph{width:66px;height:66px;object-fit:cover;border:1px solid var(--line);cursor:pointer;transition:.2s;animation:up .3s ease}
-.ph:hover{border-color:var(--accent)}
-.ph-add{width:66px;height:66px;border:1px dashed var(--line-strong);background:transparent;color:var(--muted);
-  cursor:pointer;font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.08em;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:.2s;border-radius:2px}
-.ph-add:hover{border-color:var(--accent);color:var(--accent)}
-.ph-add svg{width:15px;height:15px}
-.p-acts{display:flex;flex-wrap:wrap;gap:7px;padding:13px 15px 15px;margin-top:12px;border-top:1px dashed var(--line)}
-.btn{font-family:"Noto Sans TC",sans-serif;font-size:12.5px;font-weight:500;letter-spacing:.06em;
-  background:transparent;border:1px solid var(--line);color:var(--muted);padding:8px 13px;cursor:pointer;
-  text-decoration:none;display:inline-flex;align-items:center;gap:6px;border-radius:2px;transition:.2s}
-.btn:hover{border-color:var(--ink);color:var(--ink)}
-.btn.acc{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
-.btn.acc:hover{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--on-accent);letter-spacing:.12em}
-.btn.edit{border-color:var(--line-strong);color:var(--lock)}
-.btn.edit:hover{border-color:var(--lock);color:var(--lock)}
-.btn.king{background:var(--ink);border-color:var(--ink);color:var(--on-ink);font-weight:700}
-.btn.king:hover{background:var(--accent);border-color:var(--accent);color:var(--on-accent);letter-spacing:.12em}
-.btn svg{width:13px;height:13px}
-
+/* ================= 燈箱 / 提示 / 頁尾 ================= */
 .lb{position:fixed;inset:0;z-index:20;background:rgba(6,7,6,.96);display:flex;flex-direction:column;
   align-items:center;justify-content:center;padding:56px 14px 76px;animation:fade .22s ease}
-.lb[hidden]{display:none}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 .lb img{max-width:100%;max-height:70vh;object-fit:contain;border:1px solid #2a302a;background:#000}
-.lb figcaption{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;color:#8b918a;margin-top:12px;text-align:center}
+.lb figcaption{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;color:#8b918a;margin-top:12px;text-align:center}
 .lb-x{position:absolute;top:14px;right:16px;background:none;border:1px solid #2a302a;color:#f2efe8;
   width:38px;height:38px;font-size:20px;cursor:pointer;border-radius:2px}
 .lb-x:hover{border-color:#ff5f1f;color:#ff5f1f}
@@ -306,22 +337,22 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .lb-arrow:hover{border-color:#ff5f1f;color:#ff5f1f}
 #lbPrev{left:10px}#lbNext{right:10px}
 .lb-acts{position:absolute;bottom:18px;display:flex;gap:8px}
-.lb-acts button,.lb-acts a{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;
+.lb-acts button,.lb-acts a{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;
   background:transparent;border:1px solid #2a302a;color:#8b918a;padding:9px 14px;cursor:pointer;
   text-decoration:none;border-radius:2px}
 .lb-acts button:hover{border-color:#ff5f1f;color:#ff5f1f}
 .lb-acts a:hover{border-color:#f2efe8;color:#f2efe8}
 
-.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#0b0b0b;
-  border:1px solid var(--accent);color:#f2efe8;font-family:"DM Mono",monospace;font-size:12px;
-  letter-spacing:.08em;padding:11px 18px;z-index:30;opacity:0;pointer-events:none;transition:.28s;
-  max-width:88vw;text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
+  background:#0b0b0b;border:1px solid var(--accent);color:#f2efe8;font-family:"DM Mono",monospace;font-size:12px;
+  letter-spacing:.06em;padding:11px 18px;z-index:30;opacity:0;pointer-events:none;transition:.28s;
+  max-width:86vw;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
-footer{max-width:1120px;margin:0 auto;padding:0 20px 40px;position:relative;z-index:1;
-  font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.1em;color:var(--muted);line-height:1.9}
+footer{max-width:760px;margin:0 auto;padding:0 16px 30px;position:relative;z-index:1;
+  font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.08em;color:var(--muted);line-height:1.9}
 footer b{color:var(--ink);font-weight:500}
-#dbg{display:block;margin-top:8px;color:var(--placeholder)}
+#dbg{display:block;margin-top:6px;color:var(--placeholder)}
 </style>
 </head>
 <body>
@@ -358,103 +389,115 @@ footer b{color:var(--ink);font-weight:500}
     <div class="count"><b id="count">0</b> 筆</div>
     <div class="tools">
       <button class="icb install" id="btnInstall" hidden>安裝App</button>
-      <button class="icb theme" id="btnTheme" title="切換亮／暗背景">亮色模式</button>
+      <button class="icb theme" id="btnTheme" title="切換亮／暗背景">亮色</button>
       <button class="icb" id="btnExport">匯出</button>
       <button class="icb" id="btnImport">匯入</button>
       <input type="file" id="fileIn" accept="application/json" hidden>
     </div>
   </div>
+
+  <!-- ★ 常駐 GPS 條：換頁／開面板都在 -->
+  <div class="gps">
+    <div class="gps-main" id="gpsMain" title="點一下展開定位詳情">
+      <span class="status" id="status"><i class="dot"></i><span id="statusTxt">待命</span></span>
+      <span class="readout idle" id="readout">
+        <span class="gps-coords idle" id="lat">--.------</span><span class="gps-coords idle">, </span><span class="gps-coords idle" id="lng">--.------</span>
+      </span>
+      <span class="live-addr" id="liveAddr">地址：尚未定位</span>
+      <span class="caret" id="gpsCaret">▾</span>
+    </div>
+    <div class="gps-detail" id="gpsDetail" hidden>
+      <span class="chip">精度 <b id="acc">--</b></span>
+      <span class="chip">海拔 <b id="alt">--</b></span>
+      <span class="chip">方位 <b id="head">--</b></span>
+      <span class="chip">WGS-84</span>
+      <button class="ghost-btn" id="btnLocate">重新定位</button>
+      <button class="ghost-btn" id="btnWatch">持續定位</button>
+    </div>
+  </div>
 </header>
 
-<div class="wrap">
-<div class="grid">
+<main class="wrap">
+  <div class="log-head">
+    <h2>FIELD LOG</h2>
+    <span id="logMeta">NO ENTRIES</span>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div id="list"></div>
+</main>
 
-  <section class="capture">
-    <div class="panel">
-      <div class="p-head">
-        <span>Live Fix</span>
-        <span class="status" id="status"><i class="dot"></i><span id="statusTxt">待命</span></span>
-      </div>
+<button class="fab" id="fab">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+  記錄
+</button>
 
-      <div class="readout idle" id="readout">
-        <div class="row"><span class="lbl">LAT</span><span class="val" id="lat">--.------</span></div>
-        <div class="row"><span class="lbl">LNG</span><span class="val" id="lng">--.------</span></div>
-      </div>
+<div class="sheet-bd" id="sheetBd" hidden></div>
+<section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="記錄座標">
+  <div class="sheet-grip"></div>
+  <div class="sheet-head">
+    <h2>RECORD · 記錄座標</h2>
+    <span class="fix" id="sheetFix">--.------, --.------</span>
+    <button class="sheet-x" id="sheetClose" aria-label="關閉">×</button>
+  </div>
+  <div class="sheet-body">
 
-      <div class="chips">
-        <span class="chip">精度 <b id="acc">--</b></span>
-        <span class="chip">海拔 <b id="alt">--</b></span>
-        <span class="chip">方位 <b id="head">--</b></span>
-        <span class="chip">WGS-84</span>
-      </div>
+    <div class="sec-label">Category · 分類標籤<em id="catNow"></em></div>
+    <div class="cats" id="cats"></div>
 
-      <div class="live-addr" id="liveAddr">地址：尚未定位</div>
-
-      <div class="loc-row">
-        <button class="cta outline" id="btnLocate">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/>
-            <path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>
-          </svg>
-          取得目前位置
-        </button>
-        <button class="cta outline" id="btnWatch" style="flex:.85">持續定位</button>
-      </div>
-
-      <div class="sec-label">Category · 分類標籤<em id="catNow"></em></div>
-      <div class="cats" id="cats"></div>
-
-      <div class="sec-label">Photos · 現場照片<em id="stagedNow">0 張</em></div>
-      <div class="cam">
-        <button class="cam-btn" id="btnShoot">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2l1.3-2h8l1.3 2h2.2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-9z"/>
-            <circle cx="12" cy="13" r="3.4"/>
-          </svg>
-          拍照
-        </button>
-        <button class="cam-btn ghost" id="btnPick">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 16l5-5 4 4 3-3 6 6"/>
-          </svg>
-          相簿
-        </button>
-        <div class="staged" id="staged"><span class="none">尚未拍攝</span></div>
-      </div>
-      <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
-      <input type="file" id="pickIn" accept="image/*" multiple hidden>
-
-      <div class="sec-label">Detail · 名稱與備註</div>
-      <div class="field">
-        <label>地點名稱</label>
-        <input id="mName" type="text" placeholder="例如：三號電塔、倉庫後門">
-      </div>
-      <div class="field">
-        <label>備註</label>
-        <textarea id="mNote" placeholder="要留給自己的提示…"></textarea>
-      </div>
-      <div class="field">
-        <label>地址（可留白，按「取得」自動帶入）</label>
-        <div class="addr-row">
-          <input id="mAddr" type="text" placeholder="例如：台北市中正區羅斯福路二段100號">
-          <button class="mini" id="btnAddr">取得</button>
-        </div>
-      </div>
-
-      <button class="cta full" id="btnRecord">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/>
+    <div class="sec-label">Photos · 現場照片<em id="stagedNow">0 張</em></div>
+    <div class="cam">
+      <button class="cam-btn" id="btnShoot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2l1.3-2h8l1.3 2h2.2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-9z"/>
+          <circle cx="12" cy="13" r="3.4"/>
         </svg>
-        <span id="recLabel">記錄目前位置</span>
+        拍照
       </button>
+      <button class="cam-btn ghost" id="btnPick">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 16l5-5 4 4 3-3 6 6"/>
+        </svg>
+        相簿
+      </button>
+      <div class="staged" id="staged"><span class="none">尚未拍攝</span></div>
+    </div>
+    <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+    <input type="file" id="pickIn" accept="image/*" multiple hidden>
 
-      <div class="sec-label">Manual · 手動輸入座標</div>
+    <div class="sec-label">Detail · 名稱與備註</div>
+    <div class="field">
+      <label>地點名稱</label>
+      <input id="mName" type="text" placeholder="例如：三號電塔、倉庫後門">
+    </div>
+    <div class="field">
+      <label>備註</label>
+      <textarea id="mNote" placeholder="要留給自己的提示…"></textarea>
+    </div>
+    <div class="field">
+      <label>地址（可留白，按「取得」自動帶入）</label>
+      <div class="addr-row">
+        <input id="mAddr" type="text" placeholder="例如：台北市中正區羅斯福路二段100號">
+        <button class="mini" id="btnAddr">取得</button>
+      </div>
+    </div>
+
+    <button class="cta full" id="btnRecord">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/>
+      </svg>
+      <span id="recLabel">記錄目前位置</span>
+    </button>
+    <label class="keep"><input type="checkbox" id="keepOpen">連續記錄（儲存後不關閉面板）</label>
+
+    <div class="sec-label">Manual · 手動輸入座標</div>
+    <button class="ghost-btn" id="btnManual" style="margin-top:4px">▸ 展開手動輸入</button>
+    <div id="manualBox" hidden>
       <div class="fields">
-        <div class="field" style="margin-top:0">
+        <div class="field" style="margin-top:10px">
           <label>緯度 LAT</label>
           <input id="mLat" type="text" inputmode="decimal" placeholder="25.033000">
         </div>
-        <div class="field" style="margin-top:0">
+        <div class="field" style="margin-top:10px">
           <label>經度 LNG</label>
           <input id="mLng" type="text" inputmode="decimal" placeholder="121.565400">
         </div>
@@ -463,31 +506,19 @@ footer b{color:var(--ink);font-weight:500}
         <button class="fill" id="btnFill">帶入目前</button>
         <button class="cta" id="btnSave">儲存這筆</button>
       </div>
-      <p class="hint">十進位格式（例：25.033, 121.565）。已存的紀錄按「✎ 編輯」可修改<b>座標、名稱、備註、地址與分類</b>；改座標會自動重查地址。</p>
-
-      <div class="meter">
-        <span>本機空間</span>
-        <div class="bar"><i id="meterFill"></i></div>
-        <span id="meterTxt">計算中…</span>
-      </div>
     </div>
-  </section>
+    <p class="hint">十進位格式（例：25.033, 121.565）。已存紀錄按「✎ 編輯」可改<b>座標、名稱、備註、地址與分類</b>。</p>
 
-  <section>
-    <div class="log-head">
-      <h2>FIELD LOG</h2>
-      <span id="logMeta">NO ENTRIES</span>
+    <div class="meter">
+      <span>本機空間</span>
+      <div class="bar"><i id="meterFill"></i></div>
+      <span id="meterTxt">計算中…</span>
     </div>
-    <div class="filters" id="filters"></div>
-    <div id="list"></div>
-  </section>
-
-</div>
-</div>
+  </div>
+</section>
 
 <footer>
-  <b>資料存於本機瀏覽器（IndexedDB）</b>，不上傳伺服器；重要資料請定期「匯出」備份。<br>
-  點卡片的<b>座標數字可複製</b>；地址查詢需連網（每秒限 1 次）；右上角切換<b>亮色／暗色</b>，持續定位時<b>螢幕常亮</b>，HTTPS 開啟可<b>安裝App 離線使用</b>。
+  <b>資料存於本機瀏覽器（IndexedDB）</b>，不上傳伺服器；重要資料請「匯出」備份。點卡片座標可複製。
   <span id="dbg">初始化中…</span>
 </footer>
 
@@ -525,7 +556,7 @@ const CATS=[
 ];
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const VER="v9";
+const VER="v10";
 const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 const KING_PKGS=[
@@ -536,7 +567,7 @@ const KING_PKGS=[
 
 let points=[], custom="自訂";
 let filter="all", selectedCat="general";
-let editingId=null;
+let editingId=null, moreId=null;
 let staged=[];
 let current=null;
 let watchId=null, pendingSave=false;
@@ -581,7 +612,7 @@ try{applyTheme(currentTheme());}catch(e){if(window.__err)window.__err("主題：
 function toast(msg){
   const t=$("toast");if(!t)return;
   t.textContent=msg;t.classList.add("show");
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),3200);
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),3400);
 }
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function fmt(n,d){return Number(n).toFixed(d==null?6:d);}
@@ -686,7 +717,6 @@ function persist(){
   try{json=JSON.stringify(state);}
   catch(e){toast("資料序列化失敗");return false;}
   lastBytes=json.length;
-
   if(db){
     idbPut(state).catch(function(err){
       const n=err&&err.name;
@@ -723,9 +753,7 @@ async function updateStorageInfo(){
     }catch(e){}
   }
   const mb=lastBytes/1048576;
-  if(mt)mt.textContent=db
-    ? mb.toFixed(2)+" MB（IDB）"
-    : mb.toFixed(2)+" / "+QUOTA+" MB";
+  if(mt)mt.textContent=db?mb.toFixed(2)+" MB（IDB）":mb.toFixed(2)+" / "+QUOTA+" MB";
   if(f){
     const pct=db?Math.min(100,mb*2):Math.min(100,mb/QUOTA*100);
     f.style.width=pct.toFixed(1)+"%";
@@ -743,7 +771,7 @@ function copy(text,msg){
   }
 }
 
-/* ========== 地址：共用反查（12 秒逾時） ========== */
+/* ========== 地址 ========== */
 async function reverseGeocode(lat,lng,signal){
   const url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+
             "&lon="+lng+"&zoom=18&accept-language=zh-TW";
@@ -760,7 +788,6 @@ function withTimeout(ms){
   const t=setTimeout(function(){try{ctl.abort();}catch(e){}},ms);
   return {signal:ctl.signal,ctl:ctl,clear:function(){clearTimeout(t);}};
 }
-
 function setLiveAddr(txt,cls){
   const el=$("liveAddr");if(!el)return;
   el.textContent=txt;
@@ -776,7 +803,6 @@ function scheduleLiveAddr(){
       Math.abs(lat-lastAddrLat)>0.00015||Math.abs(lng-lastAddrLng)>0.00015;
     if(!moved&&$("liveAddr")&&$("liveAddr").classList.contains("on"))return;
     if(lastAddrLat!==null&&Date.now()-lastAddrAt<4000)return;
-
     if(liveAddrCtl){try{liveAddrCtl.abort();}catch(e){}}
     const to=withTimeout(12000);
     liveAddrCtl=to.ctl;
@@ -795,7 +821,6 @@ function scheduleLiveAddr(){
     }
   },700);
 }
-
 async function fetchAddr(p){
   p._loading=true;render();
   const to=withTimeout(12000);
@@ -892,8 +917,13 @@ function onPos(pos){
   set("acc",c.accuracy?Math.round(c.accuracy)+" m":"--");
   set("alt",(c.altitude!=null)?Math.round(c.altitude)+" m":"--");
   set("head",(c.heading!=null&&!isNaN(c.heading))?Math.round(c.heading)+"°":"--");
+  ["lat","lng"].forEach(function(id){
+    const e=$(id);if(e)e.classList.remove("idle");
+  });
   const ro=$("readout");
   if(ro){ro.classList.remove("idle");ro.classList.remove("locked");void ro.offsetWidth;ro.classList.add("locked");}
+  const sf=$("sheetFix");
+  if(sf)sf.textContent=fmt(c.latitude)+", "+fmt(c.longitude);
   setStatus("on","已鎖定 "+new Date().toLocaleTimeString("zh-TW",{hour12:false}));
   scheduleLiveAddr();
   if(pendingSave){pendingSave=false;setRecLabel();commitRecord();}
@@ -934,6 +964,15 @@ on("btnWatch","click",async function(){
       toast("持續定位已開啟"+(woken?" · 螢幕保持常亮":""));
     }catch(e){onErr({code:0,message:e.message});}
   }
+});
+
+/* ★ GPS 條展開／收合 */
+on("gpsMain","click",function(e){
+  if(e.target.closest("button")||e.target.closest("a"))return;
+  const d=$("gpsDetail"),c=$("gpsCaret");
+  if(!d)return;
+  d.hidden=!d.hidden;
+  if(c)c.textContent=d.hidden?"▾":"▴";
 });
 
 /* ========== 分類 ========== */
@@ -1014,10 +1053,51 @@ on("btnPick","click",()=>{photoTarget=null;const i=$("pickIn");if(i)i.click();})
 on("camIn","change",function(){handleFiles(this.files);this.value="";});
 on("pickIn","change",function(){handleFiles(this.files);this.value="";});
 
+/* ========== ★ 底部面板 ========== */
+function openSheet(){
+  const s=$("sheet"),b=$("sheetBd");
+  if(!s||!s.hidden)return;
+  b.hidden=false;s.hidden=false;
+  document.body.classList.add("sheet-open");
+  document.body.style.overflow="hidden";
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      b.classList.add("open");s.classList.add("open");
+    });
+  });
+  const m=$("mName");
+  if(m)setTimeout(function(){try{m.focus({preventScroll:true});}catch(e){}},340);
+}
+function closeSheet(){
+  const s=$("sheet"),b=$("sheetBd");
+  if(!s||s.hidden)return;
+  s.classList.remove("open");if(b)b.classList.remove("open");
+  document.body.classList.remove("sheet-open");
+  setTimeout(function(){
+    s.hidden=true;if(b)b.hidden=true;
+    const lb=$("lb");
+    if(!lb||lb.hidden)document.body.style.overflow="";
+  },320);
+}
+function maybeCloseSheet(){
+  const k=$("keepOpen");
+  if(k&&k.checked)return;      /* 連續記錄時保持開啟 */
+  closeSheet();
+}
+on("fab","click",openSheet);
+on("sheetClose","click",closeSheet);
+on("sheetBd","click",closeSheet);
+
+on("btnManual","click",function(){
+  const b=$("manualBox");if(!b)return;
+  b.hidden=!b.hidden;
+  this.textContent=b.hidden?"▸ 展開手動輸入":"▾ 收合手動輸入";
+});
+
 /* ========== 表單「取得」地址 ========== */
 on("btnAddr","click",async function(){
   const inp=$("mAddr");if(!inp)return;
-  if(!current){toast("先按「取得目前位置」");return}
+  if(!current){toast("先在 GPS 條按「重新定位」");return}
   const lat=current.lat,lng=current.lng;
   const to=withTimeout(12000);
   this.disabled=true;this.textContent="查詢…";
@@ -1047,6 +1127,7 @@ function addPoint(d){
   points.unshift(p);
   if(!persist()){points.shift();render();return false}
   clearComposer();render();toast("已記錄："+p.name+" · "+catOf(p.cat).name);
+  maybeCloseSheet();
   return true;
 }
 function commitRecord(){
@@ -1080,13 +1161,13 @@ on("btnSave","click",function(){
             acc:current&&Math.abs(current.lat-lat)<1e-6&&Math.abs(current.lng-lng)<1e-6?current.acc:null});
 });
 on("btnFill","click",function(){
-  if(!current){toast("先按「取得目前位置」");return}
+  if(!current){toast("先按「重新定位」");return}
   const la=$("mLat"),ln=$("mLng");
   la.value=fmt(current.lat);ln.value=fmt(current.lng);toast("已帶入目前座標");
 });
 
-/* ========== ★ v9 編輯：座標可改 ========== */
-function startEdit(id){editingId=id;render();
+/* ========== 編輯（座標可改） ========== */
+function startEdit(id){editingId=id;moreId=null;render();
   const b=list?list.querySelector('.point[data-id="'+id+'"] .edit-lat'):null;
   if(b){b.focus();b.select();}}
 function cancelEdit(){editingId=null;render();}
@@ -1100,7 +1181,6 @@ function saveEdit(id){
   const addrI=box.querySelector(".edit-addr");
   const catB=box.querySelector(".edit-cats [data-editcat].on");
 
-  /* ★ 座標驗證 */
   const newLat=parseFloat(latI?latI.value:"");
   const newLng=parseFloat(lngI?lngI.value:"");
   if(!isFinite(newLat)||newLat<-90||newLat>90){toast("緯度需介於 -90 ～ 90");if(latI)latI.focus();return}
@@ -1113,26 +1193,21 @@ function saveEdit(id){
   const newCat=validCat(picked)?picked:(validCat(p.cat)?p.cat:"general");
   if(!newName){toast("名稱不可空白");if(nameI)nameI.focus();return}
 
-  /* 以顯示精度（6 位小數）判斷座標是否真的變了，避免 GPS 全精度被截斷誤判 */
   const coordsChanged=(fmt(newLat)!==fmt(p.lat)||fmt(newLng)!==fmt(p.lng));
   const addrTouched=(newAddr!==(p.addr||""));
-
   const bak={name:p.name,note:p.note,cat:p.cat,addr:p.addr,lat:p.lat,lng:p.lng};
 
   if(coordsChanged){p.lat=newLat;p.lng=newLng;}
   p.name=newName;p.note=newNote;p.cat=newCat;
-  /* 座標改了、地址沒被手動改過 → 舊地址已不符，清掉並自動重查 */
   p.addr=(coordsChanged&&!addrTouched)?"":newAddr;
 
   if(!persist()){Object.assign(p,bak);render();return}
-
   editingId=null;
   if(filter!=="all"&&p.cat!==filter)filter="all";
   render();
-
   if(coordsChanged&&!addrTouched){
     toast("座標已更新，正在重新取得地址…");
-    fetchAddr(p);                    /* 自動重查地址 */
+    fetchAddr(p);
   }else{
     toast("已更新："+p.name+(coordsChanged?"（座標已修改）":""));
   }
@@ -1158,7 +1233,7 @@ function renderFilters(){
 }
 on("filters","click",e=>{
   const b=e.target.closest("[data-f]");if(!b)return;
-  filter=b.dataset.f;editingId=null;render();
+  filter=b.dataset.f;editingId=null;moreId=null;render();
 });
 
 function render(){
@@ -1175,8 +1250,8 @@ function render(){
   if(!shown.length){
     list.innerHTML='<div class="empty">'+
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>'+
-      '<p>'+(points.length?"此分類尚無紀錄":"尚無紀錄，先定位或手動輸入一筆座標")+'</p>'+
-      '<small>TAP “取得目前位置” TO START</small></div>';
+      '<p>'+(points.length?"此分類尚無紀錄":"尚無紀錄，按右下角「＋ 記錄」新增一筆")+'</p>'+
+      '<small>TAP ＋ TO LOG A POINT</small></div>';
     return;
   }
   list.innerHTML=shown.map((p,i)=>{
@@ -1187,6 +1262,7 @@ function render(){
     const gView="https://www.google.com/maps/search/?api=1&query="+lat+","+lng;
     const nPhotos=(p.photos||[]).length;
     const isEdit=editingId===p.id;
+    const showMore=(moreId===p.id);
 
     const addr=p._loading
       ? '<p class="p-addr loading">查詢地址中…</p>'
@@ -1198,7 +1274,6 @@ function render(){
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>'+
         (nPhotos?"加照片":"＋ 照片")+'</button></div>';
 
-    /* ★ v9：編輯表單 — 座標改為可編輯欄位 */
     const editBox=
       '<div class="edit-box">'+
         '<div class="fields" style="margin-top:0">'+
@@ -1214,7 +1289,7 @@ function render(){
           '<input class="edit-name" type="text" value="'+esc(p.name)+'" maxlength="60" placeholder="地點名稱"></div>'+
         '<div class="field"><label>備註</label>'+
           '<textarea class="edit-note" maxlength="500" placeholder="要留給自己的提示…">'+esc(p.note||"")+'</textarea></div>'+
-        '<div class="field"><label>地址（可留白；卡片「補地址」可自動取得）</label>'+
+        '<div class="field"><label>地址（可留白；「補地址」可自動取得）</label>'+
           '<input class="edit-addr" type="text" value="'+esc(p.addr||"")+'" placeholder="例如：台北市中正區羅斯福路二段100號"></div>'+
         '<div class="field"><label>分類</label><div class="edit-cats">'+
           CATS.map(cc=>'<button type="button" class="cat'+(p.cat===cc.id?" on":"")+'" data-editcat="'+cc.id+'" '+styleOf(cc)+'><i></i>'+esc(cc.id==="custom"?custom:cc.name)+'</button>').join("")+
@@ -1223,7 +1298,7 @@ function render(){
           '<button type="button" class="btn-save" data-act="saveEdit">儲存變更</button>'+
           '<button type="button" class="btn-cancel" data-act="cancelEdit">取消</button>'+
         '</div>'+
-        '<p class="edit-tip">ENTER 儲存 · ESC 取消 · 座標範圍 ±90 / ±180 · 改座標會自動重查地址</p>'+
+        '<p class="edit-tip">ENTER 儲存 · ESC 取消 · 改座標會自動重查地址</p>'+
       '</div>';
 
     const top=
@@ -1239,21 +1314,25 @@ function render(){
         '<button class="p-del" data-act="del" title="刪除" aria-label="刪除">×</button>'+
       '</div>';
 
+    /* ★ 主按鈕只剩 3 顆 + ⋯ */
+    const acts=
+      '<div class="p-acts">'+
+        '<a class="btn acc" href="'+gDir+'" target="_blank" rel="noopener">'+
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a>'+
+        '<button class="btn king" data-act="king">導航王</button>'+
+        '<button class="btn edit" data-act="edit">編輯</button>'+
+        '<button class="btn" data-act="more">'+(showMore?"▾ 收合":"⋯ 更多")+'</button>'+
+      '</div>'+
+      '<div class="p-more"'+(showMore?"":" hidden")+'>'+
+        '<a class="btn" href="'+gView+'" target="_blank" rel="noopener">Google 地圖</a>'+
+        '<button class="btn" data-act="addr">補地址</button>'+
+        '<button class="btn" data-act="share">分享</button>'+
+      '</div>';
+
     return '<article class="point'+(isEdit?" editing":"")+'" data-id="'+p.id+'" '+styleOf(c,dly)+'>'+
       top+
-      (isEdit
-        ? editBox
-        : '<button class="p-coords" data-act="copy" title="點一下複製座標">'+lat+', '+lng+'</button>'+addr+photos+
-          '<div class="p-acts">'+
-            '<a class="btn acc" href="'+gDir+'" target="_blank" rel="noopener">'+
-			  'G導航</a>'+
-              <!--'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a>'+-->
-            '<button class="btn king" data-act="king">導航王</button>'+
-            '<a class="btn" href="'+gView+'" target="_blank" rel="noopener">地圖</a>'+
-            '<button class="btn edit" data-act="edit">編輯</button>'+
-            '<button class="btn" data-act="addr">地址</button>'+
-            '<button class="btn" data-act="share">分享</button>'+
-          '</div>')+
+      (isEdit ? editBox
+        : '<button class="p-coords" data-act="copy" title="點一下複製座標">'+lat+', '+lng+'</button>'+addr+photos+acts)+
     '</article>';
   }).join("");
 }
@@ -1279,10 +1358,12 @@ if(list){
     if(act==="edit"){startEdit(id);return}
     if(act==="cancelEdit"){cancelEdit();return}
     if(act==="saveEdit"){saveEdit(id);return}
+    if(act==="more"){moreId=(moreId===p.id?null:p.id);render();return}
     if(act==="del"){
       const np=(p.photos||[]).length;
       if(confirm("刪除「"+p.name+"」"+(np?("（含 "+np+" 張照片）"):"")+"？")){
         if(editingId===id)editingId=null;
+        if(moreId===id)moreId=null;
         points.splice(idx,1);persist();render();toast("已刪除");
       }
       return;
@@ -1328,7 +1409,10 @@ function paintLb(){
   $("lbPrev").style.display=multi?"":"none";
   $("lbNext").style.display=multi?"":"none";
 }
-function closeLb(){const lb=$("lb");if(lb)lb.hidden=true;document.body.style.overflow="";}
+function closeLb(){const lb=$("lb");if(lb)lb.hidden=true;
+  const s=$("sheet");
+  if(!s||s.hidden)document.body.style.overflow="";
+}
 on("lbClose","click",closeLb);
 on("lbPrev","click",()=>{lbState.i--;paintLb();});
 on("lbNext","click",()=>{lbState.i++;paintLb();});
@@ -1342,10 +1426,15 @@ on("lbDel","click",function(){
   render();toast("照片已刪除");
 });
 document.addEventListener("keydown",e=>{
-  const lb=$("lb");if(!lb||lb.hidden)return;
-  if(e.key==="Escape")closeLb();
-  if(e.key==="ArrowLeft"){lbState.i--;paintLb();}
-  if(e.key==="ArrowRight"){lbState.i++;paintLb();}
+  const lb=$("lb");
+  if(lb&&!lb.hidden){
+    if(e.key==="Escape")closeLb();
+    if(e.key==="ArrowLeft"){lbState.i--;paintLb();}
+    if(e.key==="ArrowRight"){lbState.i++;paintLb();}
+    return;
+  }
+  const s=$("sheet");
+  if(e.key==="Escape"&&s&&!s.hidden)closeSheet();
 });
 
 /* ========== 匯出 / 匯入 ========== */
@@ -1389,7 +1478,7 @@ on("fileIn","change",function(){
       });
       normalize();
       if(!persist()){toast("匯入失敗：空間不足");render();return}
-      editingId=null;render();toast(n?("已匯入 "+n+" 筆"):"檔案格式不符");
+      editingId=null;moreId=null;render();toast(n?("已匯入 "+n+" 筆"):"檔案格式不符");
     }catch(e){toast("匯入失敗："+e.message)}
   };
   rd.readAsText(f);this.value="";
