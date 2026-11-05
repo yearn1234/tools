@@ -127,7 +127,6 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
 .chip{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);padding:4px 8px}
 .chip b{color:var(--ink);font-weight:500}
 
-/* ★ v8：即時地址列 */
 .live-addr{margin-top:11px;font-size:12.5px;line-height:1.55;color:var(--muted);
   border-left:2px solid var(--line-strong);padding:2px 0 2px 10px;min-height:22px;word-break:break-word}
 .live-addr.on{color:var(--ink);border-left-color:var(--accent)}
@@ -196,7 +195,6 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .form-acts .fill:hover{border-color:var(--accent);color:var(--accent)}
 .hint{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.55}
 
-/* ★ v8：地址輸入列 */
 .addr-row{display:flex;gap:8px}
 .addr-row input{flex:1;min-width:0;font-family:"Noto Sans TC",sans-serif}
 .addr-row .mini{flex:none;background:transparent;border:1px solid var(--line);color:var(--muted);
@@ -261,7 +259,7 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .edit-box{padding:14px 15px 15px;animation:up .3s ease}
 .edit-box .field:first-of-type{margin-top:0}
 .edit-box .coord-ro{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;color:var(--muted);
-  margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap}
+  margin-top:10px;margin-bottom:0;display:flex;gap:8px;flex-wrap:wrap}
 .edit-box .coord-ro b{color:var(--ink);font-weight:500}
 .edit-cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .edit-cats .cat{padding:6px 9px;font-size:11.5px}
@@ -390,7 +388,6 @@ footer b{color:var(--ink);font-weight:500}
         <span class="chip">WGS-84</span>
       </div>
 
-      <!-- ★ v8：目前位置地址 -->
       <div class="live-addr" id="liveAddr">地址：尚未定位</div>
 
       <div class="loc-row">
@@ -436,7 +433,6 @@ footer b{color:var(--ink);font-weight:500}
         <label>備註</label>
         <textarea id="mNote" placeholder="要留給自己的提示…"></textarea>
       </div>
-      <!-- ★ v8：新增表單的地址欄 -->
       <div class="field">
         <label>地址（可留白，按「取得」自動帶入）</label>
         <div class="addr-row">
@@ -467,7 +463,7 @@ footer b{color:var(--ink);font-weight:500}
         <button class="fill" id="btnFill">帶入目前</button>
         <button class="cta" id="btnSave">儲存這筆</button>
       </div>
-      <p class="hint">十進位格式（例：25.033, 121.565）。定位成功後上方會自動顯示地址；「取得」會把地址帶入欄位並隨紀錄一起儲存。</p>
+      <p class="hint">十進位格式（例：25.033, 121.565）。已存的紀錄按「✎ 編輯」可修改<b>座標、名稱、備註、地址與分類</b>；改座標會自動重查地址。</p>
 
       <div class="meter">
         <span>本機空間</span>
@@ -491,7 +487,7 @@ footer b{color:var(--ink);font-weight:500}
 
 <footer>
   <b>資料存於本機瀏覽器（IndexedDB）</b>，不上傳伺服器；重要資料請定期「匯出」備份。<br>
-  地址查詢需連網（OpenStreetMap Nominatim，每秒限 1 次）；右上角切換<b>亮色／暗色</b>，持續定位時<b>螢幕保持常亮</b>，HTTPS 開啟可<b>安裝App 離線使用</b>。
+  點卡片的<b>座標數字可複製</b>；地址查詢需連網（每秒限 1 次）；右上角切換<b>亮色／暗色</b>，持續定位時<b>螢幕常亮</b>，HTTPS 開啟可<b>安裝App 離線使用</b>。
   <span id="dbg">初始化中…</span>
 </footer>
 
@@ -529,7 +525,7 @@ const CATS=[
 ];
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const VER="v8";
+const VER="v9";
 const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 const KING_PKGS=[
@@ -547,7 +543,6 @@ let watchId=null, pendingSave=false;
 let photoTarget=null;
 let lbState={id:null,i:0};
 
-/* v7 */
 let db=null;
 let storageMode="載入中";
 let lastBytes=0;
@@ -555,7 +550,6 @@ let wakeLock=null;
 let swState="SW 未註冊";
 let deferredPrompt=null;
 
-/* ★ v8：地址相關狀態 */
 let liveAddrCtl=null, liveAddrTimer=null;
 let lastAddrAt=0, lastAddrLat=null, lastAddrLng=null;
 
@@ -613,7 +607,7 @@ function normalize(){
   });
 }
 
-/* ========== 儲存層（v7 同） ========== */
+/* ========== 儲存層 ========== */
 function idbOpen(){
   return new Promise((res,rej)=>{
     if(!("indexedDB" in window)){rej(new Error("此瀏覽器不支援 IndexedDB"));return;}
@@ -749,7 +743,7 @@ function copy(text,msg){
   }
 }
 
-/* ========== ★ 地址：共用反查函式（含 12 秒逾時） ========== */
+/* ========== 地址：共用反查（12 秒逾時） ========== */
 async function reverseGeocode(lat,lng,signal){
   const url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+
             "&lon="+lng+"&zoom=18&accept-language=zh-TW";
@@ -759,13 +753,14 @@ async function reverseGeocode(lat,lng,signal){
   return (d.display_name||"").trim();
 }
 function withTimeout(ms){
-  if(!("AbortController" in window))return {signal:undefined,ctl:null};
+  if(!("AbortController" in window)){
+    return {signal:undefined,ctl:null,clear:function(){}};
+  }
   const ctl=new AbortController();
   const t=setTimeout(function(){try{ctl.abort();}catch(e){}},ms);
   return {signal:ctl.signal,ctl:ctl,clear:function(){clearTimeout(t);}};
 }
 
-/* ★ v8：即時地址（定位成功後自動顯示，附節流） */
 function setLiveAddr(txt,cls){
   const el=$("liveAddr");if(!el)return;
   el.textContent=txt;
@@ -777,7 +772,6 @@ function scheduleLiveAddr(){
   clearTimeout(liveAddrTimer);
   liveAddrTimer=setTimeout(async function(){
     if(!current||current.lat!==lat||current.lng!==lng)return;
-    /* 節流：移動 <15m 且已有地址就不重查；且最短間隔 4 秒 */
     const moved=lastAddrLat===null||
       Math.abs(lat-lastAddrLat)>0.00015||Math.abs(lng-lastAddrLng)>0.00015;
     if(!moved&&$("liveAddr")&&$("liveAddr").classList.contains("on"))return;
@@ -802,7 +796,6 @@ function scheduleLiveAddr(){
   },700);
 }
 
-/* ★ v8：卡片「補地址」— 修正載入狀態 + 逾時 */
 async function fetchAddr(p){
   p._loading=true;render();
   const to=withTimeout(12000);
@@ -810,9 +803,8 @@ async function fetchAddr(p){
     const t=await reverseGeocode(p.lat,p.lng,to.signal);
     to.clear();
     p.addr=t;
-    p._loading=false;                 /* ★ 修正：成功也清除載入狀態 */
+    p._loading=false;
     persist();
-    /* 若正在編輯這筆：只更新地址欄，避免打斷輸入中的名稱／備註 */
     if(editingId===p.id&&list){
       const box=list.querySelector('.point[data-id="'+p.id+'"]');
       const inp=box&&box.querySelector(".edit-addr");
@@ -903,7 +895,7 @@ function onPos(pos){
   const ro=$("readout");
   if(ro){ro.classList.remove("idle");ro.classList.remove("locked");void ro.offsetWidth;ro.classList.add("locked");}
   setStatus("on","已鎖定 "+new Date().toLocaleTimeString("zh-TW",{hour12:false}));
-  scheduleLiveAddr();                 /* ★ v8：自動帶出地址 */
+  scheduleLiveAddr();
   if(pendingSave){pendingSave=false;setRecLabel();commitRecord();}
 }
 function onErr(err){
@@ -1022,7 +1014,7 @@ on("btnPick","click",()=>{photoTarget=null;const i=$("pickIn");if(i)i.click();})
 on("camIn","change",function(){handleFiles(this.files);this.value="";});
 on("pickIn","change",function(){handleFiles(this.files);this.value="";});
 
-/* ========== ★ v8：表單「取得」地址 ========== */
+/* ========== 表單「取得」地址 ========== */
 on("btnAddr","click",async function(){
   const inp=$("mAddr");if(!inp)return;
   if(!current){toast("先按「取得目前位置」");return}
@@ -1093,30 +1085,57 @@ on("btnFill","click",function(){
   la.value=fmt(current.lat);ln.value=fmt(current.lng);toast("已帶入目前座標");
 });
 
-/* ========== 編輯（★ v8 含地址欄） ========== */
+/* ========== ★ v9 編輯：座標可改 ========== */
 function startEdit(id){editingId=id;render();
-  const b=list?list.querySelector('.point[data-id="'+id+'"] .edit-name'):null;
+  const b=list?list.querySelector('.point[data-id="'+id+'"] .edit-lat'):null;
   if(b){b.focus();b.select();}}
 function cancelEdit(){editingId=null;render();}
 function saveEdit(id){
   const p=points.find(x=>x.id===id);if(!p||!list)return;
   const box=list.querySelector('.point[data-id="'+id+'"]');if(!box)return;
+  const latI=box.querySelector(".edit-lat");
+  const lngI=box.querySelector(".edit-lng");
   const nameI=box.querySelector(".edit-name");
   const noteT=box.querySelector(".edit-note");
   const addrI=box.querySelector(".edit-addr");
   const catB=box.querySelector(".edit-cats [data-editcat].on");
+
+  /* ★ 座標驗證 */
+  const newLat=parseFloat(latI?latI.value:"");
+  const newLng=parseFloat(lngI?lngI.value:"");
+  if(!isFinite(newLat)||newLat<-90||newLat>90){toast("緯度需介於 -90 ～ 90");if(latI)latI.focus();return}
+  if(!isFinite(newLng)||newLng<-180||newLng>180){toast("經度需介於 -180 ～ 180");if(lngI)lngI.focus();return}
+
   const newName=nameI?nameI.value.trim():"";
   const newNote=noteT?noteT.value.trim():"";
   const newAddr=addrI?addrI.value.trim():"";
   const picked=catB?catB.dataset.editcat:null;
   const newCat=validCat(picked)?picked:(validCat(p.cat)?p.cat:"general");
   if(!newName){toast("名稱不可空白");if(nameI)nameI.focus();return}
-  const bak={name:p.name,note:p.note,cat:p.cat,addr:p.addr};
-  p.name=newName;p.note=newNote;p.cat=newCat;p.addr=newAddr;
+
+  /* 以顯示精度（6 位小數）判斷座標是否真的變了，避免 GPS 全精度被截斷誤判 */
+  const coordsChanged=(fmt(newLat)!==fmt(p.lat)||fmt(newLng)!==fmt(p.lng));
+  const addrTouched=(newAddr!==(p.addr||""));
+
+  const bak={name:p.name,note:p.note,cat:p.cat,addr:p.addr,lat:p.lat,lng:p.lng};
+
+  if(coordsChanged){p.lat=newLat;p.lng=newLng;}
+  p.name=newName;p.note=newNote;p.cat=newCat;
+  /* 座標改了、地址沒被手動改過 → 舊地址已不符，清掉並自動重查 */
+  p.addr=(coordsChanged&&!addrTouched)?"":newAddr;
+
   if(!persist()){Object.assign(p,bak);render();return}
+
   editingId=null;
   if(filter!=="all"&&p.cat!==filter)filter="all";
-  render();toast("已更新："+p.name);
+  render();
+
+  if(coordsChanged&&!addrTouched){
+    toast("座標已更新，正在重新取得地址…");
+    fetchAddr(p);                    /* 自動重查地址 */
+  }else{
+    toast("已更新："+p.name+(coordsChanged?"（座標已修改）":""));
+  }
 }
 
 /* ========== 篩選與渲染 ========== */
@@ -1179,10 +1198,18 @@ function render(){
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>'+
         (nPhotos?"加照片":"＋ 照片")+'</button></div>';
 
-    /* ★ v8：編輯表單加入地址欄 */
+    /* ★ v9：編輯表單 — 座標改為可編輯欄位 */
     const editBox=
       '<div class="edit-box">'+
-        '<div class="coord-ro"><b>座標（唯讀）</b> '+lat+', '+lng+(p.acc?' · ±'+Math.round(p.acc)+'m':'')+'</div>'+
+        '<div class="fields" style="margin-top:0">'+
+          '<div class="field" style="margin-top:0">'+
+            '<label>緯度 LAT</label>'+
+            '<input class="edit-lat" type="text" inputmode="decimal" value="'+lat+'" placeholder="25.033000"></div>'+
+          '<div class="field" style="margin-top:0">'+
+            '<label>經度 LNG</label>'+
+            '<input class="edit-lng" type="text" inputmode="decimal" value="'+lng+'" placeholder="121.565400"></div>'+
+        '</div>'+
+        (p.acc?'<div class="coord-ro"><b>原定位精度</b> ±'+Math.round(p.acc)+'m</div>':'')+
         '<div class="field"><label>地點名稱</label>'+
           '<input class="edit-name" type="text" value="'+esc(p.name)+'" maxlength="60" placeholder="地點名稱"></div>'+
         '<div class="field"><label>備註</label>'+
@@ -1196,7 +1223,7 @@ function render(){
           '<button type="button" class="btn-save" data-act="saveEdit">儲存變更</button>'+
           '<button type="button" class="btn-cancel" data-act="cancelEdit">取消</button>'+
         '</div>'+
-        '<p class="edit-tip">ENTER 儲存 · ESC 取消 · 座標如需修改請刪除後重建</p>'+
+        '<p class="edit-tip">ENTER 儲存 · ESC 取消 · 座標範圍 ±90 / ±180 · 改座標會自動重查地址</p>'+
       '</div>';
 
     const top=
@@ -1216,13 +1243,12 @@ function render(){
       top+
       (isEdit
         ? editBox
-        : '<button class="p-coords" data-act="copy">'+lat+', '+lng+'</button>'+addr+photos+
+        : '<button class="p-coords" data-act="copy" title="點一下複製座標">'+lat+', '+lng+'</button>'+addr+photos+
           '<div class="p-acts">'+
             '<a class="btn acc" href="'+gDir+'" target="_blank" rel="noopener">'+
               '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a>'+
             '<button class="btn king" data-act="king">導航王</button>'+
             '<a class="btn" href="'+gView+'" target="_blank" rel="noopener">Google 地圖</a>'+
-            '<button class="btn" data-act="copy">複製</button>'+
             '<button class="btn edit" data-act="edit">編輯</button>'+
             '<button class="btn" data-act="addr">補地址</button>'+
             '<button class="btn" data-act="share">分享</button>'+
@@ -1275,7 +1301,8 @@ if(list){
   list.addEventListener("keydown",function(e){
     if(!editingId)return;
     const box=e.target.closest(".edit-box");if(!box)return;
-    if(e.key==="Enter"&&(e.target.classList.contains("edit-name")||e.ctrlKey||e.metaKey)){
+    if(e.key==="Enter"&&(e.target.classList.contains("edit-name")||
+       e.target.classList.contains("edit-lat")||e.ctrlKey||e.metaKey)){
       e.preventDefault();saveEdit(editingId);
     }
     if(e.key==="Escape"){e.preventDefault();cancelEdit();}
@@ -1367,7 +1394,7 @@ on("fileIn","change",function(){
   rd.readAsText(f);this.value="";
 });
 
-/* ========== PWA（v7 同） ========== */
+/* ========== PWA ========== */
 function buildIcon(size){
   const cv=document.createElement("canvas");cv.width=cv.height=size;
   const g=cv.getContext("2d");

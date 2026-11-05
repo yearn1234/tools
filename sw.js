@@ -1,5 +1,5 @@
 /* coord logger service worker — 快取外殼，離線可用 */
-const CACHE="coordlog-v8";
+const CACHE="coordlog-v9";
 const ASSETS=["./","./index.html"];
 
 self.addEventListener("install",function(e){
