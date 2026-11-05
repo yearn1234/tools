@@ -8,12 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>座標記錄器 · COORD LOGGER</title>
 
-<!-- ① 主題（防呆） -->
 <script>
 try{var t=localStorage.getItem("coordlog.theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}
 </script>
 
-<!-- ② 錯誤攔截 -->
 <script>
 (function(){
   function show(m){
@@ -129,6 +127,12 @@ h1{font-size:17px;font-weight:700;letter-spacing:.24em;line-height:1.3}
 .chip{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);padding:4px 8px}
 .chip b{color:var(--ink);font-weight:500}
 
+/* ★ v8：即時地址列 */
+.live-addr{margin-top:11px;font-size:12.5px;line-height:1.55;color:var(--muted);
+  border-left:2px solid var(--line-strong);padding:2px 0 2px 10px;min-height:22px;word-break:break-word}
+.live-addr.on{color:var(--ink);border-left-color:var(--accent)}
+.live-addr.err{color:var(--accent);border-left-color:var(--accent)}
+
 .loc-row{display:flex;gap:8px;margin-top:14px}
 .cta{border:0;cursor:pointer;background:var(--accent);color:var(--on-accent);
   font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
@@ -191,6 +195,15 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
   font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;padding:0 14px;cursor:pointer;transition:.2s}
 .form-acts .fill:hover{border-color:var(--accent);color:var(--accent)}
 .hint{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.55}
+
+/* ★ v8：地址輸入列 */
+.addr-row{display:flex;gap:8px}
+.addr-row input{flex:1;min-width:0;font-family:"Noto Sans TC",sans-serif}
+.addr-row .mini{flex:none;background:transparent;border:1px solid var(--line);color:var(--muted);
+  font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;padding:0 14px;cursor:pointer;
+  border-radius:2px;transition:.2s}
+.addr-row .mini:hover{border-color:var(--accent);color:var(--accent)}
+.addr-row .mini:disabled{opacity:.5;cursor:wait}
 
 .meter{display:flex;align-items:center;gap:9px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
 .meter span{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted);white-space:nowrap}
@@ -377,6 +390,9 @@ footer b{color:var(--ink);font-weight:500}
         <span class="chip">WGS-84</span>
       </div>
 
+      <!-- ★ v8：目前位置地址 -->
+      <div class="live-addr" id="liveAddr">地址：尚未定位</div>
+
       <div class="loc-row">
         <button class="cta outline" id="btnLocate">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -420,6 +436,14 @@ footer b{color:var(--ink);font-weight:500}
         <label>備註</label>
         <textarea id="mNote" placeholder="要留給自己的提示…"></textarea>
       </div>
+      <!-- ★ v8：新增表單的地址欄 -->
+      <div class="field">
+        <label>地址（可留白，按「取得」自動帶入）</label>
+        <div class="addr-row">
+          <input id="mAddr" type="text" placeholder="例如：台北市中正區羅斯福路二段100號">
+          <button class="mini" id="btnAddr">取得</button>
+        </div>
+      </div>
 
       <button class="cta full" id="btnRecord">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -443,7 +467,7 @@ footer b{color:var(--ink);font-weight:500}
         <button class="fill" id="btnFill">帶入目前</button>
         <button class="cta" id="btnSave">儲存這筆</button>
       </div>
-      <p class="hint">十進位格式（例：25.033, 121.565）。已存的紀錄可在右側卡片按「✎ 編輯」修改名稱、備註與分類；按「導航王」會複製座標並開啟導航王 3D 設為目的地。</p>
+      <p class="hint">十進位格式（例：25.033, 121.565）。定位成功後上方會自動顯示地址；「取得」會把地址帶入欄位並隨紀錄一起儲存。</p>
 
       <div class="meter">
         <span>本機空間</span>
@@ -466,8 +490,8 @@ footer b{color:var(--ink);font-weight:500}
 </div>
 
 <footer>
-  <b>資料存於本機瀏覽器（IndexedDB，空間上限遠大於舊版 5MB）</b>，不上傳伺服器；重要資料仍請定期「匯出」備份。<br>
-  右上角切換<b>亮色／暗色</b>；開啟「持續定位」時會<b>自動防止螢幕休眠</b>。若以 HTTPS 開啟，可按「安裝App」加到主畫面並<b>離線使用</b>。
+  <b>資料存於本機瀏覽器（IndexedDB）</b>，不上傳伺服器；重要資料請定期「匯出」備份。<br>
+  地址查詢需連網（OpenStreetMap Nominatim，每秒限 1 次）；右上角切換<b>亮色／暗色</b>，持續定位時<b>螢幕保持常亮</b>，HTTPS 開啟可<b>安裝App 離線使用</b>。
   <span id="dbg">初始化中…</span>
 </footer>
 
@@ -491,7 +515,6 @@ footer b{color:var(--ink);font-weight:500}
 (function(){
 "use strict";
 
-/* ========== 宣告集中在最上方 ========== */
 const $=id=>document.getElementById(id);
 const list=$("list");
 
@@ -504,15 +527,15 @@ const CATS=[
   {id:"risk",   name:"注意風險",color:"#ff4d6d",colorLight:"#c0143c"},
   {id:"custom", name:"自訂",    color:"#a855f7",colorLight:"#7c3aed"}
 ];
-const KEY="coordlog.v2";        // 舊版 localStorage（僅供遷移）
+const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const VER="v7";
-const MAXEDGE=900, QUALITY=.7, QUOTA=5;   // QUOTA 僅供 localStorage 退路顯示
+const VER="v8";
+const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 const KING_PKGS=[
-  "com.kingwaytek.naviking3d",             // 樂客導航王全3D Pro（你的版本）
-  "com.kingwaytek.naviking.telemetrics",   // 導航王 TM
-  "com.kingwaytek.naviking3d.google.std"   // 樂客導航王全3D（體驗後內購版）
+  "com.kingwaytek.naviking3d",
+  "com.kingwaytek.naviking.telemetrics",
+  "com.kingwaytek.naviking3d.google.std"
 ];
 
 let points=[], custom="自訂";
@@ -524,13 +547,17 @@ let watchId=null, pendingSave=false;
 let photoTarget=null;
 let lbState={id:null,i:0};
 
-/* ★ v7 新增狀態 */
-let db=null;                 // IndexedDB 連線（null＝退回 localStorage）
-let storageMode="載入中";      // IndexedDB / localStorage / 載入中
-let lastBytes=0;             // 最近一次序列化大小
-let wakeLock=null;           // 螢幕常亮鎖
-let swState="SW 未註冊";      // Service Worker 狀態
-let deferredPrompt=null;     // PWA 安裝提示
+/* v7 */
+let db=null;
+let storageMode="載入中";
+let lastBytes=0;
+let wakeLock=null;
+let swState="SW 未註冊";
+let deferredPrompt=null;
+
+/* ★ v8：地址相關狀態 */
+let liveAddrCtl=null, liveAddrTimer=null;
+let lastAddrAt=0, lastAddrLat=null, lastAddrLng=null;
 
 function on(id,ev,fn){
   const el=$(id);
@@ -586,9 +613,7 @@ function normalize(){
   });
 }
 
-/* =========================================================
-   ★★★ 儲存層：IndexedDB（主）＋ localStorage（退路）
-   ========================================================= */
+/* ========== 儲存層（v7 同） ========== */
 function idbOpen(){
   return new Promise((res,rej)=>{
     if(!("indexedDB" in window)){rej(new Error("此瀏覽器不支援 IndexedDB"));return;}
@@ -624,7 +649,6 @@ function idbPut(state){
     }catch(e){rej(e);}
   });
 }
-/* 舊版 localStorage 資料 → 統一狀態物件 */
 function readLegacyLS(){
   const read=k=>{try{return JSON.parse(localStorage.getItem(k)||"null");}catch(e){return null;}};
   const raw=read(KEY);
@@ -651,7 +675,7 @@ async function storageInit(){
     let state=null;
     try{state=await idbGet();}catch(e){state=null;}
     if(!state){
-      state=readLegacyLS();               // 從舊版遷移
+      state=readLegacyLS();
       if(state){try{await idbPut(state);}catch(e){}}
     }
     applyState(state);
@@ -670,7 +694,6 @@ function persist(){
   lastBytes=json.length;
 
   if(db){
-    /* IDB：背景寫入，失敗（多為空間滿）用 toast 通知 */
     idbPut(state).catch(function(err){
       const n=err&&err.name;
       toast(n==="QuotaExceededError"
@@ -726,7 +749,90 @@ function copy(text,msg){
   }
 }
 
-/* ========== ★ 導航王（geo 連結，已實測可用） ========== */
+/* ========== ★ 地址：共用反查函式（含 12 秒逾時） ========== */
+async function reverseGeocode(lat,lng,signal){
+  const url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+
+            "&lon="+lng+"&zoom=18&accept-language=zh-TW";
+  const r=await fetch(url,{headers:{Accept:"application/json"},signal:signal});
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const d=await r.json();
+  return (d.display_name||"").trim();
+}
+function withTimeout(ms){
+  if(!("AbortController" in window))return {signal:undefined,ctl:null};
+  const ctl=new AbortController();
+  const t=setTimeout(function(){try{ctl.abort();}catch(e){}},ms);
+  return {signal:ctl.signal,ctl:ctl,clear:function(){clearTimeout(t);}};
+}
+
+/* ★ v8：即時地址（定位成功後自動顯示，附節流） */
+function setLiveAddr(txt,cls){
+  const el=$("liveAddr");if(!el)return;
+  el.textContent=txt;
+  el.className="live-addr"+(cls?" "+cls:"");
+}
+function scheduleLiveAddr(){
+  if(!current)return;
+  const lat=current.lat,lng=current.lng;
+  clearTimeout(liveAddrTimer);
+  liveAddrTimer=setTimeout(async function(){
+    if(!current||current.lat!==lat||current.lng!==lng)return;
+    /* 節流：移動 <15m 且已有地址就不重查；且最短間隔 4 秒 */
+    const moved=lastAddrLat===null||
+      Math.abs(lat-lastAddrLat)>0.00015||Math.abs(lng-lastAddrLng)>0.00015;
+    if(!moved&&$("liveAddr")&&$("liveAddr").classList.contains("on"))return;
+    if(lastAddrLat!==null&&Date.now()-lastAddrAt<4000)return;
+
+    if(liveAddrCtl){try{liveAddrCtl.abort();}catch(e){}}
+    const to=withTimeout(12000);
+    liveAddrCtl=to.ctl;
+    setLiveAddr("地址查詢中…","");
+    try{
+      const t=await reverseGeocode(lat,lng,to.signal);
+      to.clear();
+      if(!current||current.lat!==lat||current.lng!==lng)return;
+      lastAddrAt=Date.now();lastAddrLat=lat;lastAddrLng=lng;
+      if(t){setLiveAddr("地址："+t,"on");}
+      else{setLiveAddr("查無地址（此點可能在海面或圖資外）","");}
+    }catch(e){
+      to.clear();
+      if(e&&e.name==="AbortError")return;
+      setLiveAddr("地址查詢失敗（需連網，或 Nominatim 限流）","err");
+    }
+  },700);
+}
+
+/* ★ v8：卡片「補地址」— 修正載入狀態 + 逾時 */
+async function fetchAddr(p){
+  p._loading=true;render();
+  const to=withTimeout(12000);
+  try{
+    const t=await reverseGeocode(p.lat,p.lng,to.signal);
+    to.clear();
+    p.addr=t;
+    p._loading=false;                 /* ★ 修正：成功也清除載入狀態 */
+    persist();
+    /* 若正在編輯這筆：只更新地址欄，避免打斷輸入中的名稱／備註 */
+    if(editingId===p.id&&list){
+      const box=list.querySelector('.point[data-id="'+p.id+'"]');
+      const inp=box&&box.querySelector(".edit-addr");
+      if(inp){inp.value=p.addr;updateDbg();}
+      else render();
+    }else{
+      render();
+    }
+    toast(p.addr?"已取得地址 ✓":"查無地址");
+  }catch(e){
+    to.clear();
+    p._loading=false;
+    render();
+    toast((e&&e.name==="AbortError")
+      ?"地址查詢逾時（12 秒無回應）"
+      :"地址查詢失敗（"+(e.message||"網路錯誤")+"）");
+  }
+}
+
+/* ========== 導航王 ========== */
 function openNaviKing(p){
   const lat=fmt(p.lat),lng=fmt(p.lng);
   const coord=lat+", "+lng;
@@ -760,7 +866,7 @@ function openNaviKing(p){
   setTimeout(step,500);
 }
 
-/* ========== ★ 螢幕常亮（配合持續定位） ========== */
+/* ========== 螢幕常亮 ========== */
 async function startWake(){
   try{
     if(!("wakeLock" in navigator))return false;
@@ -773,7 +879,6 @@ function stopWake(){
   if(wakeLock){try{wakeLock.release();}catch(e){} wakeLock=null;}
 }
 document.addEventListener("visibilitychange",async function(){
-  /* 手機切回前景時，若仍在持續定位就重新拿鎖 */
   if(document.visibilityState==="visible"&&watchId!=null&&!wakeLock){
     const ok=await startWake();
     if(ok)toast("已恢復螢幕常亮");
@@ -798,6 +903,7 @@ function onPos(pos){
   const ro=$("readout");
   if(ro){ro.classList.remove("idle");ro.classList.remove("locked");void ro.offsetWidth;ro.classList.add("locked");}
   setStatus("on","已鎖定 "+new Date().toLocaleTimeString("zh-TW",{hour12:false}));
+  scheduleLiveAddr();                 /* ★ v8：自動帶出地址 */
   if(pendingSave){pendingSave=false;setRecLabel();commitRecord();}
 }
 function onErr(err){
@@ -916,10 +1022,30 @@ on("btnPick","click",()=>{photoTarget=null;const i=$("pickIn");if(i)i.click();})
 on("camIn","change",function(){handleFiles(this.files);this.value="";});
 on("pickIn","change",function(){handleFiles(this.files);this.value="";});
 
+/* ========== ★ v8：表單「取得」地址 ========== */
+on("btnAddr","click",async function(){
+  const inp=$("mAddr");if(!inp)return;
+  if(!current){toast("先按「取得目前位置」");return}
+  const lat=current.lat,lng=current.lng;
+  const to=withTimeout(12000);
+  this.disabled=true;this.textContent="查詢…";
+  try{
+    const t=await reverseGeocode(lat,lng,to.signal);
+    to.clear();
+    inp.value=t||"";
+    toast(t?"已帶入地址 ✓":"查無地址");
+  }catch(e){
+    to.clear();
+    toast((e&&e.name==="AbortError")?"地址查詢逾時（12 秒）":
+          "地址查詢失敗（"+(e.message||"網路錯誤")+"）");
+  }
+  this.disabled=false;this.textContent="取得";
+});
+
 /* ========== 新增 ========== */
 function clearComposer(){
-  const n=$("mName"),t=$("mNote");
-  if(n)n.value="";if(t)t.value="";
+  const n=$("mName"),t=$("mNote"),a=$("mAddr");
+  if(n)n.value="";if(t)t.value="";if(a)a.value="";
   staged=[];renderStaged();
 }
 function addPoint(d){
@@ -932,10 +1058,11 @@ function addPoint(d){
   return true;
 }
 function commitRecord(){
-  const n=$("mName"),t=$("mNote");
+  const n=$("mName"),t=$("mNote"),a=$("mAddr");
   addPoint({
     lat:current.lat,lng:current.lng,acc:current.acc,
     name:n?n.value.trim():"",note:t?t.value.trim():"",
+    addr:a?a.value.trim():"",
     cat:selectedCat,photos:staged.slice()
   });
 }
@@ -954,8 +1081,9 @@ on("btnSave","click",function(){
   const lat=parseFloat(la.value),lng=parseFloat(ln.value);
   if(!isFinite(lat)||lat<-90||lat>90){toast("緯度需介於 -90 ～ 90");la.focus();return}
   if(!isFinite(lng)||lng<-180||lng>180){toast("經度需介於 -180 ～ 180");ln.focus();return}
-  const n=$("mName"),t=$("mNote");
+  const n=$("mName"),t=$("mNote"),a=$("mAddr");
   addPoint({lat:lat,lng:lng,name:n?n.value.trim():"",note:t?t.value.trim():"",
+            addr:a?a.value.trim():"",
             cat:selectedCat,photos:staged.slice(),
             acc:current&&Math.abs(current.lat-lat)<1e-6&&Math.abs(current.lng-lng)<1e-6?current.acc:null});
 });
@@ -965,7 +1093,7 @@ on("btnFill","click",function(){
   la.value=fmt(current.lat);ln.value=fmt(current.lng);toast("已帶入目前座標");
 });
 
-/* ========== 編輯 ========== */
+/* ========== 編輯（★ v8 含地址欄） ========== */
 function startEdit(id){editingId=id;render();
   const b=list?list.querySelector('.point[data-id="'+id+'"] .edit-name'):null;
   if(b){b.focus();b.select();}}
@@ -975,48 +1103,20 @@ function saveEdit(id){
   const box=list.querySelector('.point[data-id="'+id+'"]');if(!box)return;
   const nameI=box.querySelector(".edit-name");
   const noteT=box.querySelector(".edit-note");
+  const addrI=box.querySelector(".edit-addr");
   const catB=box.querySelector(".edit-cats [data-editcat].on");
   const newName=nameI?nameI.value.trim():"";
   const newNote=noteT?noteT.value.trim():"";
+  const newAddr=addrI?addrI.value.trim():"";
   const picked=catB?catB.dataset.editcat:null;
   const newCat=validCat(picked)?picked:(validCat(p.cat)?p.cat:"general");
   if(!newName){toast("名稱不可空白");if(nameI)nameI.focus();return}
-  const bak={name:p.name,note:p.note,cat:p.cat};
-  p.name=newName;p.note=newNote;p.cat=newCat;
+  const bak={name:p.name,note:p.note,cat:p.cat,addr:p.addr};
+  p.name=newName;p.note=newNote;p.cat=newCat;p.addr=newAddr;
   if(!persist()){Object.assign(p,bak);render();return}
   editingId=null;
   if(filter!=="all"&&p.cat!==filter)filter="all";
-  render();toast("已更新："+p.name+" · "+catOf(p.cat).name);
-}
-
-/* ========== 地址 ========== */
-async function fetchAddr(p){
-  p._loading=true;render();
-  let ctl=null;
-  try{
-    /* ★ 加 12 秒逾時，避免無限等待 */
-    if("AbortController" in window){
-      ctl=new AbortController();
-      setTimeout(function(){try{ctl.abort();}catch(e){}},12000);
-    }
-    const url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+p.lat+"&lon="+p.lng+"&zoom=18&accept-language=zh-TW";
-    const r=await fetch(url,{
-      headers:{Accept:"application/json"},
-      signal:ctl?ctl.signal:undefined
-    });
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    const d=await r.json();
-    p.addr=(d.display_name||"").trim();
-    p._loading=false;                 /* ★ 修正：成功也要清除載入狀態 */
-    persist();render();
-    toast(p.addr?"已取得地址 ✓":"查無地址");
-  }catch(e){
-    p._loading=false;                 /* 失敗本來就有，保留 */
-    render();
-    toast((e&&e.name==="AbortError")
-      ?"地址查詢逾時（12 秒無回應，可能離線或網路不穩）"
-      :"地址查詢失敗（"+(e.message||"網路錯誤")+"）");
-  }
+  render();toast("已更新："+p.name);
 }
 
 /* ========== 篩選與渲染 ========== */
@@ -1079,6 +1179,7 @@ function render(){
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>'+
         (nPhotos?"加照片":"＋ 照片")+'</button></div>';
 
+    /* ★ v8：編輯表單加入地址欄 */
     const editBox=
       '<div class="edit-box">'+
         '<div class="coord-ro"><b>座標（唯讀）</b> '+lat+', '+lng+(p.acc?' · ±'+Math.round(p.acc)+'m':'')+'</div>'+
@@ -1086,6 +1187,8 @@ function render(){
           '<input class="edit-name" type="text" value="'+esc(p.name)+'" maxlength="60" placeholder="地點名稱"></div>'+
         '<div class="field"><label>備註</label>'+
           '<textarea class="edit-note" maxlength="500" placeholder="要留給自己的提示…">'+esc(p.note||"")+'</textarea></div>'+
+        '<div class="field"><label>地址（可留白；卡片「補地址」可自動取得）</label>'+
+          '<input class="edit-addr" type="text" value="'+esc(p.addr||"")+'" placeholder="例如：台北市中正區羅斯福路二段100號"></div>'+
         '<div class="field"><label>分類</label><div class="edit-cats">'+
           CATS.map(cc=>'<button type="button" class="cat'+(p.cat===cc.id?" on":"")+'" data-editcat="'+cc.id+'" '+styleOf(cc)+'><i></i>'+esc(cc.id==="custom"?custom:cc.name)+'</button>').join("")+
         '</div></div>'+
@@ -1162,9 +1265,10 @@ if(list){
     if(act==="view"){openLb(p.id,+el.dataset.i);return}
     if(act==="share"){
       const url="https://www.google.com/maps/search/?api=1&query="+text;
-      const payload={title:p.name,text:p.name+"\n"+catOf(p.cat).name+"\n"+text+(p.addr?"\n"+p.addr:""),url:url};
+      const payload={title:p.name,text:p.name+"\n"+catOf(p.cat).name+"\n"+text+
+        (p.addr?"\n"+p.addr:""),url:url};
       if(navigator.share){navigator.share(payload).catch(()=>{})}
-      else copy(p.name+"\n"+text+"\n"+url,"已複製分享內容");
+      else copy(p.name+"\n"+text+"\n"+(p.addr?p.addr+"\n":"")+url,"已複製分享內容");
       return;
     }
   });
@@ -1263,9 +1367,7 @@ on("fileIn","change",function(){
   rd.readAsText(f);this.value="";
 });
 
-/* =========================================================
-   ★★★ PWA：圖示＋manifest＋Service Worker＋安裝按鈕
-   ========================================================= */
+/* ========== PWA（v7 同） ========== */
 function buildIcon(size){
   const cv=document.createElement("canvas");cv.width=cv.height=size;
   const g=cv.getContext("2d");
@@ -1291,13 +1393,8 @@ function injectManifest(){
       name:"座標記錄器 COORD LOGGER",
       short_name:"座標記錄器",
       description:"現場座標紀錄與導航王跳轉工具",
-      start_url:pageUrl,
-      scope:dirUrl,
-      display:"standalone",
-      orientation:"portrait",
-      background_color:"#0e100f",
-      theme_color:"#0e100f",
-      lang:"zh-Hant",
+      start_url:pageUrl,scope:dirUrl,display:"standalone",orientation:"portrait",
+      background_color:"#0e100f",theme_color:"#0e100f",lang:"zh-Hant",
       icons:[
         {src:buildIcon(192),sizes:"192x192",type:"image/png",purpose:"any"},
         {src:buildIcon(512),sizes:"512x512",type:"image/png",purpose:"any"},
@@ -1313,7 +1410,7 @@ function injectManifest(){
 function registerSW(){
   if(!("serviceWorker" in navigator)){swState="SW 不支援";updateDbg();return;}
   if(location.protocol!=="https:"&&location.protocol!=="http:"){
-    swState="SW 需 https";updateDbg();return;   // file:// 無法註冊
+    swState="SW 需 https";updateDbg();return;
   }
   navigator.serviceWorker.register("sw.js",{scope:"./"}).then(function(){
     swState="SW 已啟用";updateDbg();
@@ -1341,9 +1438,7 @@ window.addEventListener("appinstalled",function(){
   const b=$("btnInstall");if(b)b.hidden=true;
 });
 
-/* =========================================================
-   ★★★ init（分段防呆，改為 async）
-   ========================================================= */
+/* ========== init ========== */
 (async function(){
   try{await storageInit();}
   catch(e){if(window.__err)window.__err("storageInit："+e.message);applyState(null);storageMode="localStorage";}
