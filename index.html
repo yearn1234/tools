@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-<meta name="theme-color" content="#0e100f" id="metaTheme">
+<meta name="theme-color" content="#0e100f" id="metaThcmw4bgzae83feme">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>座標記錄器 · COORD LOGGER</title>
@@ -467,10 +467,6 @@ footer b{color:var(--ink);font-weight:500}
       <span class="readout idle" id="readout">
         <span class="gps-coords idle" id="lat">--.------</span><span class="gps-coords idle">, </span><span class="gps-coords idle" id="lng">--.------</span>
       </span>
-      <button class="gps-add" id="btnAddRec" type="button" title="新增紀錄">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
-        <span>新增紀錄</span>
-      </button>
     </div>
     <div class="gps-row gps-detail">
       <span class="chip">精度 <b id="acc">--</b></span>
@@ -479,7 +475,7 @@ footer b{color:var(--ink);font-weight:500}
       <span class="chip">WGS-84</span>
       <button class="ghost-btn" id="btnLocate">重新定位</button>
       <button class="ghost-btn" id="btnWatch">持續定位</button>
-      <button class="ghost-btn" id="btnAddRec2" type="button">＋ 新增紀錄</button>
+      <button class="ghost-btn" stroke="currentColor" id="btnAddRec" type="button">＋新增卡片(新增此座標文字記錄)</button>
     </div>
   </div>
 </header>
@@ -1252,7 +1248,6 @@ function maybeCloseSheet(){
   closeSheet();
 }
 on("btnAddRec","click",safe(openSheet,"btnAddRec"));
-on("btnAddRec2","click",safe(openSheet,"btnAddRec2"));
 on("sheetClose","click",safe(closeSheet,"sheetClose"));
 on("sheetBd","click",safe(closeSheet,"sheetBd"));
 
