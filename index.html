@@ -116,6 +116,21 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .live-addr.on{color:var(--ink)}
 .live-addr.err{color:var(--accent)}
 .caret{font-family:"DM Mono",monospace;font-size:10px;color:var(--placeholder);flex:none}
+
+/* ★ 頂部常駐「＋ 新增紀錄」（取代右下 FAB） */
+.gps-add{flex:none;background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
+  font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:12px;letter-spacing:.06em;
+  padding:8px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  transition:letter-spacing .25s ease,background .2s ease;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.gps-add:hover{letter-spacing:.12em;background:var(--accent-soft)}
+.gps-add:active{transform:translateY(1px)}
+.gps-add svg{width:14px;height:14px;flex:none}
+@media(max-width:520px){
+  .gps-add span{display:none}
+  .gps-add{padding:9px 10px}
+}
+
 .gps-detail{max-width:760px;margin:0 auto;padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .chip{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);padding:3px 7px}
 .chip b{color:var(--ink);font-weight:500}
@@ -124,12 +139,11 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .ghost-btn:hover{border-color:var(--accent);color:var(--accent)}
 .ghost-btn.on{border-color:var(--lock);color:var(--lock)}
 
-.wrap{max-width:760px;margin:0 auto;padding:16px 16px 130px;position:relative;z-index:1}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 48px;position:relative;z-index:1}
 .log-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:10px}
 .log-head h2{font-family:"Syne",sans-serif;font-size:12.5px;letter-spacing:.26em;font-weight:700}
 .log-head span{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
 
-/* ★ 卡片搜尋 */
 .search-row{display:flex;gap:7px;margin-bottom:11px;align-items:center}
 .search-box{position:relative;flex:1;min-width:0}
 .search-box>svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);
@@ -235,23 +249,6 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .btn-cancel:hover{border-color:var(--ink);color:var(--ink)}
 .edit-tip{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.1em;color:var(--placeholder);margin-top:9px}
 
-/* ★ FAB：dock 固定層 + env 三行後備 + visualViewport 同步 */
-.fab-dock{position:fixed;left:0;right:0;bottom:0;z-index:5;pointer-events:none;
-  display:flex;justify-content:flex-end;
-  padding:16px;
-  padding:16px 16px 16px;
-  padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));
-  transition:padding-bottom .12s linear;will-change:padding-bottom}
-.fab{pointer-events:auto;background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
-  padding:15px 19px;font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
-  display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;
-  box-shadow:0 8px 26px rgba(0,0,0,.5);transition:letter-spacing .3s ease,background .2s ease;
-  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.fab:hover{letter-spacing:.16em;background:var(--accent-soft)}
-.fab:active{transform:translateY(1px)}
-.fab svg{width:17px;height:17px}
-body.sheet-open .fab-dock,body.modal-open .fab-dock{display:none}
-
 .sheet-bd{position:fixed;inset:0;background:rgba(5,6,5,.72);z-index:10;opacity:0;transition:opacity .25s ease;
   touch-action:none}
 .sheet-bd.open{opacity:1}
@@ -352,7 +349,6 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .bar i{position:absolute;inset:0 auto 0 0;background:var(--lock);width:0;transition:width .4s ease}
 .bar i.hot{background:var(--accent)}
 
-/* ========== 分類管理 ========== */
 .modal{position:fixed;inset:0;z-index:15;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal-bd{position:absolute;inset:0;background:rgba(5,6,5,.78);touch-action:none;animation:fade .2s ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
@@ -414,7 +410,7 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .lb-acts a:hover{border-color:#f2efe8;color:#f2efe8}
 
 .toast{position:fixed;left:50%;transform:translate(-50%,20px);
-  bottom:86px;bottom:calc(86px + env(safe-area-inset-bottom,0px));
+  bottom:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));
   background:#0b0b0b;border:1px solid var(--accent);color:#f2efe8;font-family:"DM Mono",monospace;font-size:12px;
   letter-spacing:.06em;padding:11px 18px;z-index:30;opacity:0;pointer-events:none;transition:.28s;
   max-width:86vw;text-align:center}
@@ -474,6 +470,11 @@ footer b{color:var(--ink);font-weight:500}
         <span class="gps-coords idle" id="lat">--.------</span><span class="gps-coords idle">, </span><span class="gps-coords idle" id="lng">--.------</span>
       </span>
       <span class="live-addr" id="liveAddr">地址：尚未定位</span>
+      <!-- ★ 取代右下 FAB：頂部常駐新增 -->
+      <button class="gps-add" id="btnAddRec" type="button" title="新增紀錄">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
+        <span>新增紀錄</span>
+      </button>
       <span class="caret" id="gpsCaret">▾</span>
     </div>
     <div class="gps-detail" id="gpsDetail" hidden>
@@ -483,6 +484,7 @@ footer b{color:var(--ink);font-weight:500}
       <span class="chip">WGS-84</span>
       <button class="ghost-btn" id="btnLocate">重新定位</button>
       <button class="ghost-btn" id="btnWatch">持續定位</button>
+      <button class="ghost-btn" id="btnAddRec2" type="button">＋ 新增紀錄</button>
     </div>
   </div>
 </header>
@@ -493,7 +495,6 @@ footer b{color:var(--ink);font-weight:500}
     <span id="logMeta">NO ENTRIES</span>
   </div>
 
-  <!-- ★ 卡片搜尋 -->
   <div class="search-row">
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -510,12 +511,7 @@ footer b{color:var(--ink);font-weight:500}
   <div id="list"></div>
 </main>
 
-<div class="fab-dock" id="fabDock">
-  <button class="fab" id="fab">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-    記錄
-  </button>
-</div>
+<!-- ★ 右下 FAB 已移除 -->
 
 <div class="sheet-bd" id="sheetBd" hidden></div>
 <section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="記錄座標">
@@ -673,7 +669,7 @@ const PALETTE=[
 
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const VER="v13";
+const VER="v14";
 const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 const KING_PKGS=[
@@ -687,7 +683,7 @@ let cats=[];
 let defaultCat="general";
 let selectedCat="general";
 let filter="all";
-let searchQ="";                 /* ★ 搜尋字串 */
+let searchQ="";
 let editingId=null, moreId=null;
 let staged=[];
 let current=null;
@@ -785,7 +781,6 @@ function normalize(){
   ensureCats();
 }
 
-/* ========== ★ 卡片搜尋比對 ========== */
 function matchSearch(p,q){
   if(!q)return true;
   const s=q.trim().toLowerCase();
@@ -798,7 +793,6 @@ function matchSearch(p,q){
     fmt(p.lat,4)+" "+fmt(p.lng,4),
     when(p.ts)
   ].join("\n").toLowerCase();
-  /* 空白分隔多關鍵字：全部都要命中 */
   return s.split(/\s+/).every(function(k){return hay.indexOf(k)>=0;});
 }
 
@@ -1152,23 +1146,6 @@ on("gpsMain","click",function(e){
   if(c)c.textContent=d.hidden?"▾":"▴";
 });
 
-/* ========== ★ FAB 同步（三重保險） ========== */
-function syncFabBottom(){
-  const dock=$("fabDock");if(!dock)return;
-  const vv=window.visualViewport;
-  if(!vv){dock.style.paddingBottom="";return;}
-  const inset=Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-  dock.style.paddingBottom="calc(16px + "+inset+"px + env(safe-area-inset-bottom, 0px))";
-}
-if(window.visualViewport){
-  window.visualViewport.addEventListener("resize",syncFabBottom);
-  window.visualViewport.addEventListener("scroll",syncFabBottom);
-}
-window.addEventListener("resize",syncFabBottom);
-window.addEventListener("orientationchange",function(){setTimeout(syncFabBottom,150);});
-if(document.fonts&&document.fonts.ready)document.fonts.ready.then(syncFabBottom);
-setTimeout(syncFabBottom,0);
-
 /* ========== 分類管理 ========== */
 function catUseCount(id){return points.reduce((n,p)=>n+(p&&p.cat===id?1:0),0);}
 
@@ -1184,7 +1161,6 @@ function closeCatModal(){
   document.body.classList.remove("modal-open");
   render();
 }
-/* ★ 修掉：btnCatMgr 是動態產生的，不能在此時綁 → 全走 #filters 委派 */
 on("btnCatMgr2","click",openCatModal);
 on("catModalClose","click",closeCatModal);
 on("catModalBd","click",closeCatModal);
@@ -1378,7 +1354,6 @@ function openSheet(){
       b.classList.add("open");s.classList.add("open");
     });
   });
-  syncFabBottom();
   const m=$("mName");
   if(m)setTimeout(function(){try{m.focus({preventScroll:true});}catch(e){}},340);
 }
@@ -1389,7 +1364,6 @@ function closeSheet(){
   document.body.classList.remove("sheet-open");
   setTimeout(function(){
     s.hidden=true;if(b)b.hidden=true;
-    syncFabBottom();
   },320);
 }
 function maybeCloseSheet(){
@@ -1397,11 +1371,12 @@ function maybeCloseSheet(){
   if(k&&k.checked)return;
   closeSheet();
 }
-on("fab","click",openSheet);
+/* ★ CTA 從頂部 GPS 列開啟（右下 FAB 已移除） */
+on("btnAddRec","click",openSheet);
+on("btnAddRec2","click",openSheet);
 on("sheetClose","click",closeSheet);
 on("sheetBd","click",closeSheet);
 
-/* ★ 不鎖 body 捲軸（避免版面位移），改 backdrop 擋捲動 */
 (function(){
   const bd=$("sheetBd");
   if(bd)bd.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
@@ -1436,7 +1411,7 @@ on("btnAddr","click",async function(){
   this.disabled=false;this.textContent="取得";
 });
 
-/* ========== ★ 搜尋 ========== */
+/* ========== 搜尋 ========== */
 function onSearchInput(){
   const inp=$("searchIn");if(!inp)return;
   searchQ=inp.value;
@@ -1600,7 +1575,6 @@ on("filters","click",e=>{
 function render(){
   const c1=$("count");if(c1)c1.textContent=points.length;
 
-  /* ★ 先分類、再搜尋（兩條件 AND） */
   const byCat=points.filter(p=>p&&(filter==="all"||p.cat===filter));
   const shown=byCat.filter(p=>matchSearch(p,searchQ));
 
@@ -1629,9 +1603,9 @@ function render(){
       : "此分類尚無紀錄";
     list.innerHTML='<div class="empty">'+
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>'+
-      '<p>'+(points.length?why:"尚無紀錄，按右下角「＋ 記錄」新增一筆")+'</p>'+
+      '<p>'+(points.length?why:"尚無紀錄，按上方「＋ 新增紀錄」新增一筆")+'</p>'+
       '<small>'+(!points.length
-        ?"TAP ＋ TO LOG A POINT"
+        ?"TAP ＋ NEW RECORD"
         :(searchQ.trim()?"TRY ANOTHER KEYWORD":"TRY ANOTHER CATEGORY"))+'</small></div>';
     return;
   }
@@ -1830,7 +1804,6 @@ document.addEventListener("keydown",e=>{
   }
   const s=$("sheet");
   if(e.key==="Escape"&&s&&!s.hidden){closeSheet();return;}
-  /* 焦點不在輸入框時，按 / 跳到搜尋 */
   const t=e.target;
   const typing=t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable);
   if(e.key==="/"&&!typing){
@@ -1979,8 +1952,6 @@ window.addEventListener("appinstalled",function(){
 
   try{injectManifest();registerSW();}
   catch(e){if(window.__err)window.__err("pwa："+e.message);}
-
-  try{syncFabBottom();}catch(e){}
 
   try{
     if(points.length)toast("已載入 "+points.length+" 筆紀錄（"+storageMode+"）");
