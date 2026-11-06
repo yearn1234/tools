@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#0e100f" id="metaTheme">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -67,7 +67,7 @@ try{var t=localStorage.getItem("coordlog.theme");if(t)document.documentElement.d
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%;color-scheme:var(--scheme)}
 body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",sans-serif;line-height:1.6;
-  min-height:100dvh;position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  min-height:100vh;min-height:100dvh;position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased;
   transition:background .3s ease,color .3s ease}
 .topo{position:fixed;inset:0;width:100%;height:100%;color:var(--topo);opacity:.55;pointer-events:none;z-index:0;transition:color .3s}
 .grain{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:.05;mix-blend-mode:overlay;
@@ -75,7 +75,6 @@ body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",sans-serif
 ::selection{background:var(--accent);color:var(--on-accent)}
 button,input,textarea{font-family:inherit}
 
-/* ================= Header + GPS 常駐條 ================= */
 header{position:sticky;top:0;z-index:4;background:var(--header-bg);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);transition:background .3s}
 .hd{max-width:760px;margin:0 auto;padding:11px 16px;display:flex;align-items:center;gap:11px}
@@ -125,8 +124,7 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .ghost-btn:hover{border-color:var(--accent);color:var(--accent)}
 .ghost-btn.on{border-color:var(--lock);color:var(--lock)}
 
-/* ================= 主列表 ================= */
-.wrap{max-width:760px;margin:0 auto;padding:20px 16px 120px;position:relative;z-index:1}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 130px;position:relative;z-index:1}
 .log-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:12px}
 .log-head h2{font-family:"Syne",sans-serif;font-size:12.5px;letter-spacing:.26em;font-weight:700}
 .log-head span{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
@@ -139,6 +137,8 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .fchip:hover{border-color:var(--ink);color:var(--ink)}
 .fchip.on{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
 .fchip.on b{opacity:.6}
+.fchip.mgr{border-style:dashed;letter-spacing:.04em}
+.fchip.mgr:hover{border-color:var(--accent);color:var(--accent)}
 .empty{border:1px dashed var(--line);padding:44px 22px;text-align:center;color:var(--muted)}
 .empty svg{width:26px;height:26px;color:var(--ghost);margin-bottom:12px}
 .empty p{font-size:13px;letter-spacing:.06em}
@@ -195,9 +195,10 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .btn.edit:hover{border-color:var(--lock);color:var(--lock)}
 .btn.king{background:var(--ink);border-color:var(--ink);color:var(--on-ink);font-weight:700}
 .btn.king:hover{background:var(--accent);border-color:var(--accent);color:var(--on-accent);letter-spacing:.1em}
+.btn.use{width:100%;justify-content:center;border-color:var(--line-strong);color:var(--ink);font-weight:500}
+.btn.use:hover{border-color:var(--lock);color:var(--lock)}
 .btn svg{width:12px;height:12px}
 
-/* 編輯表單 */
 .edit-box{padding:12px 13px 13px;animation:up .3s ease}
 .edit-box .field:first-of-type{margin-top:0}
 .edit-box .coord-ro{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.05em;color:var(--muted);
@@ -213,45 +214,51 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .btn-cancel:hover{border-color:var(--ink);color:var(--ink)}
 .edit-tip{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.1em;color:var(--placeholder);margin-top:9px}
 
-/* ================= FAB ================= */
-.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:5;
-  background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
+.fab-dock{position:fixed;left:0;right:0;bottom:0;z-index:5;pointer-events:none;
+  display:flex;justify-content:flex-end;
+  padding:16px;
+  padding:16px calc(16px + env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) 16px;
+  transition:padding-bottom .15s linear}
+.fab{pointer-events:auto;background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
   padding:15px 19px;font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
-  display:flex;align-items:center;gap:8px;cursor:pointer;
-  box-shadow:0 8px 26px rgba(0,0,0,.5);transition:letter-spacing .3s ease,background .2s ease}
+  display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;
+  box-shadow:0 8px 26px rgba(0,0,0,.5);transition:letter-spacing .3s ease,background .2s ease;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .fab:hover{letter-spacing:.16em;background:var(--accent-soft)}
 .fab:active{transform:translateY(1px)}
 .fab svg{width:17px;height:17px}
-body.sheet-open .fab{display:none}
+body.sheet-open .fab-dock,body.modal-open .fab-dock{display:none}
 
-/* ================= 底部面板 ================= */
-.sheet-bd{position:fixed;inset:0;background:rgba(5,6,5,.72);z-index:10;opacity:0;transition:opacity .25s ease}
+.sheet-bd{position:fixed;inset:0;background:rgba(5,6,5,.72);z-index:10;opacity:0;transition:opacity .25s ease;
+  touch-action:none}
 .sheet-bd.open{opacity:1}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--surface);
   border-top:1px solid var(--line-strong);max-height:88dvh;display:flex;flex-direction:column;
   transform:translateY(101%);transition:transform .32s cubic-bezier(.2,.85,.25,1);
-  padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -14px 40px rgba(0,0,0,.5)}
+  padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -14px 40px rgba(0,0,0,.5)}
 .sheet.open{transform:none}
 @media(min-width:720px){
   .sheet{left:50%;width:560px;max-width:94vw;transform:translate(-50%,101%)}
   .sheet.open{transform:translate(-50%,0)}
 }
 .sheet-grip{width:38px;height:3px;background:var(--line-strong);margin:9px auto 0;border-radius:2px;flex:none}
-.sheet-head{display:flex;align-items:center;justify-content:space-between;
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:9px 16px 11px;border-bottom:1px solid var(--line);flex:none}
-.sheet-head h2{font-family:"Syne",sans-serif;font-size:12.5px;letter-spacing:.24em;font-weight:700}
+.sheet-head h2{font-family:"Syne",sans-serif;font-size:12.5px;letter-spacing:.24em;font-weight:700;flex:none}
 .sheet-head .fix{font-family:"DM Mono",monospace;font-size:10.5px;color:var(--muted);
-  letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  letter-spacing:-.01em;font-variant-numeric:tabular-nums;flex:1;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sheet-x{background:none;border:1px solid var(--line);color:var(--muted);width:30px;height:30px;
   font-size:16px;cursor:pointer;border-radius:2px;flex:none;transition:.2s}
 .sheet-x:hover{border-color:var(--accent);color:var(--accent)}
-.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px calc(20px + env(safe-area-inset-bottom))}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px calc(20px + env(safe-area-inset-bottom,0px))}
 
 .sec-label{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.22em;color:var(--muted);
   margin-top:17px;padding-top:14px;border-top:1px solid var(--line);
   display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sec-label:first-child{border-top:0;margin-top:8px;padding-top:6px}
 .sec-label em{font-style:normal;color:var(--placeholder);letter-spacing:.08em;text-align:right}
+.sec-label .ghost-btn{padding:3px 8px}
 
 .cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .cat{font-size:12.5px;letter-spacing:.03em;background:var(--surface-2);border:1px solid var(--line);
@@ -260,7 +267,6 @@ body.sheet-open .fab{display:none}
 .cat i{width:9px;height:9px;background:var(--c);flex:none;border-radius:1px}
 .cat:hover{border-color:var(--cl,var(--c));color:var(--ink)}
 .cat.on{border-color:var(--cl,var(--c));color:var(--ink);box-shadow:inset 0 0 0 1px var(--cl,var(--c))}
-.cat .pen{font-family:"DM Mono",monospace;font-size:10px;opacity:.55;margin-left:2px}
 
 .cam{display:flex;gap:8px;margin-top:10px;align-items:flex-start;flex-wrap:wrap}
 .cam-btn{width:70px;height:70px;flex:none;border:1px dashed var(--line-strong);background:var(--surface-2);
@@ -323,10 +329,52 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .bar i{position:absolute;inset:0 auto 0 0;background:var(--lock);width:0;transition:width .4s ease}
 .bar i.hot{background:var(--accent)}
 
-/* ================= 燈箱 / 提示 / 頁尾 ================= */
-.lb{position:fixed;inset:0;z-index:20;background:rgba(6,7,6,.96);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;padding:56px 14px 76px;animation:fade .22s ease}
+/* ========== ★ 分類管理 ========== */
+.modal{position:fixed;inset:0;z-index:15;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-bd{position:absolute;inset:0;background:rgba(5,6,5,.78);touch-action:none;animation:fade .2s ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
+.modal-panel{position:relative;background:var(--surface);border:1px solid var(--line-strong);
+  width:100%;max-width:520px;max-height:86dvh;display:flex;flex-direction:column;
+  box-shadow:0 20px 50px rgba(0,0,0,.55);animation:pop .25s cubic-bezier(.2,.85,.3,1)}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.modal-panel::before,.modal-panel::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--accent);pointer-events:none}
+.modal-panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.modal-panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.mp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px 12px;border-bottom:1px solid var(--line);flex:none}
+.mp-head h2{font-family:"Syne",sans-serif;font-size:12.5px;letter-spacing:.22em;font-weight:700}
+.mp-head p{font-family:"DM Mono",monospace;font-size:9.5px;color:var(--placeholder);letter-spacing:.08em;margin-top:2px}
+.mp-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 4px}
+.mp-foot{padding:12px 16px 16px;border-top:1px solid var(--line);flex:none}
+.mp-foot .hint{margin-top:0}
+
+.cm-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.cm-row:last-child{border-bottom:0}
+.cm-sw{position:relative;width:30px;height:30px;flex:none;border:1px solid var(--line-strong);border-radius:2px;overflow:hidden;cursor:pointer}
+.cm-sw input[type=color]{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);
+  border:0;padding:0;cursor:pointer;background:none}
+.cm-name{flex:1;min-width:0;font-size:13.5px;font-weight:500;letter-spacing:.03em;
+  background:transparent;border:1px solid transparent;color:var(--ink);padding:6px 8px;border-radius:2px;
+  outline:none;transition:.18s;font-family:"Noto Sans TC",sans-serif;width:100%}
+.cm-name:hover{border-color:var(--line)}
+.cm-name:focus{border-color:var(--accent);background:var(--surface-2)}
+.cm-n{font-family:"DM Mono",monospace;font-size:9.5px;color:var(--placeholder);flex:none;letter-spacing:.05em;min-width:44px;text-align:right}
+.cm-ib{width:28px;height:28px;flex:none;background:transparent;border:1px solid var(--line);color:var(--muted);
+  cursor:pointer;border-radius:2px;font-family:"DM Mono",monospace;font-size:12px;line-height:1;
+  display:grid;place-items:center;transition:.18s;padding:0}
+.cm-ib:hover{border-color:var(--ink);color:var(--ink)}
+.cm-ib.star{color:var(--placeholder)}
+.cm-ib.star.on{border-color:var(--lock);color:var(--lock)}
+.cm-ib.del:hover{border-color:var(--accent);color:var(--accent)}
+.cm-ib:disabled{opacity:.3;cursor:not-allowed}
+.cm-add{display:flex;gap:8px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.cm-add input[type=text]{flex:1;min-width:0;font-family:"Noto Sans TC",sans-serif;font-size:13.5px;padding:9px 10px}
+.cm-add .cm-sw{width:36px;height:36px}
+.cm-add .cta{margin-top:0;padding:9px 16px;font-size:13px;flex:none;letter-spacing:.06em}
+.cm-add .cta:hover{letter-spacing:.1em}
+
+.lb{position:fixed;inset:0;z-index:20;background:rgba(6,7,6,.96);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:56px 14px 76px;animation:fade .22s ease;touch-action:none}
 .lb img{max-width:100%;max-height:70vh;object-fit:contain;border:1px solid #2a302a;background:#000}
 .lb figcaption{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;color:#8b918a;margin-top:12px;text-align:center}
 .lb-x{position:absolute;top:14px;right:16px;background:none;border:1px solid #2a302a;color:#f2efe8;
@@ -343,7 +391,8 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .lb-acts button:hover{border-color:#ff5f1f;color:#ff5f1f}
 .lb-acts a:hover{border-color:#f2efe8;color:#f2efe8}
 
-.toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
+.toast{position:fixed;left:50%;transform:translate(-50%,20px);
+  bottom:86px;bottom:calc(86px + env(safe-area-inset-bottom,0px));
   background:#0b0b0b;border:1px solid var(--accent);color:#f2efe8;font-family:"DM Mono",monospace;font-size:12px;
   letter-spacing:.06em;padding:11px 18px;z-index:30;opacity:0;pointer-events:none;transition:.28s;
   max-width:86vw;text-align:center}
@@ -396,7 +445,6 @@ footer b{color:var(--ink);font-weight:500}
     </div>
   </div>
 
-  <!-- ★ 常駐 GPS 條：換頁／開面板都在 -->
   <div class="gps">
     <div class="gps-main" id="gpsMain" title="點一下展開定位詳情">
       <span class="status" id="status"><i class="dot"></i><span id="statusTxt">待命</span></span>
@@ -426,10 +474,12 @@ footer b{color:var(--ink);font-weight:500}
   <div id="list"></div>
 </main>
 
-<button class="fab" id="fab">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-  記錄
-</button>
+<div class="fab-dock" id="fabDock">
+  <button class="fab" id="fab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+    記錄
+  </button>
+</div>
 
 <div class="sheet-bd" id="sheetBd" hidden></div>
 <section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="記錄座標">
@@ -441,7 +491,10 @@ footer b{color:var(--ink);font-weight:500}
   </div>
   <div class="sheet-body">
 
-    <div class="sec-label">Category · 分類標籤<em id="catNow"></em></div>
+    <div class="sec-label">Category · 分類標籤
+      <em id="catNow"></em>
+      <button class="ghost-btn" id="btnCatMgr2" type="button">⚙ 管理</button>
+    </div>
     <div class="cats" id="cats"></div>
 
     <div class="sec-label">Photos · 現場照片<em id="stagedNow">0 張</em></div>
@@ -507,7 +560,7 @@ footer b{color:var(--ink);font-weight:500}
         <button class="cta" id="btnSave">儲存這筆</button>
       </div>
     </div>
-    <p class="hint">十進位格式（例：25.033, 121.565）。已存紀錄按「✎ 編輯」可改<b>座標、名稱、備註、地址與分類</b>。</p>
+    <p class="hint">十進位格式（例：25.033, 121.565）。分類可增刪、改名、換色、排序（篩選列「⚙ 分類管理」）。</p>
 
     <div class="meter">
       <span>本機空間</span>
@@ -516,6 +569,29 @@ footer b{color:var(--ink);font-weight:500}
     </div>
   </div>
 </section>
+
+<!-- ★ 分類管理 -->
+<div class="modal" id="catModal" hidden role="dialog" aria-modal="true" aria-label="分類管理">
+  <div class="modal-bd" id="catModalBd"></div>
+  <div class="modal-panel">
+    <div class="mp-head">
+      <div>
+        <h2>CATEGORIES · 分類管理</h2>
+        <p>改名／換色／排序／設預設／刪除</p>
+      </div>
+      <button class="sheet-x" id="catModalClose" aria-label="關閉">×</button>
+    </div>
+    <div class="mp-body" id="catMgrList"></div>
+    <div class="mp-foot">
+      <div class="cm-add">
+        <span class="cm-sw" id="newSwWrap"><input type="color" id="newColor" value="#4da3ff" aria-label="新分類顏色"></span>
+        <input type="text" id="newCatName" maxlength="12" placeholder="新分類名稱（Enter 新增）">
+        <button class="cta" id="btnAddCat">新增</button>
+      </div>
+      <p class="hint">★＝預設分類（開啟記錄面板時自動選取）。刪除有紀錄的分類時，其紀錄會自動改掛到預設分類。至少保留 1 個分類。</p>
+    </div>
+  </div>
+</div>
 
 <footer>
   <b>資料存於本機瀏覽器（IndexedDB）</b>，不上傳伺服器；重要資料請「匯出」備份。點卡片座標可複製。
@@ -545,18 +621,25 @@ footer b{color:var(--ink);font-weight:500}
 const $=id=>document.getElementById(id);
 const list=$("list");
 
-const CATS=[
-  {id:"general",name:"一般", color:"#8b918a",colorLight:"#626764"},
-  {id:"power",name:"車站", color:"#ffb020",colorLight:"#9a6200"},
-  {id:"custom1",name:"禁限建(01-06)",color:"#4da3ff",colorLight:"#1667c4"},
-  {id:"custom2",name:"禁限建(06-09)",color:"#ff5f1f",colorLight:"#c24100"},
-  {id:"custom3",name:"禁限建(09-11)",color:"#5cb800",colorLight:"#3f7d00"},
-  {id:"custom4",name:"塔吊巡檢",color:"#ff4d6d",colorLight:"#c0143c"},
-  {id:"custom", name:"自訂",color:"#a855f7",colorLight:"#7c3aed"}
+/* ★ 預設分類範本（首次載入時寫入，之後由使用者管理） */
+const DEFAULT_CATS=[
+  {id:"general",name:"一般",    color:"#8b918a"},
+  {id:"power",  name:"電力設施",color:"#ffb020"},
+  {id:"store",  name:"倉儲點",  color:"#4da3ff"},
+  {id:"work",   name:"施工中",  color:"#ff5f1f"},
+  {id:"nature", name:"環境採集",color:"#5cb800"},
+  {id:"risk",   name:"注意風險",color:"#ff4d6d"},
+  {id:"custom", name:"自訂",    color:"#a855f7"}
 ];
+const PALETTE=[
+  "#8b918a","#ffb020","#4da3ff","#ff5f1f","#5cb800","#ff4d6d",
+  "#a855f7","#00c2c7","#e8c547","#f06292","#7986cb","#8d6e63",
+  "#26a69a","#ec407a","#5c6bc0","#9ccc65"
+];
+
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const VER="v10";
+const VER="v12";
 const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 const KING_PKGS=[
@@ -565,8 +648,11 @@ const KING_PKGS=[
   "com.kingwaytek.naviking3d.google.std"
 ];
 
-let points=[], custom="自訂";
-let filter="all", selectedCat="general";
+let points=[];
+let cats=[];                 /* ★ 使用者分類清單 */
+let defaultCat="general";    /* ★ 預設分類 */
+let selectedCat="general";
+let filter="all";
 let editingId=null, moreId=null;
 let staged=[];
 let current=null;
@@ -595,7 +681,7 @@ function currentTheme(){return document.documentElement.dataset.theme==="light"?
 function updateDbg(msg){
   const d=$("dbg");
   if(d)d.textContent=(msg?msg+" · ":"")+"腳本 "+VER+" ✓ · "+points.length+" 筆 · "+
-    (currentTheme()==="light"?"亮色":"暗色")+" · 儲存 "+storageMode+" · "+swState+
+    cats.length+" 分類 · "+(currentTheme()==="light"?"亮色":"暗色")+" · 儲存 "+storageMode+" · "+swState+
     (location.protocol==="file:"?" · file://（離線與定位可能受限）":"");
 }
 function applyTheme(t){
@@ -617,25 +703,52 @@ function toast(msg){
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function fmt(n,d){return Number(n).toFixed(d==null?6:d);}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-function validCat(id){return CATS.some(c=>c.id===id);}
+function validCat(id){return cats.some(c=>c.id===id);}
 function catOf(id){
-  const c=CATS.find(x=>x.id===id)||CATS[0];
-  return c.id==="custom"?{id:c.id,name:custom,color:c.color,colorLight:c.colorLight}:c;
+  return cats.find(x=>x.id===id)||cats[0]||{id:"general",name:"一般",color:"#8b918a"};
 }
 function styleOf(c,dly){
-  return 'style="--c:'+c.color+';--cl:'+(c.colorLight||c.color)+(dly?';--d:'+dly+'s':'')+'"';
+  const col=c.color||"#8b918a";
+  return 'style="--c:'+col+';--cl:'+col+(dly?';--d:'+dly+'s':'')+'"';
 }
 function when(ts){return new Date(ts).toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});}
-
+function nextColor(){
+  const used=cats.map(c=>String(c.color||"").toLowerCase());
+  for(let i=0;i<PALETTE.length;i++){
+    const col=PALETTE[i];
+    if(used.indexOf(col.toLowerCase())<0)return col;
+  }
+  return PALETTE[Math.floor(Math.random()*PALETTE.length)];
+}
+function ensureCats(){
+  if(!cats.length){
+    cats=DEFAULT_CATS.map(c=>({id:c.id,name:c.name,color:c.color}));
+  }
+  /* 紀錄用到但清單沒有的分類 → 自動補建 */
+  points.forEach(p=>{
+    if(!p)return;
+    let id=String(p.cat||"general");
+    if(!cats.some(c=>c.id===id)){
+      let name=id;
+      if(id==="custom"){
+        name=(typeof p._legacyCustom==="string"&&p._legacyCustom)?p._legacyCustom:"自訂";
+      }
+      cats.push({id:id,name:String(name).slice(0,12),color:nextColor()});
+    }
+  });
+  if(!cats.some(c=>c.id===defaultCat))defaultCat=cats[0].id;
+  if(!cats.some(c=>c.id===selectedCat))selectedCat=defaultCat;
+}
 function normalize(){
   points.forEach(p=>{
     if(!p||typeof p!=="object")return;
-    if(!validCat(p.cat))p.cat="general";
+    if(typeof p.cat!=="string"||!p.cat)p.cat="general";
     if(!Array.isArray(p.photos))p.photos=[];
     if(typeof p.name!=="string"||!p.name.trim())p.name="未命名地點";
     if(typeof p.note!=="string")p.note="";
     if(typeof p.addr!=="string")p.addr="";
   });
+  ensureCats();
 }
 
 /* ========== 儲存層 ========== */
@@ -688,9 +801,25 @@ function readLegacyLS(){
 }
 function applyState(state){
   points=(state&&Array.isArray(state.points))?state.points:[];
-  custom=(state&&typeof state.custom==="string"&&state.custom.trim())
-         ?state.custom.trim().slice(0,10):"自訂";
   points=points.filter(p=>p&&typeof p==="object");
+
+  /* ★ 分類：v4 有 cats 用之；否則從預設範本＋舊 custom 名稱遷移 */
+  if(state&&Array.isArray(state.cats)&&state.cats.length){
+    cats=state.cats.filter(c=>c&&typeof c==="object"&&c.id)
+      .map(c=>({
+        id:String(c.id),
+        name:String(c.name||c.id).slice(0,12),
+        color:/^#[0-9a-fA-F]{6}$/.test(c.color||"")?c.color:"#8b918a"
+      }));
+  }else{
+    cats=DEFAULT_CATS.map(c=>({id:c.id,name:c.name,color:c.color}));
+    const legacy=(state&&typeof state.custom==="string"&&state.custom.trim())
+      ?state.custom.trim().slice(0,12):"自訂";
+    const cu=cats.find(c=>c.id==="custom");
+    if(cu)cu.name=legacy;
+  }
+  defaultCat=(state&&typeof state.defaultCat==="string"&&state.defaultCat)?state.defaultCat:"general";
+  selectedCat=defaultCat;
   normalize();
 }
 async function storageInit(){
@@ -712,7 +841,7 @@ async function storageInit(){
   }
 }
 function persist(){
-  const state={v:3,points:points,custom:custom};
+  const state={v:4,points:points,cats:cats,defaultCat:defaultCat};
   let json;
   try{json=JSON.stringify(state);}
   catch(e){toast("資料序列化失敗");return false;}
@@ -966,7 +1095,6 @@ on("btnWatch","click",async function(){
   }
 });
 
-/* ★ GPS 條展開／收合 */
 on("gpsMain","click",function(e){
   if(e.target.closest("button")||e.target.closest("a"))return;
   const d=$("gpsDetail"),c=$("gpsCaret");
@@ -975,25 +1103,162 @@ on("gpsMain","click",function(e){
   if(c)c.textContent=d.hidden?"▾":"▴";
 });
 
-/* ========== 分類 ========== */
+/* ========== FAB 定位同步 ========== */
+function syncFabBottom(){
+  const dock=$("fabDock");if(!dock)return;
+  const vv=window.visualViewport;
+  if(!vv){dock.style.paddingBottom="";return;}
+  const inset=Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  dock.style.paddingBottom="calc(16px + "+Math.round(inset)+"px + env(safe-area-inset-bottom, 0px))";
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize",syncFabBottom);
+  window.visualViewport.addEventListener("scroll",syncFabBottom);
+}
+window.addEventListener("resize",syncFabBottom);
+window.addEventListener("orientationchange",function(){setTimeout(syncFabBottom,120);});
+setTimeout(syncFabBottom,0);
+
+/* ========== ★ 分類管理 ========== */
+function catUseCount(id){return points.reduce((n,p)=>n+(p&&p.cat===id?1:0),0);}
+
+function openCatModal(){
+  const m=$("catModal");if(!m||!m.hidden)return;
+  m.hidden=false;
+  document.body.classList.add("modal-open");
+  renderCatMgr();
+}
+function closeCatModal(){
+  const m=$("catModal");if(!m||m.hidden)return;
+  m.hidden=true;
+  document.body.classList.remove("modal-open");
+  render();   /* 套用改名／改色到卡片與篩選列 */
+}
+on("btnCatMgr","click",openCatModal);
+on("btnCatMgr2","click",openCatModal);
+on("catModalClose","click",closeCatModal);
+on("catModalBd","click",closeCatModal);
+
+function renderCatMgr(){
+  const box=$("catMgrList");if(!box)return;
+  box.innerHTML=cats.map((c,i)=>{
+    const n=catUseCount(c.id);
+    const isDef=(c.id===defaultCat);
+    const last=(cats.length<=1);
+    return '<div class="cm-row" data-id="'+esc(c.id)+'">'+
+      '<span class="cm-sw" title="換色"><input type="color" value="'+esc(c.color)+'" data-act="color" aria-label="分類顏色"></span>'+
+      '<input class="cm-name" type="text" value="'+esc(c.name)+'" maxlength="12" data-act="name" aria-label="分類名稱">'+
+      '<span class="cm-n">'+n+' 筆</span>'+
+      '<button class="cm-ib star'+(isDef?" on":"")+'" data-act="def" title="設為預設"'+(isDef?" disabled":"")+'>★</button>'+
+      '<button class="cm-ib" data-act="up" title="上移"'+(i===0?" disabled":"")+'>↑</button>'+
+      '<button class="cm-ib" data-act="down" title="下移"'+(i===cats.length-1?" disabled":"")+'>↓</button>'+
+      '<button class="cm-ib del" data-act="del" title="刪除"'+(last?" disabled":"")+'>✕</button>'+
+    '</div>';
+  }).join("");
+}
+
+on("catMgrList","input",function(e){
+  const row=e.target.closest(".cm-row");if(!row)return;
+  const c=cats.find(x=>x.id===row.dataset.id);if(!c)return;
+  if(e.target.dataset.act==="color"){
+    c.color=e.target.value;
+    /* 即時只更新色票外框，完整 render 等關閉時 */
+    const sw=row.querySelector(".cm-sw");
+    if(sw)sw.style.background=c.color;
+  }
+  if(e.target.dataset.act==="name"){
+    c.name=e.target.value.slice(0,12);
+  }
+});
+on("catMgrList","change",function(e){
+  if(e.target.dataset.act==="color"){
+    persist();
+    const row=e.target.closest(".cm-row");
+    if(row){
+      const c=cats.find(x=>x.id===row.dataset.id);
+      const sw=row.querySelector(".cm-sw");
+      if(c&&sw)sw.style.background=c.color;
+    }
+  }
+});
+on("catMgrList","click",function(e){
+  const btn=e.target.closest("[data-act]");if(!btn||btn.tagName==="INPUT")return;
+  const row=e.target.closest(".cm-row");if(!row)return;
+  const id=row.dataset.id;
+  const i=cats.findIndex(c=>c.id===id);if(i<0)return;
+  const act=btn.dataset.act;
+
+  if(act==="def"){
+    defaultCat=id;
+    if(!validCat(selectedCat))selectedCat=id;
+    persist();renderCatMgr();
+    toast("預設分類 → "+catOf(id).name);
+    return;
+  }
+  if(act==="up"&&i>0){
+    const t=cats[i-1];cats[i-1]=cats[i];cats[i]=t;
+    persist();renderCatMgr();return;
+  }
+  if(act==="down"&&i<cats.length-1){
+    const t=cats[i+1];cats[i+1]=cats[i];cats[i]=t;
+    persist();renderCatMgr();return;
+  }
+  if(act==="del"){
+    if(cats.length<=1){toast("至少保留 1 個分類");return}
+    const c=cats[i];
+    const n=catUseCount(c.id);
+    const fallback=(defaultCat===id)
+      ? (cats.find(x=>x.id!==id)||cats[0])
+      : catOf(defaultCat);
+    if(n>0){
+      if(!confirm("刪除「"+c.name+"」？\n"+n+" 筆紀錄將改掛到「"+fallback.name+"」。"))return;
+      points.forEach(p=>{if(p&&p.cat===id)p.cat=fallback.id;});
+    }else{
+      if(!confirm("刪除分類「"+c.name+"」？"))return;
+    }
+    cats.splice(i,1);
+    if(defaultCat===id)defaultCat=cats[0].id;
+    if(selectedCat===id)selectedCat=defaultCat;
+    if(filter===id)filter="all";
+    if(editingId){/* 編輯中不變，render 會補 */}
+    persist();renderCatMgr();
+    toast("已刪除分類"+(n?("，"+n+" 筆改掛「"+fallback.name+"」"):""));
+    return;
+  }
+});
+
+on("btnAddCat","click",addCatFromInput);
+on("newCatName","keydown",function(e){
+  if(e.key==="Enter"){e.preventDefault();addCatFromInput();}
+});
+function addCatFromInput(){
+  const inp=$("newCatName"),col=$("newColor");
+  if(!inp)return;
+  const name=inp.value.trim().slice(0,12);
+  if(!name){toast("請輸入分類名稱");inp.focus();return}
+  if(cats.some(c=>c.name===name)){toast("已有同名分類");inp.focus();return}
+  const color=(col&&/^#[0-9a-fA-F]{6}$/.test(col.value))?col.value:nextColor();
+  const id="c"+uid();
+  cats.push({id:id,name:name,color:color});
+  inp.value="";
+  if(col)col.value=nextColor();
+  persist();renderCatMgr();
+  toast("已新增分類："+name);
+  inp.focus();
+}
+
+/* ========== 分類 chip（記錄面板） ========== */
 function renderCats(){
   const box=$("cats");if(!box)return;
-  box.innerHTML=CATS.map(c=>{
-    const nm=c.id==="custom"?custom:c.name;
-    const pen=c.id==="custom"?'<span class="pen" data-rename="1" title="重新命名">✎</span>':"";
-    return '<button class="cat'+(selectedCat===c.id?" on":"")+'" data-cat="'+c.id+'" '+styleOf(c)+'><i></i>'+esc(nm)+pen+'</button>';
-  }).join("");
+  box.innerHTML=cats.map(c=>{
+    return '<button class="cat'+(selectedCat===c.id?" on":"")+'" data-cat="'+esc(c.id)+'" '+styleOf(c)+'><i></i>'+esc(c.name)+'</button>';
+  }).join("")+
+  '<button class="cat" data-cat="__mgr" style="border-style:dashed" title="分類管理">⚙ 管理</button>';
   const now=$("catNow");if(now)now.textContent="▸ "+catOf(selectedCat).name;
 }
 on("cats","click",function(e){
-  const pen=e.target.closest("[data-rename]");
   const btn=e.target.closest("[data-cat]");if(!btn)return;
-  if(pen){
-    e.stopPropagation();
-    const v=prompt("自訂分類名稱：",custom);
-    if(v&&v.trim()){custom=v.trim().slice(0,10);persist();renderCats();render();}
-    return;
-  }
+  if(btn.dataset.cat==="__mgr"){openCatModal();return}
   selectedCat=btn.dataset.cat;renderCats();
 });
 
@@ -1053,18 +1318,21 @@ on("btnPick","click",()=>{photoTarget=null;const i=$("pickIn");if(i)i.click();})
 on("camIn","change",function(){handleFiles(this.files);this.value="";});
 on("pickIn","change",function(){handleFiles(this.files);this.value="";});
 
-/* ========== ★ 底部面板 ========== */
+/* ========== 底部面板 ========== */
 function openSheet(){
   const s=$("sheet"),b=$("sheetBd");
   if(!s||!s.hidden)return;
+  /* 開面板時跳到預設分類 */
+  if(validCat(defaultCat))selectedCat=defaultCat;
+  renderCats();
   b.hidden=false;s.hidden=false;
   document.body.classList.add("sheet-open");
-  document.body.style.overflow="hidden";
   requestAnimationFrame(function(){
     requestAnimationFrame(function(){
       b.classList.add("open");s.classList.add("open");
     });
   });
+  syncFabBottom();
   const m=$("mName");
   if(m)setTimeout(function(){try{m.focus({preventScroll:true});}catch(e){}},340);
 }
@@ -1075,18 +1343,26 @@ function closeSheet(){
   document.body.classList.remove("sheet-open");
   setTimeout(function(){
     s.hidden=true;if(b)b.hidden=true;
-    const lb=$("lb");
-    if(!lb||lb.hidden)document.body.style.overflow="";
+    syncFabBottom();
   },320);
 }
 function maybeCloseSheet(){
   const k=$("keepOpen");
-  if(k&&k.checked)return;      /* 連續記錄時保持開啟 */
+  if(k&&k.checked)return;
   closeSheet();
 }
 on("fab","click",openSheet);
 on("sheetClose","click",closeSheet);
 on("sheetBd","click",closeSheet);
+
+(function(){
+  const bd=$("sheetBd");
+  if(bd)bd.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
+  const cm=$("catModalBd");
+  if(cm)cm.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
+  const lb=$("lb");
+  if(lb)lb.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
+})();
 
 on("btnManual","click",function(){
   const b=$("manualBox");if(!b)return;
@@ -1122,7 +1398,7 @@ function clearComposer(){
 }
 function addPoint(d){
   const p=Object.assign({id:uid(),cat:selectedCat,photos:[],addr:"",note:"",acc:null,ts:Date.now()},d);
-  if(!validCat(p.cat))p.cat="general";
+  if(!validCat(p.cat))p.cat=defaultCat;
   if(!p.name)p.name="未命名地點 "+(points.length+1);
   points.unshift(p);
   if(!persist()){points.shift();render();return false}
@@ -1166,7 +1442,7 @@ on("btnFill","click",function(){
   la.value=fmt(current.lat);ln.value=fmt(current.lng);toast("已帶入目前座標");
 });
 
-/* ========== 編輯（座標可改） ========== */
+/* ========== 編輯 ========== */
 function startEdit(id){editingId=id;moreId=null;render();
   const b=list?list.querySelector('.point[data-id="'+id+'"] .edit-lat'):null;
   if(b){b.focus();b.select();}}
@@ -1190,7 +1466,7 @@ function saveEdit(id){
   const newNote=noteT?noteT.value.trim():"";
   const newAddr=addrI?addrI.value.trim():"";
   const picked=catB?catB.dataset.editcat:null;
-  const newCat=validCat(picked)?picked:(validCat(p.cat)?p.cat:"general");
+  const newCat=validCat(picked)?picked:(validCat(p.cat)?p.cat:defaultCat);
   if(!newName){toast("名稱不可空白");if(nameI)nameI.focus();return}
 
   const coordsChanged=(fmt(newLat)!==fmt(p.lat)||fmt(newLng)!==fmt(p.lng));
@@ -1212,8 +1488,22 @@ function saveEdit(id){
     toast("已更新："+p.name+(coordsChanged?"（座標已修改）":""));
   }
 }
+function useLockedCoords(id){
+  const box=list?list.querySelector('.point[data-id="'+id+'"]'):null;
+  if(!box)return;
+  const latI=box.querySelector(".edit-lat");
+  const lngI=box.querySelector(".edit-lng");
+  if(!latI||!lngI)return;
+  if(!current){
+    toast("尚未鎖定座標：先在 GPS 條按「重新定位」");
+    return;
+  }
+  latI.value=fmt(current.lat);
+  lngI.value=fmt(current.lng);
+  toast("已帶入鎖定座標 "+fmt(current.lat)+", "+fmt(current.lng)+"（按儲存變更生效）");
+}
 
-/* ========== 篩選與渲染 ========== */
+/* ========== 篩選 ========== */
 function counts(){
   const m={all:points.length};
   points.forEach(p=>{if(p)m[p.cat]=(m[p.cat]||0)+1});
@@ -1223,19 +1513,21 @@ function renderFilters(){
   const box=$("filters");if(!box)return;
   const m=counts();
   let h='<button class="fchip'+(filter==="all"?" on":"")+'" data-f="all">全部 <b>'+m.all+'</b></button>';
-  h+=CATS.map(c=>{
+  h+=cats.map(c=>{
     const n=m[c.id]||0;
     if(!n&&filter!==c.id)return "";
-    const nm=c.id==="custom"?custom:c.name;
-    return '<button class="fchip'+(filter===c.id?" on":"")+'" data-f="'+c.id+'" '+styleOf(c)+'><i></i>'+esc(nm)+' <b>'+n+'</b></button>';
+    return '<button class="fchip'+(filter===c.id?" on":"")+'" data-f="'+esc(c.id)+'" '+styleOf(c)+'><i></i>'+esc(c.name)+' <b>'+n+'</b></button>';
   }).join("");
+  h+='<button class="fchip mgr" id="btnCatMgr" type="button">⚙ 分類管理</button>';
   box.innerHTML=h;
 }
 on("filters","click",e=>{
+  if(e.target.closest("#btnCatMgr")){openCatModal();return}
   const b=e.target.closest("[data-f]");if(!b)return;
   filter=b.dataset.f;editingId=null;moreId=null;render();
 });
 
+/* ========== 渲染 ========== */
 function render(){
   const c1=$("count");if(c1)c1.textContent=points.length;
   const lm=$("logMeta");if(lm)lm.textContent=points.length?(points.length+" ENTRIES"):"NO ENTRIES";
@@ -1251,7 +1543,7 @@ function render(){
     list.innerHTML='<div class="empty">'+
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>'+
       '<p>'+(points.length?"此分類尚無紀錄":"尚無紀錄，按右下角「＋ 記錄」新增一筆")+'</p>'+
-      '<small>TAP ＋ TO LOG A POINT</small></div>';
+      '<small>'+(points.length?"TRY ANOTHER CATEGORY":"TAP ＋ TO LOG A POINT")+'</small></div>';
     return;
   }
   list.innerHTML=shown.map((p,i)=>{
@@ -1284,6 +1576,12 @@ function render(){
             '<label>經度 LNG</label>'+
             '<input class="edit-lng" type="text" inputmode="decimal" value="'+lng+'" placeholder="121.565400"></div>'+
         '</div>'+
+        '<div class="field">'+
+          '<button type="button" class="btn use" data-act="useLocked">'+
+            '⌖ 帶入已鎖定座標'+
+            (current?'（'+fmt(current.lat)+', '+fmt(current.lng)+'）':'（尚未鎖定）')+
+          '</button>'+
+        '</div>'+
         (p.acc?'<div class="coord-ro"><b>原定位精度</b> ±'+Math.round(p.acc)+'m</div>':'')+
         '<div class="field"><label>地點名稱</label>'+
           '<input class="edit-name" type="text" value="'+esc(p.name)+'" maxlength="60" placeholder="地點名稱"></div>'+
@@ -1292,7 +1590,7 @@ function render(){
         '<div class="field"><label>地址（可留白；「補地址」可自動取得）</label>'+
           '<input class="edit-addr" type="text" value="'+esc(p.addr||"")+'" placeholder="例如：台北市中正區羅斯福路二段100號"></div>'+
         '<div class="field"><label>分類</label><div class="edit-cats">'+
-          CATS.map(cc=>'<button type="button" class="cat'+(p.cat===cc.id?" on":"")+'" data-editcat="'+cc.id+'" '+styleOf(cc)+'><i></i>'+esc(cc.id==="custom"?custom:cc.name)+'</button>').join("")+
+          cats.map(cc=>'<button type="button" class="cat'+(p.cat===cc.id?" on":"")+'" data-editcat="'+esc(cc.id)+'" '+styleOf(cc)+'><i></i>'+esc(cc.name)+'</button>').join("")+
         '</div></div>'+
         '<div class="edit-acts">'+
           '<button type="button" class="btn-save" data-act="saveEdit">儲存變更</button>'+
@@ -1314,7 +1612,6 @@ function render(){
         '<button class="p-del" data-act="del" title="刪除" aria-label="刪除">×</button>'+
       '</div>';
 
-    /* ★ 主按鈕只剩 3 顆 + ⋯ */
     const acts=
       '<div class="p-acts">'+
         '<a class="btn acc" href="'+gDir+'" target="_blank" rel="noopener">'+
@@ -1358,6 +1655,7 @@ if(list){
     if(act==="edit"){startEdit(id);return}
     if(act==="cancelEdit"){cancelEdit();return}
     if(act==="saveEdit"){saveEdit(id);return}
+    if(act==="useLocked"){useLockedCoords(id);return}
     if(act==="more"){moreId=(moreId===p.id?null:p.id);render();return}
     if(act==="del"){
       const np=(p.photos||[]).length;
@@ -1396,7 +1694,9 @@ function openLb(pid,i){
   const p=points.find(x=>x&&x.id===pid);if(!p||!(p.photos||[]).length)return;
   lbState={id:pid,i:Math.max(0,Math.min(i,p.photos.length-1))};
   const lb=$("lb");if(!lb)return;
-  lb.hidden=false;paintLb();document.body.style.overflow="hidden";
+  lb.hidden=false;paintLb();
+  const s=$("sheet");
+  if(s&&s.hidden)document.body.style.overflow="hidden";
 }
 function paintLb(){
   const p=points.find(x=>x&&x.id===lbState.id);
@@ -1409,7 +1709,8 @@ function paintLb(){
   $("lbPrev").style.display=multi?"":"none";
   $("lbNext").style.display=multi?"":"none";
 }
-function closeLb(){const lb=$("lb");if(lb)lb.hidden=true;
+function closeLb(){
+  const lb=$("lb");if(lb)lb.hidden=true;
   const s=$("sheet");
   if(!s||s.hidden)document.body.style.overflow="";
 }
@@ -1426,6 +1727,11 @@ on("lbDel","click",function(){
   render();toast("照片已刪除");
 });
 document.addEventListener("keydown",e=>{
+  const cm=$("catModal");
+  if(cm&&!cm.hidden){
+    if(e.key==="Escape")closeCatModal();
+    return;
+  }
   const lb=$("lb");
   if(lb&&!lb.hidden){
     if(e.key==="Escape")closeLb();
@@ -1445,12 +1751,12 @@ on("btnExport","click",function(){
     note:p.note||"",addr:p.addr||"",
     time:new Date(p.ts).toISOString(),photos:p.photos||[]
   }));
-  const blob=new Blob([JSON.stringify({custom:custom,points:data},null,2)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify({v:4,cats:cats,defaultCat:defaultCat,points:data},null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download="座標紀錄-"+new Date().toISOString().slice(0,10)+".json";
   document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),3000);
-  toast("已匯出 "+data.length+" 筆");
+  toast("已匯出 "+data.length+" 筆（含分類定義）");
 });
 on("btnImport","click",()=>{const i=$("fileIn");if(i)i.click();});
 on("fileIn","change",function(){
@@ -1461,13 +1767,24 @@ on("fileIn","change",function(){
       const raw=JSON.parse(rd.result);
       const arr=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.points)?raw.points:null);
       if(!arr)throw new Error("格式不符");
-      if(raw.custom)custom=String(raw.custom).slice(0,10);
+      /* 匯入分類定義（若有） */
+      if(raw&&Array.isArray(raw.cats)&&raw.cats.length){
+        raw.cats.filter(c=>c&&c.id).forEach(function(c){
+          const id=String(c.id);
+          if(!cats.some(x=>x.id===id)){
+            cats.push({id:id,
+              name:String(c.name||id).slice(0,12),
+              color:/^#[0-9a-fA-F]{6}$/.test(c.color||"")?c.color:nextColor()});
+          }
+        });
+      }
       let n=0;
       arr.forEach(o=>{
         const lat=parseFloat(o.lat!=null?o.lat:o.LAT),lng=parseFloat(o.lng!=null?o.lng:o.LNG);
         if(!isFinite(lat)||!isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return;
+        const catId=(typeof o.cat==="string"&&o.cat)?o.cat:"general";
         points.unshift({
-          id:uid(),cat:validCat(o.cat)?o.cat:"general",
+          id:uid(),cat:catId,
           name:(typeof o.name==="string"&&o.name.trim())?o.name:"匯入地點",
           note:typeof o.note==="string"?o.note:"",addr:typeof o.addr==="string"?o.addr:"",
           lat:lat,lng:lng,acc:null,
@@ -1567,6 +1884,8 @@ window.addEventListener("appinstalled",function(){
 
   try{injectManifest();registerSW();}
   catch(e){if(window.__err)window.__err("pwa："+e.message);}
+
+  try{syncFabBottom();}catch(e){}
 
   try{
     if(points.length)toast("已載入 "+points.length+" 筆紀錄（"+storageMode+"）");
