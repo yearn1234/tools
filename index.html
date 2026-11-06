@@ -111,7 +111,6 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
   font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
 .gps-coords.idle{color:var(--ghost)}
 
-/* ★ 橘色「＋新增卡片」按鈕（取代右上角＋鈕） */
 .gps-add-card{flex:none;background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
   font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:12px;letter-spacing:.03em;
   padding:9px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.35;
@@ -166,6 +165,8 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .fchip.on b{opacity:.6}
 .fchip.mgr{border-style:dashed;letter-spacing:.04em}
 .fchip.mgr:hover{border-color:var(--accent);color:var(--accent)}
+.filter-hint{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.08em;
+  color:var(--placeholder);margin:-6px 0 12px}
 
 .empty{border:1px dashed var(--line);padding:44px 22px;text-align:center;color:var(--muted)}
 .empty svg{width:26px;height:26px;color:var(--ghost);margin-bottom:12px}
@@ -183,10 +184,10 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
   color:transparent;-webkit-text-stroke:1px var(--stroke);flex:none;letter-spacing:-.03em}
 .p-id{flex:1;min-width:0}
 .p-id h3{font-size:14.5px;font-weight:700;letter-spacing:.04em;word-break:break-word}
-.tag{display:inline-flex;align-items:center;gap:5px;margin-left:7px;vertical-align:2px;
+.tag{display:inline-flex;align-items:center;gap:5px;margin:4px 0 0 7px;vertical-align:2px;
   font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.08em;
-  border:1px solid var(--cl,var(--c));color:var(--cl,var(--c));padding:2px 6px}
-.tag i{width:6px;height:6px;background:var(--c);border-radius:1px}
+  border:1px solid var(--cl,var(--c));color:var(--cl,var(--c));padding:2px 6px;white-space:nowrap}
+.tag i{width:6px;height:6px;background:var(--c);border-radius:1px;flex:none}
 .p-meta{font-family:"DM Mono",monospace;font-size:10px;color:var(--muted);letter-spacing:.04em;margin-top:3px}
 .p-meta .acc{color:var(--lock)}
 .p-del,.p-edit{background:none;border:0;color:var(--placeholder);cursor:pointer;font-size:16px;line-height:1;
@@ -227,7 +228,6 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .btn.use:hover{border-color:var(--lock);color:var(--lock)}
 .btn svg{width:12px;height:12px}
 
-/* ===== 底部漂浮面板 ===== */
 .sheet-bd{position:fixed;inset:0;background:rgba(5,6,5,.72);z-index:10;opacity:0;
   transition:opacity .25s ease;touch-action:none}
 .sheet-bd.open{opacity:1}
@@ -265,10 +265,11 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .cat{font-size:12.5px;letter-spacing:.03em;background:var(--surface-2);border:1px solid var(--line);
   color:var(--muted);padding:7px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
-  border-radius:2px;transition:.18s}
+  border-radius:2px;transition:.18s;font-family:"Noto Sans TC",sans-serif}
 .cat i{width:9px;height:9px;background:var(--c);flex:none;border-radius:1px}
 .cat:hover{border-color:var(--cl,var(--c));color:var(--ink)}
 .cat.on{border-color:var(--cl,var(--c));color:var(--ink);box-shadow:inset 0 0 0 1px var(--cl,var(--c))}
+.cat.on::after{content:"✓";font-family:"DM Mono",monospace;font-size:10px;color:var(--cl,var(--c));margin-left:1px}
 
 .cam{display:flex;gap:8px;margin-top:10px;align-items:flex-start;flex-wrap:wrap}
 .cam-btn{width:70px;height:70px;flex:none;border:1px dashed var(--line-strong);background:var(--surface-2);
@@ -496,13 +497,14 @@ footer b{color:var(--ink);font-weight:500}
         <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
       </svg>
       <input id="searchIn" type="search" autocomplete="off" spellcheck="false"
-             placeholder="搜尋名稱、備註、地址、分類、座標…">
+             placeholder="搜尋名稱、備註、地址、標籤、座標…">
       <button class="search-clear" id="searchClear" type="button" aria-label="清除搜尋">×</button>
     </div>
     <span class="search-meta" id="searchMeta"></span>
   </div>
 
   <div class="filters" id="filters"></div>
+  <p class="filter-hint" id="filterHint" hidden></p>
   <div id="list"></div>
 </main>
 
@@ -516,7 +518,7 @@ footer b{color:var(--ink);font-weight:500}
     <button class="sheet-x" id="sheetClose" aria-label="關閉">×</button>
   </div>
   <div class="sheet-body">
-    <div class="sec-label">Category · 分類標籤
+    <div class="sec-label">Tags · 標籤（可多選）
       <em id="catNow"></em>
       <button class="ghost-btn" id="btnCatMgr2" type="button">⚙ 管理</button>
     </div>
@@ -585,7 +587,7 @@ footer b{color:var(--ink);font-weight:500}
         <button class="cta" id="btnSave">儲存這筆</button>
       </div>
     </div>
-    <p class="hint">十進位格式（例：25.033, 121.565）。分類可增刪、改名、換色、排序（篩選列「⚙ 分類管理」）。</p>
+    <p class="hint">十進位格式（例：25.033, 121.565）。標籤可多選、增刪、改名、換色、排序（篩選列「⚙ 標籤管理」）。</p>
 
     <div class="meter">
       <span>本機空間</span>
@@ -623,7 +625,7 @@ footer b{color:var(--ink);font-weight:500}
     </div>
     <div class="edit-orig" id="editOrig"></div>
 
-    <div class="sec-label">Category · 分類</div>
+    <div class="sec-label">Tags · 標籤（可多選）</div>
     <div class="cats" id="eCats"></div>
 
     <div class="sec-label">Detail · 名稱與備註</div>
@@ -652,12 +654,12 @@ footer b{color:var(--ink);font-weight:500}
   </div>
 </section>
 
-<div class="modal" id="catModal" hidden role="dialog" aria-modal="true" aria-label="分類管理">
+<div class="modal" id="catModal" hidden role="dialog" aria-modal="true" aria-label="標籤管理">
   <div class="modal-bd" id="catModalBd"></div>
   <div class="modal-panel">
     <div class="mp-head">
       <div>
-        <h2>CATEGORIES · 分類管理</h2>
+        <h2>TAGS · 標籤管理</h2>
         <p>改名／換色／排序／設預設／刪除</p>
       </div>
       <button class="sheet-x" id="catModalClose" aria-label="關閉">×</button>
@@ -665,11 +667,11 @@ footer b{color:var(--ink);font-weight:500}
     <div class="mp-body" id="catMgrList"></div>
     <div class="mp-foot">
       <div class="cm-add">
-        <span class="cm-sw" id="newSwWrap"><input type="color" id="newColor" value="#4da3ff" aria-label="新分類顏色"></span>
-        <input type="text" id="newCatName" maxlength="12" placeholder="新分類名稱（Enter 新增）">
+        <span class="cm-sw" id="newSwWrap"><input type="color" id="newColor" value="#4da3ff" aria-label="新標籤顏色"></span>
+        <input type="text" id="newCatName" maxlength="12" placeholder="新標籤名稱（Enter 新增）">
         <button class="cta" id="btnAddCat">新增</button>
       </div>
-      <p class="hint">★＝預設分類。刪除有紀錄的分類時，其紀錄會自動改掛到預設分類。至少保留 1 個分類。</p>
+      <p class="hint">★＝預設標籤（新增紀錄時自動勾選）。刪除有紀錄的標籤時，該標籤會從紀錄上移除；若某紀錄因此沒有標籤，會自動補上預設標籤。至少保留 1 個標籤。</p>
     </div>
   </div>
 </div>
@@ -702,7 +704,7 @@ footer b{color:var(--ink);font-weight:500}
 const $=id=>document.getElementById(id);
 const list=$("list");
 
-const DEFAULT_CATS=[
+const DEFAULT_TAGS=[
   {id:"general",name:"一般",    color:"#8b918a"},
   {id:"power",  name:"電力設施",color:"#ffb020"},
   {id:"store",  name:"倉儲點",  color:"#4da3ff"},
@@ -719,7 +721,7 @@ const PALETTE=[
 
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const VER="v16.2";
+const VER="v17.0-tag";
 const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 const KING_PKGS=[
@@ -729,11 +731,11 @@ const KING_PKGS=[
 ];
 
 let points=[];
-let cats=[];
-let defaultCat="general";
-let selectedCat="general";
-let editCat=null;
-let filter="all";
+let tags=[];
+let defaultTag="general";
+let selTags=[];      /* 新增面板：已勾選標籤 */
+let editTags=[];     /* 編輯面板：已勾選標籤 */
+let filterTags=[];   /* 篩選列：多選（OR） */
 let searchQ="";
 let editingId=null, moreId=null;
 let staged=[];
@@ -754,7 +756,6 @@ function on(id,ev,fn){
   if(el)el.addEventListener(ev,fn);
   else if(window.__err)window.__err("缺少元素 #"+id);
 }
-/* 所有按鈕都包一層：出錯一定看得到 */
 function safe(fn,label){
   return function(e){
     try{fn.call(this,e);}
@@ -771,7 +772,7 @@ function currentTheme(){return document.documentElement.dataset.theme==="light"?
 function updateDbg(msg){
   const d=$("dbg");
   if(d)d.textContent=(msg?msg+" · ":"")+"腳本 "+VER+" ✓ · "+points.length+" 筆 · "+
-    cats.length+" 分類 · "+(currentTheme()==="light"?"亮色":"暗色")+" · 儲存 "+storageMode+" · "+swState+
+    tags.length+" 標籤 · "+(currentTheme()==="light"?"亮色":"暗色")+" · 儲存 "+storageMode+" · "+swState+
     (location.protocol==="file:"?" · file://（離線與定位可能受限）":"");
 }
 function applyTheme(t){
@@ -793,9 +794,9 @@ function toast(msg){
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function fmt(n,d){return Number(n).toFixed(d==null?6:d);}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-function validCat(id){return cats.some(c=>c.id===id);}
-function catOf(id){
-  return cats.find(x=>x.id===id)||cats[0]||{id:"general",name:"一般",color:"#8b918a"};
+function validTag(id){return tags.some(c=>c.id===id);}
+function tagOf(id){
+  return tags.find(x=>x.id===id)||tags[0]||{id:"general",name:"一般",color:"#8b918a"};
 }
 function styleOf(c,dly){
   const col=c.color||"#8b918a";
@@ -803,51 +804,65 @@ function styleOf(c,dly){
 }
 function when(ts){return new Date(ts).toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});}
 function nextColor(){
-  const used=cats.map(c=>String(c.color||"").toLowerCase());
+  const used=tags.map(c=>String(c.color||"").toLowerCase());
   for(let i=0;i<PALETTE.length;i++){
     const col=PALETTE[i];
     if(used.indexOf(col.toLowerCase())<0)return col;
   }
   return PALETTE[Math.floor(Math.random()*PALETTE.length)];
 }
-function ensureCats(){
-  if(!cats.length){
-    cats=DEFAULT_CATS.map(c=>({id:c.id,name:c.name,color:c.color}));
+function tagsOf(p){return (p&&Array.isArray(p.tags))?p.tags:[];}
+function cleanTags(arr){
+  return (Array.isArray(arr)?arr:[]).filter(t=>typeof t==="string"&&t&&validTag(t));
+}
+function ensureTags(){
+  if(!tags.length){
+    tags=DEFAULT_TAGS.map(c=>({id:c.id,name:c.name,color:c.color}));
   }
   points.forEach(p=>{
     if(!p)return;
-    let id=String(p.cat||"general");
-    if(!cats.some(c=>c.id===id)){
-      let name=id;
-      if(id==="custom"){
-        name=(typeof p._legacyCustom==="string"&&p._legacyCustom)?p._legacyCustom:"自訂";
+    tagsOf(p).forEach(id=>{
+      if(!tags.some(c=>c.id===id)){
+        let name=id;
+        if(id==="custom"){
+          name=(typeof p._legacyCustom==="string"&&p._legacyCustom)?p._legacyCustom:"自訂";
+        }
+        tags.push({id:id,name:String(name).slice(0,12),color:nextColor()});
       }
-      cats.push({id:id,name:String(name).slice(0,12),color:nextColor()});
-    }
+    });
   });
-  if(!cats.some(c=>c.id===defaultCat))defaultCat=cats[0].id;
-  if(!cats.some(c=>c.id===selectedCat))selectedCat=defaultCat;
+  if(!tags.some(c=>c.id===defaultTag))defaultTag=tags[0].id;
+  selTags=cleanTags(selTags);
+  if(!selTags.length)selTags=[defaultTag];
+  editTags=cleanTags(editTags);
+  if(!editTags.length)editTags=[defaultTag];
+  filterTags=cleanTags(filterTags);
 }
 function normalize(){
   points.forEach(p=>{
     if(!p||typeof p!=="object")return;
-    if(typeof p.cat!=="string"||!p.cat)p.cat="general";
+    /* 舊版單一 cat → 新版 tags 陣列 */
+    if(!Array.isArray(p.tags)){
+      const legacy=(typeof p.cat==="string"&&p.cat)?p.cat:null;
+      p.tags=legacy?[legacy]:[];
+    }
+    p.tags=p.tags.filter(t=>typeof t==="string"&&t);
+    try{delete p.cat;}catch(e){}
     if(!Array.isArray(p.photos))p.photos=[];
     if(typeof p.name!=="string"||!p.name.trim())p.name="未命名地點";
     if(typeof p.note!=="string")p.note="";
     if(typeof p.addr!=="string")p.addr="";
   });
-  ensureCats();
+  ensureTags();
 }
 
 function matchSearch(p,q){
   if(!q)return true;
   const s=q.trim().toLowerCase();
   if(!s)return true;
-  const cat=catOf(p.cat);
   const hay=[
     p.name||"",p.note||"",p.addr||"",
-    cat.name||"",
+    tagsOf(p).map(id=>tagOf(id).name).join(" "),
     fmt(p.lat)+","+fmt(p.lng),
     fmt(p.lat,4)+" "+fmt(p.lng,4),
     when(p.ts)
@@ -906,22 +921,28 @@ function readLegacyLS(){
 function applyState(state){
   points=(state&&Array.isArray(state.points))?state.points:[];
   points=points.filter(p=>p&&typeof p==="object");
-  if(state&&Array.isArray(state.cats)&&state.cats.length){
-    cats=state.cats.filter(c=>c&&typeof c==="object"&&c.id)
+
+  /* 相容：新版 state.tags、舊版 state.cats */
+  const rawTags=state?(state.tags||state.cats):null;
+  if(Array.isArray(rawTags)&&rawTags.length){
+    tags=rawTags.filter(c=>c&&typeof c==="object"&&c.id)
       .map(c=>({
         id:String(c.id),
         name:String(c.name||c.id).slice(0,12),
         color:/^#[0-9a-fA-F]{6}$/.test(c.color||"")?c.color:"#8b918a"
       }));
   }else{
-    cats=DEFAULT_CATS.map(c=>({id:c.id,name:c.name,color:c.color}));
+    tags=DEFAULT_TAGS.map(c=>({id:c.id,name:c.name,color:c.color}));
     const legacy=(state&&typeof state.custom==="string"&&state.custom.trim())
       ?state.custom.trim().slice(0,12):"自訂";
-    const cu=cats.find(c=>c.id==="custom");
+    const cu=tags.find(c=>c.id==="custom");
     if(cu)cu.name=legacy;
   }
-  defaultCat=(state&&typeof state.defaultCat==="string"&&state.defaultCat)?state.defaultCat:"general";
-  selectedCat=defaultCat;
+  const dt=state?(state.defaultTag||state.defaultCat):null;
+  defaultTag=(typeof dt==="string"&&dt)?dt:"general";
+  selTags=[defaultTag];
+  editTags=[defaultTag];
+  filterTags=[];
   normalize();
 }
 async function storageInit(){
@@ -943,7 +964,7 @@ async function storageInit(){
   }
 }
 function persist(){
-  const state={v:4,points:points,cats:cats,defaultCat:defaultCat};
+  const state={v:5,points:points,tags:tags,defaultTag:defaultTag};
   let json;
   try{json=JSON.stringify(state);}
   catch(e){toast("資料序列化失敗");return false;}
@@ -1161,29 +1182,24 @@ on("btnWatch","click",safe(async function(){
   }
 },"watch"));
 
-/* ========== ★ 面板開合（強制重排 + 除錯） ========== */
+/* ========== 面板開合 ========== */
 function lockBody(){
   const s=$("sheet"),e=$("editSheet"),l=$("lb"),c=$("catModal");
   const any=(s&&!s.hidden)||(e&&!e.hidden)||(l&&!l.hidden)||(c&&!c.hidden);
   document.body.style.overflow=any?"hidden":"";
 }
-
 function showSheetById(bdId,shId){
   try{
     const bd=$(bdId),sh=$(shId);
     if(!bd)throw new Error("找不到背景 #"+bdId);
     if(!sh)throw new Error("找不到面板 #"+shId);
     if(!sh.hidden&&sh.classList.contains("open"))return false;
-
     bd.hidden=false;
     sh.hidden=false;
     void sh.offsetHeight;
     bd.classList.add("open");
     sh.classList.add("open");
     lockBody();
-    if(window.__err&&location.hash==="#debug"){
-      window.__err("[showSheet] "+shId+" opened · hidden="+sh.hidden+" · cls="+sh.className);
-    }
     return true;
   }catch(e){
     if(window.__err)window.__err("showSheetById("+bdId+","+shId+")："+((e&&e.message)||e));
@@ -1213,7 +1229,6 @@ function hideSheetById(bdId,shId,after){
 
 /* ========== 新增面板 ========== */
 function openSheet(){
-  toast("開…");
   const ok=showSheetById("sheetBd","sheet");
   if(!ok){
     const sh=$("sheet"),bd=$("sheetBd");
@@ -1231,8 +1246,8 @@ function openSheet(){
 }
 function afterRecOpen(){
   try{
-    if(validCat(defaultCat))selectedCat=defaultCat;
-    renderCats();
+    selTags=[defaultTag];
+    renderTags();
     const m=$("mName");
     if(m)setTimeout(function(){try{m.focus({preventScroll:true});}catch(e){}},340);
     toast("記錄面板已開啟");
@@ -1268,7 +1283,8 @@ function openEditSheet(id){
 
   editingId=id;
   moreId=null;
-  editCat=validCat(p.cat)?p.cat:defaultCat;
+  editTags=cleanTags(tagsOf(p));
+  if(!editTags.length)editTags=[defaultTag];
 
   const set=(i,v)=>{const e=$(i);if(e)e.value=v;};
   set("eLat",fmt(p.lat));
@@ -1284,7 +1300,7 @@ function openEditSheet(id){
     '<span><b>建立</b> '+when(p.ts)+'</span>'+
     ((p.photos||[]).length?'<span><b>照片</b> '+p.photos.length+' 張</span>':"");
   updateUseLockedHint();
-  renderECats();
+  renderETags();
 
   const sh=$("editSheet"),bd=$("editBd");
   if(sh&&!sh.hidden&&sh.classList.contains("open")){
@@ -1305,7 +1321,7 @@ function openEditSheet(id){
 function closeEditSheet(){
   hideSheetById("editBd","editSheet",function(){
     editingId=null;
-    editCat=null;
+    editTags=[defaultTag];
     render();
   });
 }
@@ -1367,21 +1383,23 @@ function saveEditSheet(){
   const newName=ni?ni.value.trim():"";
   const newNote=no?no.value.trim():"";
   const newAddr=ai?ai.value.trim():"";
-  const newCat=validCat(editCat)?editCat:(validCat(p.cat)?p.cat:defaultCat);
+  let newTags=cleanTags(editTags);
+  if(!newTags.length)newTags=[defaultTag];
   if(!newName){toast("名稱不可空白");if(ni)ni.focus();return}
 
   const coordsChanged=(fmt(newLat)!==fmt(p.lat)||fmt(newLng)!==fmt(p.lng));
   const addrTouched=(newAddr!==(p.addr||""));
-  const bak={name:p.name,note:p.note,cat:p.cat,addr:p.addr,lat:p.lat,lng:p.lng};
+  const bak={name:p.name,note:p.note,tags:p.tags.slice(),addr:p.addr,lat:p.lat,lng:p.lng};
 
   if(coordsChanged){p.lat=newLat;p.lng=newLng;}
-  p.name=newName;p.note=newNote;p.cat=newCat;
+  p.name=newName;p.note=newNote;p.tags=newTags;
   p.addr=(coordsChanged&&!addrTouched)?"":newAddr;
 
   if(!persist()){Object.assign(p,bak);toast("儲存失敗");return}
 
   closeEditSheet();
-  if(filter!=="all"&&p.cat!==filter)filter="all";
+  /* 若目前篩選的標籤已不在這筆紀錄上 → 清除篩選避免消失 */
+  if(filterTags.length&&!newTags.some(t=>filterTags.indexOf(t)>=0))filterTags=[];
 
   if(coordsChanged&&!addrTouched){
     toast("已更新，正在重新取得地址…");
@@ -1392,7 +1410,6 @@ function saveEditSheet(){
 }
 on("btnESave","click",safe(saveEditSheet,"btnESave"));
 
-/* 面板鍵盤 */
 function sheetKeydown(e){
   const sh=e.currentTarget;
   if(sh.hidden)return;
@@ -1449,38 +1466,38 @@ on("btnAddr","click",safe(async function(){
   this.disabled=false;this.textContent="取得";
 },"addr"));
 
-/* ========== 分類管理 ========== */
-function catUseCount(id){return points.reduce((n,p)=>n+(p&&p.cat===id?1:0),0);}
+/* ========== 標籤管理 ========== */
+function tagUseCount(id){return points.reduce((n,p)=>n+((p&&tagsOf(p).indexOf(id)>=0)?1:0),0);}
 
-function openCatModal(){
+function openTagModal(){
   const m=$("catModal");if(!m||!m.hidden)return;
   m.hidden=false;
   lockBody();
-  renderCatMgr();
+  renderTagMgr();
 }
-function closeCatModal(){
+function closeTagModal(){
   const m=$("catModal");if(!m||m.hidden)return;
   m.hidden=true;
   lockBody();
   render();
 }
-on("btnCatMgr2","click",safe(openCatModal,"catMgr2"));
-on("catModalClose","click",safe(closeCatModal,"catClose"));
-on("catModalBd","click",safe(closeCatModal,"catBd"));
+on("btnCatMgr2","click",safe(openTagModal,"tagMgr2"));
+on("catModalClose","click",safe(closeTagModal,"tagClose"));
+on("catModalBd","click",safe(closeTagModal,"tagBd"));
 
-function renderCatMgr(){
+function renderTagMgr(){
   const box=$("catMgrList");if(!box)return;
-  box.innerHTML=cats.map((c,i)=>{
-    const n=catUseCount(c.id);
-    const isDef=(c.id===defaultCat);
-    const last=(cats.length<=1);
+  box.innerHTML=tags.map((c,i)=>{
+    const n=tagUseCount(c.id);
+    const isDef=(c.id===defaultTag);
+    const last=(tags.length<=1);
     return '<div class="cm-row" data-id="'+esc(c.id)+'">'+
-      '<span class="cm-sw" title="換色"><input type="color" value="'+esc(c.color)+'" data-act="color" aria-label="分類顏色"></span>'+
-      '<input class="cm-name" type="text" value="'+esc(c.name)+'" maxlength="12" data-act="name" aria-label="分類名稱">'+
+      '<span class="cm-sw" title="換色"><input type="color" value="'+esc(c.color)+'" data-act="color" aria-label="標籤顏色"></span>'+
+      '<input class="cm-name" type="text" value="'+esc(c.name)+'" maxlength="12" data-act="name" aria-label="標籤名稱">'+
       '<span class="cm-n">'+n+' 筆</span>'+
       '<button class="cm-ib star'+(isDef?" on":"")+'" data-act="def" title="設為預設"'+(isDef?" disabled":"")+'>★</button>'+
       '<button class="cm-ib" data-act="up" title="上移"'+(i===0?" disabled":"")+'>↑</button>'+
-      '<button class="cm-ib" data-act="down" title="下移"'+(i===cats.length-1?" disabled":"")+'>↓</button>'+
+      '<button class="cm-ib" data-act="down" title="下移"'+(i===tags.length-1?" disabled":"")+'>↓</button>'+
       '<button class="cm-ib del" data-act="del" title="刪除"'+(last?" disabled":"")+'>✕</button>'+
     '</div>';
   }).join("");
@@ -1488,7 +1505,7 @@ function renderCatMgr(){
 
 on("catMgrList","input",function(e){
   const row=e.target.closest(".cm-row");if(!row)return;
-  const c=cats.find(x=>x.id===row.dataset.id);if(!c)return;
+  const c=tags.find(x=>x.id===row.dataset.id);if(!c)return;
   if(e.target.dataset.act==="color"){
     c.color=e.target.value;
     const sw=row.querySelector(".cm-sw");
@@ -1507,93 +1524,105 @@ on("catMgrList","click",safe(function(e){
   const btn=e.target.closest("[data-act]");if(!btn||btn.tagName==="INPUT")return;
   const row=e.target.closest(".cm-row");if(!row)return;
   const id=row.dataset.id;
-  const i=cats.findIndex(c=>c.id===id);if(i<0)return;
+  const i=tags.findIndex(c=>c.id===id);if(i<0)return;
   const act=btn.dataset.act;
 
   if(act==="def"){
-    defaultCat=id;
-    if(!validCat(selectedCat))selectedCat=id;
-    persist();renderCatMgr();
-    toast("預設分類 → "+catOf(id).name);
+    defaultTag=id;
+    persist();renderTagMgr();
+    toast("預設標籤 → "+tagOf(id).name);
     return;
   }
   if(act==="up"&&i>0){
-    const t=cats[i-1];cats[i-1]=cats[i];cats[i]=t;
-    persist();renderCatMgr();return;
+    const t=tags[i-1];tags[i-1]=tags[i];tags[i]=t;
+    persist();renderTagMgr();return;
   }
-  if(act==="down"&&i<cats.length-1){
-    const t=cats[i+1];cats[i+1]=cats[i];cats[i]=t;
-    persist();renderCatMgr();return;
+  if(act==="down"&&i<tags.length-1){
+    const t=tags[i+1];tags[i+1]=tags[i];tags[i]=t;
+    persist();renderTagMgr();return;
   }
   if(act==="del"){
-    if(cats.length<=1){toast("至少保留 1 個分類");return}
-    const c=cats[i];
-    const n=catUseCount(c.id);
-    const fallback=(defaultCat===id)
-      ? (cats.find(x=>x.id!==id)||cats[0])
-      : catOf(defaultCat);
+    if(tags.length<=1){toast("至少保留 1 個標籤");return}
+    const c=tags[i];
+    const n=tagUseCount(c.id);
     if(n>0){
-      if(!confirm("刪除「"+c.name+"」？\n"+n+" 筆紀錄將改掛到「"+fallback.name+"」。"))return;
-      points.forEach(p=>{if(p&&p.cat===id)p.cat=fallback.id;});
+      if(!confirm("刪除標籤「"+c.name+"」？\n"+n+" 筆紀錄將移除該標籤（沒有其他標籤者會改掛預設標籤）。"))return;
     }else{
-      if(!confirm("刪除分類「"+c.name+"」？"))return;
+      if(!confirm("刪除標籤「"+c.name+"」？"))return;
     }
-    cats.splice(i,1);
-    if(defaultCat===id)defaultCat=cats[0].id;
-    if(selectedCat===id)selectedCat=defaultCat;
-    if(editCat===id)editCat=defaultCat;
-    if(filter===id)filter="all";
-    persist();renderCatMgr();
-    toast("已刪除分類"+(n?("，"+n+" 筆改掛「"+fallback.name+"」"):""));
+    tags.splice(i,1);
+    /* 從所有紀錄移除 */
+    points.forEach(p=>{if(p)p.tags=tagsOf(p).filter(x=>x!==id);});
+    if(defaultTag===id||!tags.some(t=>t.id===defaultTag))defaultTag=tags[0].id;
+    points.forEach(p=>{if(p&&(!p.tags||!p.tags.length))p.tags=[defaultTag];});
+    selTags=cleanTags(selTags);if(!selTags.length)selTags=[defaultTag];
+    editTags=cleanTags(editTags);if(!editTags.length)editTags=[defaultTag];
+    filterTags=cleanTags(filterTags);
+    persist();renderTagMgr();
+    toast("已刪除標籤"+(n?("（"+n+" 筆已更新）"):""));
     return;
   }
-},"catMgrClick"));
+},"tagMgrClick"));
 
-on("btnAddCat","click",safe(addCatFromInput,"addCat"));
+on("btnAddCat","click",safe(addTagFromInput,"addTag"));
 on("newCatName","keydown",function(e){
-  if(e.key==="Enter"){e.preventDefault();addCatFromInput();}
+  if(e.key==="Enter"){e.preventDefault();addTagFromInput();}
 });
-function addCatFromInput(){
+function addTagFromInput(){
   const inp=$("newCatName"),col=$("newColor");
   if(!inp)return;
   const name=inp.value.trim().slice(0,12);
-  if(!name){toast("請輸入分類名稱");inp.focus();return}
-  if(cats.some(c=>c.name===name)){toast("已有同名分類");inp.focus();return}
+  if(!name){toast("請輸入標籤名稱");inp.focus();return}
+  if(tags.some(c=>c.name===name)){toast("已有同名標籤");inp.focus();return}
   const color=(col&&/^#[0-9a-fA-F]{6}$/.test(col.value))?col.value:nextColor();
-  const id="c"+uid();
-  cats.push({id:id,name:name,color:color});
+  const id="t"+uid();
+  tags.push({id:id,name:name,color:color});
+  if(selTags.indexOf(id)<0)selTags.push(id);
+  if(editTags.indexOf(id)<0)editTags.push(id);
   inp.value="";
   if(col)col.value=nextColor();
-  persist();renderCatMgr();
-  toast("已新增分類："+name);
+  persist();renderTagMgr();renderTags();
+  toast("已新增標籤："+name);
   inp.focus();
 }
 
-function renderCats(){
+/* 新增面板的標籤（多選） */
+function renderTags(){
   const box=$("cats");if(!box)return;
-  box.innerHTML=cats.map(c=>{
-    return '<button class="cat'+(selectedCat===c.id?" on":"")+'" data-cat="'+esc(c.id)+'" '+styleOf(c)+'><i></i>'+esc(c.name)+'</button>';
+  box.innerHTML=tags.map(c=>{
+    const on=selTags.indexOf(c.id)>=0;
+    return '<button type="button" class="cat'+(on?" on":"")+'" data-tsel="'+esc(c.id)+'" '+styleOf(c)+'><i></i>'+esc(c.name)+'</button>';
   }).join("")+
-  '<button class="cat" data-cat="__mgr" style="border-style:dashed" title="分類管理">⚙ 管理</button>';
-  const now=$("catNow");if(now)now.textContent="▸ "+catOf(selectedCat).name;
+  '<button type="button" class="cat" data-tsel="__mgr" style="border-style:dashed" title="標籤管理">⚙ 管理</button>';
+  const now=$("catNow");
+  if(now)now.textContent=selTags.length
+    ? "▸ "+selTags.map(id=>tagOf(id).name).join("、")
+    : "▸ 未選（將自動使用預設）";
 }
 on("cats","click",safe(function(e){
-  const btn=e.target.closest("[data-cat]");if(!btn)return;
-  if(btn.dataset.cat==="__mgr"){openCatModal();return}
-  selectedCat=btn.dataset.cat;renderCats();
-},"cats"));
+  const btn=e.target.closest("[data-tsel]");if(!btn)return;
+  const id=btn.dataset.tsel;
+  if(id==="__mgr"){openTagModal();return}
+  const i=selTags.indexOf(id);
+  if(i>=0)selTags.splice(i,1); else selTags.push(id);
+  renderTags();
+},"selTags"));
 
-function renderECats(){
+/* 編輯面板的標籤（多選） */
+function renderETags(){
   const box=$("eCats");if(!box)return;
-  box.innerHTML=cats.map(c=>{
-    return '<button type="button" class="cat'+(editCat===c.id?" on":"")+'" data-ecat="'+esc(c.id)+'" '+styleOf(c)+'><i></i>'+esc(c.name)+'</button>';
+  box.innerHTML=tags.map(c=>{
+    const on=editTags.indexOf(c.id)>=0;
+    return '<button type="button" class="cat'+(on?" on":"")+'" data-etag="'+esc(c.id)+'" '+styleOf(c)+'><i></i>'+esc(c.name)+'</button>';
   }).join("");
 }
 on("eCats","click",safe(function(e){
-  const b=e.target.closest("[data-ecat]");if(!b)return;
-  editCat=b.dataset.ecat;
-  renderECats();
-},"eCats"));
+  const b=e.target.closest("[data-etag]");if(!b)return;
+  const id=b.dataset.etag;
+  const i=editTags.indexOf(id);
+  if(i>=0)editTags.splice(i,1); else editTags.push(id);
+  renderETags();
+},"editTags"));
 
 /* ========== 照片 ========== */
 async function fileToDataURL(file){
@@ -1681,12 +1710,15 @@ function clearComposer(){
   staged=[];renderStaged();
 }
 function addPoint(d){
-  const p=Object.assign({id:uid(),cat:selectedCat,photos:[],addr:"",note:"",acc:null,ts:Date.now()},d);
-  if(!validCat(p.cat))p.cat=defaultCat;
+  let tg=Array.isArray(d.tags)?d.tags.filter(t=>typeof t==="string"&&validTag(t)):[];
+  if(!tg.length)tg=[defaultTag];
+  const p=Object.assign({id:uid(),photos:[],addr:"",note:"",acc:null,ts:Date.now()},d,{tags:tg});
+  try{delete p.cat;}catch(e){}
   if(!p.name)p.name="未命名地點 "+(points.length+1);
   points.unshift(p);
   if(!persist()){points.shift();render();return false}
-  clearComposer();render();toast("已記錄："+p.name+" · "+catOf(p.cat).name);
+  clearComposer();render();
+  toast("已記錄："+p.name+" · "+tg.map(id=>tagOf(id).name).join("、"));
   maybeCloseSheet();
   return true;
 }
@@ -1696,7 +1728,7 @@ function commitRecord(){
     lat:current.lat,lng:current.lng,acc:current.acc,
     name:n?n.value.trim():"",note:t?t.value.trim():"",
     addr:a?a.value.trim():"",
-    cat:selectedCat,photos:staged.slice()
+    tags:selTags.slice(),photos:staged.slice()
   });
 }
 function setRecLabel(){
@@ -1718,7 +1750,7 @@ on("btnSave","click",safe(function(){
   const n=$("mName"),t=$("mNote"),a=$("mAddr");
   addPoint({lat:lat,lng:lng,name:n?n.value.trim():"",note:t?t.value.trim():"",
             addr:a?a.value.trim():"",
-            cat:selectedCat,photos:staged.slice(),
+            tags:selTags.slice(),photos:staged.slice(),
             acc:current&&Math.abs(current.lat-lat)<1e-6&&Math.abs(current.lng-lng)<1e-6?current.acc:null});
 },"btnSave"));
 on("btnFill","click",safe(function(){
@@ -1730,33 +1762,56 @@ on("btnFill","click",safe(function(){
 /* ========== 篩選 ========== */
 function counts(){
   const m={all:points.length};
-  points.forEach(p=>{if(p)m[p.cat]=(m[p.cat]||0)+1});
+  points.forEach(p=>{
+    if(p)tagsOf(p).forEach(t=>{m[t]=(m[t]||0)+1;});
+  });
   return m;
 }
 function renderFilters(){
   const box=$("filters");if(!box)return;
   const m=counts();
-  let h='<button class="fchip'+(filter==="all"?" on":"")+'" data-f="all">全部 <b>'+m.all+'</b></button>';
-  h+=cats.map(c=>{
+  let h='<button class="fchip'+(filterTags.length?"":" on")+'" data-f="__all">全部 <b>'+m.all+'</b></button>';
+  h+=tags.map(c=>{
     const n=m[c.id]||0;
-    if(!n&&filter!==c.id)return "";
-    return '<button class="fchip'+(filter===c.id?" on":"")+'" data-f="'+esc(c.id)+'" '+styleOf(c)+'><i></i>'+esc(c.name)+' <b>'+n+'</b></button>';
+    const on=filterTags.indexOf(c.id)>=0;
+    if(!n&&!on)return "";
+    return '<button class="fchip'+(on?" on":"")+'" data-f="'+esc(c.id)+'" '+styleOf(c)+'><i></i>'+esc(c.name)+' <b>'+n+'</b></button>';
   }).join("");
-  h+='<button class="fchip mgr" id="btnCatMgr" type="button">⚙ 分類管理</button>';
+  h+='<button class="fchip mgr" id="btnTagMgr" type="button">⚙ 標籤管理</button>';
   box.innerHTML=h;
+
+  const hint=$("filterHint");
+  if(hint){
+    if(filterTags.length){
+      hint.hidden=false;
+      hint.textContent="篩選中（符合任一標籤）："+
+        filterTags.map(id=>tagOf(id).name).join(" ＋ ")+
+        "　— 再點一次取消，或按「全部」";
+    }else{hint.hidden=true;hint.textContent="";}
+  }
 }
 on("filters","click",safe(e=>{
-  if(e.target.closest("#btnCatMgr")){openCatModal();return}
+  if(e.target.closest("#btnTagMgr")){openTagModal();return}
   const b=e.target.closest("[data-f]");if(!b)return;
-  filter=b.dataset.f;moreId=null;render();
+  const f=b.dataset.f;
+  if(f==="__all"){filterTags=[];}
+  else{
+    const i=filterTags.indexOf(f);
+    if(i>=0)filterTags.splice(i,1); else filterTags.push(f);
+  }
+  moreId=null;render();
 },"filters"));
 
 /* ========== 渲染 ========== */
 function render(){
   const c1=$("count");if(c1)c1.textContent=points.length;
 
-  const byCat=points.filter(p=>p&&(filter==="all"||p.cat===filter));
-  const shown=byCat.filter(p=>matchSearch(p,searchQ));
+  const byTag=points.filter(p=>{
+    if(!p)return false;
+    if(!filterTags.length)return true;
+    return tagsOf(p).some(t=>filterTags.indexOf(t)>=0);
+  });
+  const shown=byTag.filter(p=>matchSearch(p,searchQ));
 
   const sm=$("searchMeta");
   if(sm)sm.textContent=searchQ.trim()?("搜尋 "+shown.length+" 筆"):"";
@@ -1769,7 +1824,7 @@ function render(){
                 :(points.length+" ENTRIES"));
   }
 
-  renderCats();renderFilters();updateStorageInfo();updateDbg();
+  renderTags();renderFilters();updateStorageInfo();updateDbg();
 
   if(editingId){
     const ep=points.find(x=>x.id===editingId);
@@ -1780,17 +1835,18 @@ function render(){
   if(!shown.length){
     const why=searchQ.trim()
       ? "沒有符合「"+esc(searchQ.trim())+"」的紀錄"
-      : "此分類尚無紀錄";
+      : (filterTags.length?"符合這些標籤的紀錄為空":"此標籤尚無紀錄");
     list.innerHTML='<div class="empty">'+
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>'+
-      '<p>'+(points.length?why:"尚無紀錄，按「＋新增卡片(新增此座標文字記錄)」新增一筆")+'</p>'+
+      '<p>'+(points.length?why:"尚無紀錄，按「新增卡片(此座標文字記錄)」新增一筆")+'</p>'+
       '<small>'+(!points.length
         ?"TAP ＋ NEW CARD"
-        :(searchQ.trim()?"TRY ANOTHER KEYWORD":"TRY ANOTHER CATEGORY"))+'</small></div>';
+        :(searchQ.trim()?"TRY ANOTHER KEYWORD":"TRY ANOTHER TAG"))+'</small></div>';
     return;
   }
   list.innerHTML=shown.map((p,i)=>{
-    const c=catOf(p.cat);
+    const tgs=tagsOf(p).map(id=>tagOf(id));
+    const c0=tgs[0]||{id:"general",name:"一般",color:"#8b918a"};
     const lat=fmt(p.lat),lng=fmt(p.lng);
     const dly=(Math.min(i,8)*0.045).toFixed(2);
     const gDir="https://www.google.com/maps/dir/?api=1&destination="+lat+","+lng+"&travelmode=driving";
@@ -1798,6 +1854,9 @@ function render(){
     const nPhotos=(p.photos||[]).length;
     const isEditing=(editingId===p.id);
     const showMore=(moreId===p.id);
+
+    const tagChips=tgs.map(t=>
+      '<span class="tag" style="--c:'+t.color+';--cl:'+t.color+'"><i></i>'+esc(t.name)+'</span>').join("");
 
     const addr=p._loading
       ? '<p class="p-addr loading">查詢地址中…</p>'
@@ -1812,8 +1871,7 @@ function render(){
     const top=
       '<div class="p-top">'+
         '<div class="p-idx">'+String(points.indexOf(p)+1).padStart(2,"0")+'</div>'+
-        '<div class="p-id"><h3>'+esc(p.name)+
-          '<span class="tag" '+styleOf(c)+'><i></i>'+esc(c.name)+'</span></h3>'+
+        '<div class="p-id"><h3>'+esc(p.name)+tagChips+'</h3>'+
           '<div class="p-meta">'+when(p.ts)+
           (p.acc?' · <span class="acc">±'+Math.round(p.acc)+'m</span>':"")+
           (nPhotos?' · 📷 '+nPhotos:"")+
@@ -1838,7 +1896,7 @@ function render(){
         '<button class="btn" data-act="share">分享</button>'+
       '</div>';
 
-    return '<article class="point'+(isEditing?" editing":"")+'" data-id="'+p.id+'" '+styleOf(c,dly)+'>'+
+    return '<article class="point'+(isEditing?" editing":"")+'" data-id="'+p.id+'" '+styleOf(c0,dly)+'>'+
       top+
       '<button class="p-coords" data-act="copy" title="點一下複製座標">'+lat+', '+lng+'</button>'+
       addr+photos+acts+
@@ -1874,10 +1932,11 @@ if(list){
       if(act==="view"){openLb(p.id,+el.dataset.i);return}
       if(act==="share"){
         const url="https://www.google.com/maps/search/?api=1&query="+text;
-        const payload={title:p.name,text:p.name+"\n"+catOf(p.cat).name+"\n"+text+
+        const tgNames=tagsOf(p).map(x=>tagOf(x).name).join("、");
+        const payload={title:p.name,text:p.name+(tgNames?"\n"+tgNames:"")+"\n"+text+
           (p.addr?"\n"+p.addr:""),url:url};
         if(navigator.share){navigator.share(payload).catch(()=>{})}
-        else copy(p.name+"\n"+text+"\n"+(p.addr?p.addr+"\n":"")+url,"已複製分享內容");
+        else copy(p.name+(tgNames?"\n"+tgNames:"")+"\n"+text+"\n"+(p.addr?p.addr+"\n":"")+url,"已複製分享內容");
         return;
       }
     }catch(err){
@@ -1924,7 +1983,7 @@ on("lbDel","click",safe(function(){
 document.addEventListener("keydown",e=>{
   const cm=$("catModal");
   if(cm&&!cm.hidden){
-    if(e.key==="Escape")closeCatModal();
+    if(e.key==="Escape")closeTagModal();
     return;
   }
   const lb=$("lb");
@@ -1950,16 +2009,16 @@ document.addEventListener("keydown",e=>{
 on("btnExport","click",safe(function(){
   if(!points.length){toast("沒有可匯出的紀錄");return}
   const data=points.filter(Boolean).map(p=>({
-    name:p.name,cat:validCat(p.cat)?p.cat:"general",lat:p.lat,lng:p.lng,
+    name:p.name,tags:tagsOf(p).filter(validTag),lat:p.lat,lng:p.lng,
     note:p.note||"",addr:p.addr||"",
     time:new Date(p.ts).toISOString(),photos:p.photos||[]
   }));
-  const blob=new Blob([JSON.stringify({v:4,cats:cats,defaultCat:defaultCat,points:data},null,2)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify({v:5,tags:tags,defaultTag:defaultTag,points:data},null,2)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download="座標紀錄-"+new Date().toISOString().slice(0,10)+".json";
   document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),3000);
-  toast("已匯出 "+data.length+" 筆（含分類定義）");
+  toast("已匯出 "+data.length+" 筆（含標籤定義）");
 },"export"));
 on("btnImport","click",()=>{const i=$("fileIn");if(i)i.click();});
 on("fileIn","change",function(){
@@ -1970,23 +2029,32 @@ on("fileIn","change",function(){
       const raw=JSON.parse(rd.result);
       const arr=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.points)?raw.points:null);
       if(!arr)throw new Error("格式不符");
-      if(raw&&Array.isArray(raw.cats)&&raw.cats.length){
-        raw.cats.filter(c=>c&&c.id).forEach(function(c){
+
+      /* 標籤定義（新版 tags / 舊版 cats） */
+      const defs=(raw&&(raw.tags||raw.cats));
+      if(Array.isArray(defs)&&defs.length){
+        defs.filter(c=>c&&c.id).forEach(function(c){
           const id=String(c.id);
-          if(!cats.some(x=>x.id===id)){
-            cats.push({id:id,
+          if(!tags.some(x=>x.id===id)){
+            tags.push({id:id,
               name:String(c.name||id).slice(0,12),
               color:/^#[0-9a-fA-F]{6}$/.test(c.color||"")?c.color:nextColor()});
           }
         });
       }
+      const dt=(raw&&(raw.defaultTag||raw.defaultCat));
+      if(typeof dt==="string"&&dt&&tags.some(t=>t.id===dt))defaultTag=dt;
+
       let n=0;
       arr.forEach(o=>{
         const lat=parseFloat(o.lat!=null?o.lat:o.LAT),lng=parseFloat(o.lng!=null?o.lng:o.LNG);
         if(!isFinite(lat)||!isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return;
-        const catId=(typeof o.cat==="string"&&o.cat)?o.cat:"general";
+        let tg=Array.isArray(o.tags)
+          ? o.tags.filter(t=>typeof t==="string"&&t)
+          : ((typeof o.cat==="string"&&o.cat)?[o.cat]:[]);
+        if(!tg.length)tg=[defaultTag];
         points.unshift({
-          id:uid(),cat:catId,
+          id:uid(),tags:tg,
           name:(typeof o.name==="string"&&o.name.trim())?o.name:"匯入地點",
           note:typeof o.note==="string"?o.note:"",addr:typeof o.addr==="string"?o.addr:"",
           lat:lat,lng:lng,acc:null,
@@ -1997,7 +2065,7 @@ on("fileIn","change",function(){
       });
       normalize();
       if(!persist()){toast("匯入失敗：空間不足");render();return}
-      moreId=null;render();toast(n?("已匯入 "+n+" 筆"):"檔案格式不符");
+      moreId=null;filterTags=[];render();toast(n?("已匯入 "+n+" 筆"):"檔案格式不符");
     }catch(e){toast("匯入失敗："+e.message)}
   };
   rd.readAsText(f);this.value="";
@@ -2079,7 +2147,7 @@ window.addEventListener("appinstalled",function(){
   try{await storageInit();}
   catch(e){if(window.__err)window.__err("storageInit："+e.message);applyState(null);storageMode="localStorage";}
 
-  try{renderCats();renderStaged();render();}
+  try{renderTags();renderStaged();render();}
   catch(e){if(window.__err)window.__err("render："+e.message);}
 
   try{await updateStorageInfo();}catch(e){}
