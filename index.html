@@ -69,7 +69,6 @@ html{-webkit-text-size-adjust:100%;color-scheme:var(--scheme)}
 body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",sans-serif;line-height:1.6;
   min-height:100vh;min-height:100dvh;position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased;
   transition:background .3s ease,color .3s ease}
-body.locked{overflow:hidden}
 .topo{position:fixed;inset:0;width:100%;height:100%;color:var(--topo);opacity:.55;pointer-events:none;z-index:0;transition:color .3s}
 .grain{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:.05;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
@@ -94,9 +93,8 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .icb.install{border-color:var(--lock);color:var(--lock)}
 .icb.install:hover{background:var(--lock);color:var(--on-lock)}
 
-/* GPS：兩列常駐、不折疊；★ 地址已移除 */
 .gps{border-top:1px dashed var(--line)}
-.gps-row{max-width:760px;margin:0 auto;padding:7px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gps-row{max-width:760px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .status{display:inline-flex;align-items:center;gap:5px;font-family:"DM Mono",monospace;font-size:9.5px;
   letter-spacing:.1em;color:var(--muted);flex:none;white-space:nowrap}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex:none}
@@ -109,7 +107,7 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .readout.locked::after{content:"";position:absolute;inset:-3px -6px;
   background:linear-gradient(90deg,transparent,var(--glow),transparent);animation:sweep .7s ease-out forwards}
 @keyframes sweep{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
-.gps-coords{font-family:"DM Mono",monospace;font-weight:500;font-size:14px;letter-spacing:-.02em;
+.gps-coords{font-family:"DM Mono",monospace;font-weight:500;font-size:15px;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
 .gps-coords.idle{color:var(--ghost)}
 .gps-add{flex:none;background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
@@ -123,6 +121,7 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 @media(max-width:560px){
   .gps-add span{display:none}
   .gps-add{padding:9px 10px}
+  .gps-coords{font-size:13px}
 }
 .gps-detail{border-top:1px dashed var(--line)}
 .chip{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);padding:3px 7px}
@@ -177,7 +176,7 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
   opacity:0;animation:up .5s cubic-bezier(.2,.7,.3,1) forwards;animation-delay:var(--d,0s)}
 @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .point:hover{border-color:var(--line-hover);border-left-color:var(--cl,var(--c))}
-.point.editing{border-color:var(--accent);border-left-color:var(--accent)!important;animation:none;opacity:1}
+.point.editing{border-color:var(--lock);border-left-color:var(--lock)!important;animation:none;opacity:1}
 .p-top{display:flex;gap:11px;align-items:flex-start;padding:13px 13px 0}
 .p-idx{font-family:"Syne",sans-serif;font-weight:800;font-size:23px;line-height:1;
   color:transparent;-webkit-text-stroke:1px var(--stroke);flex:none;letter-spacing:-.03em}
@@ -223,18 +222,22 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .btn.edit:hover{border-color:var(--lock);color:var(--lock)}
 .btn.king{background:var(--ink);border-color:var(--ink);color:var(--on-ink);font-weight:700}
 .btn.king:hover{background:var(--accent);border-color:var(--accent);color:var(--on-accent);letter-spacing:.1em}
+.btn.use{width:100%;justify-content:center;border-color:var(--line-strong);color:var(--ink);font-weight:500}
+.btn.use:hover{border-color:var(--lock);color:var(--lock)}
 .btn svg{width:12px;height:12px}
 
-/* ===== 共用：底部漂浮面板 ===== */
-.sheet-bd{position:fixed;inset:0;background:rgba(5,6,5,.72);z-index:10;opacity:0;transition:opacity .25s ease;
-  touch-action:none}
+/* ===== 底部漂浮面板 ===== */
+.sheet-bd{position:fixed;inset:0;background:rgba(5,6,5,.72);z-index:10;opacity:0;
+  transition:opacity .25s ease;touch-action:none}
 .sheet-bd.open{opacity:1}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--surface);
   border-top:1px solid var(--line-strong);max-height:88dvh;display:flex;flex-direction:column;
   transform:translateY(101%);transition:transform .32s cubic-bezier(.2,.85,.25,1);
   padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -14px 40px rgba(0,0,0,.5)}
 .sheet.open{transform:none}
-.sheet.is-edit{border-top-color:var(--lock)}
+.sheet.editing{border-top-color:var(--lock)}
+.sheet.editing .sheet-grip{background:var(--lock)}
+.sheet.editing .sheet-head h2{color:var(--lock)}
 @media(min-width:720px){
   .sheet{left:50%;width:560px;max-width:94vw;transform:translate(-50%,101%)}
   .sheet.open{transform:translate(-50%,0)}
@@ -321,12 +324,6 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
   font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.06em;color:var(--muted);cursor:pointer}
 .keep input{accent-color:var(--lock);width:15px;height:15px;cursor:pointer}
 
-/* ★ 編輯面板 */
-.btn-use{width:100%;justify-content:center;border-color:var(--line-strong);color:var(--ink);font-weight:500}
-.btn-use:hover{border-color:var(--lock);color:var(--lock)}
-.orig-ro{font-family:"DM Mono",monospace;font-size:10.5px;letter-spacing:.03em;color:var(--muted);
-  margin-top:9px;display:flex;gap:8px;flex-wrap:wrap}
-.orig-ro b{color:var(--ink);font-weight:500}
 .edit-cta{width:100%;margin-top:16px;font-size:15px;padding:16px 14px;
   background:var(--lock);color:var(--on-lock);border:0;border-radius:2px;cursor:pointer;
   font-family:"Noto Sans TC",sans-serif;font-weight:700;letter-spacing:.1em;
@@ -339,6 +336,9 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
   border:1px solid var(--line);color:var(--muted);border-radius:2px;cursor:pointer;
   font-family:"Noto Sans TC",sans-serif;font-size:13px;font-weight:500;letter-spacing:.08em;transition:.2s}
 .edit-cancel:hover{border-color:var(--ink);color:var(--ink)}
+.edit-orig{font-family:"DM Mono",monospace;font-size:10.5px;color:var(--muted);
+  margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;letter-spacing:.03em}
+.edit-orig b{color:var(--ink);font-weight:500}
 .edit-tip{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.1em;color:var(--placeholder);margin-top:10px;text-align:center}
 
 .meter{display:flex;align-items:center;gap:9px;margin-top:16px;padding-top:13px;border-top:1px dashed var(--line)}
@@ -461,7 +461,6 @@ footer b{color:var(--ink);font-weight:500}
     </div>
   </div>
 
-  <!-- ★ GPS 兩列常駐：地址拿掉、不折疊 -->
   <div class="gps">
     <div class="gps-row">
       <span class="status" id="status"><i class="dot"></i><span id="statusTxt">待命</span></span>
@@ -507,17 +506,16 @@ footer b{color:var(--ink);font-weight:500}
   <div id="list"></div>
 </main>
 
-<!-- ===== ★ 新增紀錄：底部漂浮面板 ===== -->
-<div class="sheet-bd" id="recBd" hidden></div>
-<section class="sheet" id="recSheet" hidden role="dialog" aria-modal="true" aria-label="記錄座標">
+<!-- 新增紀錄面板 -->
+<div class="sheet-bd" id="sheetBd" hidden></div>
+<section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="記錄座標">
   <div class="sheet-grip"></div>
   <div class="sheet-head">
     <h2>RECORD · 記錄座標</h2>
-    <span class="fix" id="recFix">--.------, --.------</span>
-    <button class="sheet-x" id="recClose" aria-label="關閉">×</button>
+    <span class="fix" id="sheetFix">--.------, --.------</span>
+    <button class="sheet-x" id="sheetClose" aria-label="關閉">×</button>
   </div>
   <div class="sheet-body">
-
     <div class="sec-label">Category · 分類標籤
       <em id="catNow"></em>
       <button class="ghost-btn" id="btnCatMgr2" type="button">⚙ 管理</button>
@@ -597,9 +595,9 @@ footer b{color:var(--ink);font-weight:500}
   </div>
 </section>
 
-<!-- ===== ★ 編輯紀錄：底部漂浮面板（與新增同款） ===== -->
+<!-- 編輯紀錄面板 -->
 <div class="sheet-bd" id="editBd" hidden></div>
-<section class="sheet is-edit" id="editSheet" hidden role="dialog" aria-modal="true" aria-label="編輯紀錄">
+<section class="sheet editing" id="editSheet" hidden role="dialog" aria-modal="true" aria-label="編輯紀錄">
   <div class="sheet-grip"></div>
   <div class="sheet-head">
     <h2>EDIT · 編輯紀錄</h2>
@@ -607,7 +605,6 @@ footer b{color:var(--ink);font-weight:500}
     <button class="sheet-x" id="editClose" aria-label="關閉">×</button>
   </div>
   <div class="sheet-body">
-
     <div class="sec-label">Coordinates · 座標</div>
     <div class="fields" style="margin-top:8px">
       <div class="field" style="margin-top:0">
@@ -620,12 +617,11 @@ footer b{color:var(--ink);font-weight:500}
       </div>
     </div>
     <div class="field">
-      <button type="button" class="btn btn-use" id="btnUseLocked">
-        ⌖ 帶入已鎖定座標
-        <span id="useLockedHint">（尚未鎖定）</span>
+      <button type="button" class="btn use" id="btnUseLocked">
+        ⌖ 帶入已鎖定座標<span id="useLockedHint">（尚未鎖定）</span>
       </button>
     </div>
-    <div class="orig-ro" id="editOrig"></div>
+    <div class="edit-orig" id="editOrig"></div>
 
     <div class="sec-label">Category · 分類</div>
     <div class="cats" id="eCats"></div>
@@ -647,15 +643,12 @@ footer b{color:var(--ink);font-weight:500}
       </div>
     </div>
 
-    <div class="sec-label">Photos · 現場照片<em id="ePhotoNow">0 張</em></div>
-    <div class="photos" id="ePhotos" style="padding:0;margin-top:8px"></div>
-
     <button class="edit-cta" id="btnESave" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg>
       儲存變更
     </button>
     <button class="edit-cancel" id="btnECancel" type="button">取消（ESC）</button>
-    <p class="edit-tip">ENTER 儲存 · ESC 取消 · 改座標會自動重查地址 · 刪照片請點卡片上的縮圖</p>
+    <p class="edit-tip">ENTER 儲存 · ESC 取消 · 改座標會自動重查地址</p>
   </div>
 </section>
 
@@ -676,7 +669,7 @@ footer b{color:var(--ink);font-weight:500}
         <input type="text" id="newCatName" maxlength="12" placeholder="新分類名稱（Enter 新增）">
         <button class="cta" id="btnAddCat">新增</button>
       </div>
-      <p class="hint">★＝預設分類（開啟記錄面板時自動選取）。刪除有紀錄的分類時，其紀錄會自動改掛到預設分類。至少保留 1 個分類。</p>
+      <p class="hint">★＝預設分類。刪除有紀錄的分類時，其紀錄會自動改掛到預設分類。至少保留 1 個分類。</p>
     </div>
   </div>
 </div>
@@ -726,7 +719,7 @@ const PALETTE=[
 
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const VER="v16";
+const VER="v16.1";
 const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 const KING_PKGS=[
@@ -761,6 +754,17 @@ function on(id,ev,fn){
   if(el)el.addEventListener(ev,fn);
   else if(window.__err)window.__err("缺少元素 #"+id);
 }
+/* 所有按鈕都包一層：出錯一定看得到 */
+function safe(fn,label){
+  return function(e){
+    try{fn.call(this,e);}
+    catch(err){
+      const m=(err&&err.stack)?err.stack:String(err);
+      if(window.__err)window.__err("["+label+"] "+m);
+      toast("操作失敗："+((err&&err.message)||err));
+    }
+  };
+}
 
 /* ========== 主題 ========== */
 function currentTheme(){return document.documentElement.dataset.theme==="light"?"light":"dark";}
@@ -777,7 +781,7 @@ function applyTheme(t){
   const m=$("metaTheme");if(m)m.setAttribute("content",t==="light"?"#f4f1ea":"#0e100f");
   updateDbg();
 }
-on("btnTheme","click",()=>{applyTheme(currentTheme()==="light"?"dark":"light");});
+on("btnTheme","click",safe(function(){applyTheme(currentTheme()==="light"?"dark":"light");},"theme"));
 try{applyTheme(currentTheme());}catch(e){if(window.__err)window.__err("主題："+e.message);}
 
 /* ========== 工具 ========== */
@@ -998,7 +1002,7 @@ function copy(text,msg){
   }
 }
 
-/* ========== 地址（僅卡片／編輯面板用，頂部已拿掉） ========== */
+/* ========== 地址 ========== */
 async function reverseGeocode(lat,lng,signal){
   const url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+
             "&lon="+lng+"&zoom=18&accept-language=zh-TW";
@@ -1100,12 +1104,6 @@ function setStatus(cls,txt){
   s.className="status"+(cls?" "+cls:"");
   const t=$("statusTxt");if(t)t.textContent=txt;
 }
-function updateUseLockedHint(){
-  const h=$("useLockedHint");
-  if(h)h.textContent=current
-    ?("（"+fmt(current.lat)+", "+fmt(current.lng)+"）")
-    :"（尚未鎖定）";
-}
 function onPos(pos){
   const c=pos.coords;
   current={lat:c.latitude,lng:c.longitude,acc:c.accuracy,alt:c.altitude,head:c.heading,ts:Date.now()};
@@ -1119,8 +1117,8 @@ function onPos(pos){
   });
   const ro=$("readout");
   if(ro){ro.classList.remove("idle");ro.classList.remove("locked");void ro.offsetWidth;ro.classList.add("locked");}
-  const rf=$("recFix");
-  if(rf)rf.textContent=fmt(c.latitude)+", "+fmt(c.longitude);
+  const sf=$("sheetFix");
+  if(sf)sf.textContent=fmt(c.latitude)+", "+fmt(c.longitude);
   updateUseLockedHint();
   setStatus("on","已鎖定 "+new Date().toLocaleTimeString("zh-TW",{hour12:false}));
   if(pendingSave){pendingSave=false;setRecLabel();commitRecord();}
@@ -1144,8 +1142,8 @@ function locate(){
     navigator.geolocation.getCurrentPosition(onPos,onErr,{enableHighAccuracy:true,timeout:15000,maximumAge:0});
   }catch(e){onErr({code:0,message:e.message});}
 }
-on("btnLocate","click",locate);
-on("btnWatch","click",async function(){
+on("btnLocate","click",safe(locate,"locate"));
+on("btnWatch","click",safe(async function(){
   if(!navigator.geolocation){toast("此瀏覽器不支援定位");return}
   if(watchId!=null){
     navigator.geolocation.clearWatch(watchId);watchId=null;
@@ -1161,7 +1159,302 @@ on("btnWatch","click",async function(){
       toast("持續定位已開啟"+(woken?" · 螢幕保持常亮":""));
     }catch(e){onErr({code:0,message:e.message});}
   }
+},"watch"));
+
+/* ========== ★ 面板開合（重寫：強制重排 + 除錯） ========== */
+function lockBody(){
+  const s=$("sheet"),e=$("editSheet"),l=$("lb"),c=$("catModal");
+  const any=(s&&!s.hidden)||(e&&!e.hidden)||(l&&!l.hidden)||(c&&!c.hidden);
+  document.body.style.overflow=any?"hidden":"";
+}
+
+/* 用 ID 操作，避免傳參傳錯；強制 reflow 讓瀏覽器先吃到 display */
+function showSheetById(bdId,shId){
+  try{
+    const bd=$(bdId),sh=$(shId);
+    if(!bd)throw new Error("找不到背景 #"+bdId);
+    if(!sh)throw new Error("找不到面板 #"+shId);
+    /* 已經開著就不要再開 */
+    if(!sh.hidden&&sh.classList.contains("open"))return false;
+
+    bd.hidden=false;
+    sh.hidden=false;
+    void sh.offsetHeight;          /* 強制重排 */
+    bd.classList.add("open");
+    sh.classList.add("open");
+    lockBody();
+    if(window.__err&&location.hash==="#debug"){
+      window.__err("[showSheet] "+shId+" opened · hidden="+sh.hidden+" · cls="+sh.className);
+    }
+    return true;
+  }catch(e){
+    if(window.__err)window.__err("showSheetById("+bdId+","+shId+")："+((e&&e.message)||e));
+    toast("開啟面板失敗："+((e&&e.message)||e));
+    return false;
+  }
+}
+function hideSheetById(bdId,shId,after){
+  try{
+    const bd=$(bdId),sh=$(shId);
+    if(!sh||sh.hidden){if(after)after();return;}
+    sh.classList.remove("open");
+    if(bd)bd.classList.remove("open");
+    setTimeout(function(){
+      try{
+        sh.hidden=true;
+        if(bd)bd.hidden=true;
+        lockBody();
+      }catch(e){if(window.__err)window.__err("hide timeout："+e.message);}
+      if(after)after();
+    },320);
+  }catch(e){
+    if(window.__err)window.__err("hideSheetById："+((e&&e.message)||e));
+    if(after)after();
+  }
+}
+
+/* ========== 新增面板 ========== */
+function openSheet(){
+  toast("開…"); /* 確認 handler 有觸發（下面會被蓋掉） */
+  const ok=showSheetById("sheetBd","sheet");
+  if(!ok){
+    /* 若是「已開著」狀態卡住，強制重置再開一次 */
+    const sh=$("sheet"),bd=$("sheetBd");
+    if(sh&&bd){
+      try{
+        sh.hidden=true;bd.hidden=true;
+        sh.classList.remove("open");bd.classList.remove("open");
+        const ok2=showSheetById("sheetBd","sheet");
+        if(ok2)afterRecOpen();
+      }catch(e){if(window.__err)window.__err("rec reset："+e.message);}
+    }
+    return;
+  }
+  afterRecOpen();
+}
+function afterRecOpen(){
+  try{
+    if(validCat(defaultCat))selectedCat=defaultCat;
+    renderCats();
+    const m=$("mName");
+    if(m)setTimeout(function(){try{m.focus({preventScroll:true});}catch(e){}},340);
+    toast("記錄面板已開啟");
+  }catch(e){
+    if(window.__err)window.__err("afterRecOpen："+((e&&e.message)||e));
+  }
+}
+function closeSheet(){
+  hideSheetById("sheetBd","sheet");
+}
+function maybeCloseSheet(){
+  const k=$("keepOpen");
+  if(k&&k.checked)return;
+  closeSheet();
+}
+on("btnAddRec","click",safe(openSheet,"btnAddRec"));
+on("btnAddRec2","click",safe(openSheet,"btnAddRec2"));
+on("sheetClose","click",safe(closeSheet,"sheetClose"));
+on("sheetBd","click",safe(closeSheet,"sheetBd"));
+
+/* ========== 編輯面板 ========== */
+function updateUseLockedHint(){
+  const h=$("useLockedHint");
+  if(h)h.textContent=current
+    ?("（"+fmt(current.lat)+", "+fmt(current.lng)+"）")
+    :"（尚未鎖定）";
+}
+function openEditSheet(id){
+  const p=points.find(x=>x&&x.id===id);
+  if(!p){toast("找不到這筆紀錄");return}
+
+  /* 若新增面板開著，先關 */
+  const rec=$("sheet");
+  if(rec&&!rec.hidden)hideSheetById("sheetBd","sheet");
+
+  editingId=id;
+  moreId=null;
+  editCat=validCat(p.cat)?p.cat:defaultCat;
+
+  const set=(i,v)=>{const e=$(i);if(e)e.value=v;};
+  set("eLat",fmt(p.lat));
+  set("eLng",fmt(p.lng));
+  set("eName",p.name||"");
+  set("eNote",p.note||"");
+  set("eAddr",p.addr||"");
+  const fx=$("editFix");if(fx)fx.textContent=fmt(p.lat)+", "+fmt(p.lng);
+  const og=$("editOrig");
+  if(og)og.innerHTML=
+    '<span><b>原座標</b> '+fmt(p.lat)+', '+fmt(p.lng)+'</span>'+
+    (p.acc?'<span><b>精度</b> ±'+Math.round(p.acc)+'m</span>':"")+
+    '<span><b>建立</b> '+when(p.ts)+'</span>'+
+    ((p.photos||[]).length?'<span><b>照片</b> '+p.photos.length+' 張</span>':"");
+  updateUseLockedHint();
+  renderECats();
+
+  /* 若狀態卡住，先重置 */
+  const sh=$("editSheet"),bd=$("editBd");
+  if(sh&&!sh.hidden&&sh.classList.contains("open")){
+    /* 已經開著就只更新內容 */
+    toast("編輯面板已開啟");
+    render();
+    return;
+  }
+  if(sh&&bd){sh.hidden=true;bd.hidden=true;sh.classList.remove("open");bd.classList.remove("open");}
+
+  const ok=showSheetById("editBd","editSheet");
+  if(!ok){toast("編輯面板開啟失敗");return}
+
+  const n=$("eName");
+  if(n)setTimeout(function(){try{n.focus({preventScroll:true});n.select();}catch(e){}},340);
+  render();
+  toast("編輯面板已開啟");
+}
+function closeEditSheet(){
+  hideSheetById("editBd","editSheet",function(){
+    editingId=null;
+    editCat=null;
+    render();
+  });
+}
+on("editClose","click",safe(closeEditSheet,"editClose"));
+on("editBd","click",safe(closeEditSheet,"editBd"));
+on("btnECancel","click",safe(closeEditSheet,"btnECancel"));
+
+on("btnUseLocked","click",safe(function(){
+  if(!current){toast("尚未鎖定座標：先按「重新定位」");return}
+  const la=$("eLat"),ln=$("eLng");
+  if(la)la.value=fmt(current.lat);
+  if(ln)ln.value=fmt(current.lng);
+  const fx=$("editFix");
+  if(fx)fx.textContent=fmt(current.lat)+", "+fmt(current.lng);
+  toast("已帶入鎖定座標（按「儲存變更」生效）");
+},"useLocked"));
+
+on("btnEAddr","click",safe(async function(){
+  const inp=$("eAddr");if(!inp)return;
+  const la=$("eLat"),ln=$("eLng");
+  const lat=parseFloat(la?la.value:""),lng=parseFloat(ln?ln.value:"");
+  if(!isFinite(lat)||!isFinite(lng)){toast("請先填寫有效座標");return}
+  const to=withTimeout(12000);
+  this.disabled=true;this.textContent="查詢…";
+  try{
+    const t=await reverseGeocode(lat,lng,to.signal);
+    to.clear();
+    inp.value=t||"";
+    toast(t?"已帶入地址 ✓":"查無地址");
+  }catch(e){
+    to.clear();
+    toast((e&&e.name==="AbortError")?"地址查詢逾時（12 秒）":
+          "地址查詢失敗（"+(e.message||"網路錯誤")+"）");
+  }
+  this.disabled=false;this.textContent="補地址";
+},"eAddr"));
+
+["eLat","eLng"].forEach(function(id){
+  on(id,"input",function(){
+    const la=$("eLat"),ln=$("eLng"),fx=$("editFix");
+    if(!fx)return;
+    const a=parseFloat(la?la.value:""),b=parseFloat(ln?ln.value:"");
+    fx.textContent=(isFinite(a)&&isFinite(b))
+      ?(fmt(a)+", "+fmt(b))
+      :"--.------, --.------";
+  });
 });
+
+function saveEditSheet(){
+  if(!editingId){toast("沒有正在編輯的紀錄");return}
+  const p=points.find(x=>x.id===editingId);if(!p){toast("紀錄已不存在");return}
+
+  const la=$("eLat"),ln=$("eLng"),ni=$("eName"),no=$("eNote"),ai=$("eAddr");
+  const newLat=parseFloat(la?la.value:"");
+  const newLng=parseFloat(ln?ln.value:"");
+  if(!isFinite(newLat)||newLat<-90||newLat>90){toast("緯度需介於 -90 ～ 90");if(la)la.focus();return}
+  if(!isFinite(newLng)||newLng<-180||newLng>180){toast("經度需介於 -180 ～ 180");if(ln)ln.focus();return}
+
+  const newName=ni?ni.value.trim():"";
+  const newNote=no?no.value.trim():"";
+  const newAddr=ai?ai.value.trim():"";
+  const newCat=validCat(editCat)?editCat:(validCat(p.cat)?p.cat:defaultCat);
+  if(!newName){toast("名稱不可空白");if(ni)ni.focus();return}
+
+  const coordsChanged=(fmt(newLat)!==fmt(p.lat)||fmt(newLng)!==fmt(p.lng));
+  const addrTouched=(newAddr!==(p.addr||""));
+  const bak={name:p.name,note:p.note,cat:p.cat,addr:p.addr,lat:p.lat,lng:p.lng};
+
+  if(coordsChanged){p.lat=newLat;p.lng=newLng;}
+  p.name=newName;p.note=newNote;p.cat=newCat;
+  p.addr=(coordsChanged&&!addrTouched)?"":newAddr;
+
+  if(!persist()){Object.assign(p,bak);toast("儲存失敗");return}
+
+  closeEditSheet();
+  if(filter!=="all"&&p.cat!==filter)filter="all";
+
+  if(coordsChanged&&!addrTouched){
+    toast("已更新，正在重新取得地址…");
+    fetchAddr(p);
+  }else{
+    toast("已更新："+p.name+(coordsChanged?"（座標已修改）":""));
+  }
+}
+on("btnESave","click",safe(saveEditSheet,"btnESave"));
+
+/* 面板鍵盤 */
+function sheetKeydown(e){
+  const sh=e.currentTarget;
+  if(sh.hidden)return;
+  try{
+    if(e.key==="Escape"){
+      e.preventDefault();e.stopPropagation();
+      if(sh.id==="editSheet")closeEditSheet();
+      else closeSheet();
+      return;
+    }
+    if(e.key==="Enter"&&e.target.tagName!=="TEXTAREA"&&!e.isComposing){
+      e.preventDefault();
+      if(sh.id==="editSheet")saveEditSheet();
+      else onRecordClick();
+    }
+  }catch(err){
+    if(window.__err)window.__err("sheetKeydown："+err.message);
+  }
+}
+["sheet","editSheet"].forEach(function(id){
+  const sh=$(id);
+  if(sh)sh.addEventListener("keydown",sheetKeydown);
+});
+
+(function(){
+  ["sheetBd","editBd","catModalBd","lb"].forEach(function(id){
+    const el=$(id);
+    if(el)el.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
+  });
+})();
+
+on("btnManual","click",safe(function(){
+  const b=$("manualBox");if(!b)return;
+  b.hidden=!b.hidden;
+  this.textContent=b.hidden?"▸ 展開手動輸入":"▾ 收合手動輸入";
+},"manual"));
+
+on("btnAddr","click",safe(async function(){
+  const inp=$("mAddr");if(!inp)return;
+  if(!current){toast("先按「重新定位」");return}
+  const lat=current.lat,lng=current.lng;
+  const to=withTimeout(12000);
+  this.disabled=true;this.textContent="查詢…";
+  try{
+    const t=await reverseGeocode(lat,lng,to.signal);
+    to.clear();
+    inp.value=t||"";
+    toast(t?"已帶入地址 ✓":"查無地址");
+  }catch(e){
+    to.clear();
+    toast((e&&e.name==="AbortError")?"地址查詢逾時（12 秒）":
+          "地址查詢失敗（"+(e.message||"網路錯誤")+"）");
+  }
+  this.disabled=false;this.textContent="取得";
+},"addr"));
 
 /* ========== 分類管理 ========== */
 function catUseCount(id){return points.reduce((n,p)=>n+(p&&p.cat===id?1:0),0);}
@@ -1169,16 +1462,18 @@ function catUseCount(id){return points.reduce((n,p)=>n+(p&&p.cat===id?1:0),0);}
 function openCatModal(){
   const m=$("catModal");if(!m||!m.hidden)return;
   m.hidden=false;
+  lockBody();
   renderCatMgr();
 }
 function closeCatModal(){
   const m=$("catModal");if(!m||m.hidden)return;
   m.hidden=true;
+  lockBody();
   render();
 }
-on("btnCatMgr2","click",openCatModal);
-on("catModalClose","click",closeCatModal);
-on("catModalBd","click",closeCatModal);
+on("btnCatMgr2","click",safe(openCatModal,"catMgr2"));
+on("catModalClose","click",safe(closeCatModal,"catClose"));
+on("catModalBd","click",safe(closeCatModal,"catBd"));
 
 function renderCatMgr(){
   const box=$("catMgrList");if(!box)return;
@@ -1213,15 +1508,9 @@ on("catMgrList","input",function(e){
 on("catMgrList","change",function(e){
   if(e.target.dataset.act==="color"){
     persist();
-    const row=e.target.closest(".cm-row");
-    if(row){
-      const c=cats.find(x=>x.id===row.dataset.id);
-      const sw=row.querySelector(".cm-sw");
-      if(c&&sw)sw.style.background=c.color;
-    }
   }
 });
-on("catMgrList","click",function(e){
+on("catMgrList","click",safe(function(e){
   const btn=e.target.closest("[data-act]");if(!btn||btn.tagName==="INPUT")return;
   const row=e.target.closest(".cm-row");if(!row)return;
   const id=row.dataset.id;
@@ -1231,7 +1520,6 @@ on("catMgrList","click",function(e){
   if(act==="def"){
     defaultCat=id;
     if(!validCat(selectedCat))selectedCat=id;
-    if(editCat&&!validCat(editCat))editCat=id;
     persist();renderCatMgr();
     toast("預設分類 → "+catOf(id).name);
     return;
@@ -1263,13 +1551,12 @@ on("catMgrList","click",function(e){
     if(editCat===id)editCat=defaultCat;
     if(filter===id)filter="all";
     persist();renderCatMgr();
-    if(!$("editSheet").hidden)renderECats();
     toast("已刪除分類"+(n?("，"+n+" 筆改掛「"+fallback.name+"」"):""));
     return;
   }
-});
+},"catMgrClick"));
 
-on("btnAddCat","click",addCatFromInput);
+on("btnAddCat","click",safe(addCatFromInput,"addCat"));
 on("newCatName","keydown",function(e){
   if(e.key==="Enter"){e.preventDefault();addCatFromInput();}
 });
@@ -1285,8 +1572,6 @@ function addCatFromInput(){
   inp.value="";
   if(col)col.value=nextColor();
   persist();renderCatMgr();
-  if(!$("editSheet").hidden)renderECats();
-  if(!$("recSheet").hidden)renderCats();
   toast("已新增分類："+name);
   inp.focus();
 }
@@ -1299,11 +1584,11 @@ function renderCats(){
   '<button class="cat" data-cat="__mgr" style="border-style:dashed" title="分類管理">⚙ 管理</button>';
   const now=$("catNow");if(now)now.textContent="▸ "+catOf(selectedCat).name;
 }
-on("cats","click",function(e){
+on("cats","click",safe(function(e){
   const btn=e.target.closest("[data-cat]");if(!btn)return;
   if(btn.dataset.cat==="__mgr"){openCatModal();return}
   selectedCat=btn.dataset.cat;renderCats();
-});
+},"cats"));
 
 function renderECats(){
   const box=$("eCats");if(!box)return;
@@ -1311,11 +1596,11 @@ function renderECats(){
     return '<button type="button" class="cat'+(editCat===c.id?" on":"")+'" data-ecat="'+esc(c.id)+'" '+styleOf(c)+'><i></i>'+esc(c.name)+'</button>';
   }).join("");
 }
-on("eCats","click",function(e){
+on("eCats","click",safe(function(e){
   const b=e.target.closest("[data-ecat]");if(!b)return;
   editCat=b.dataset.ecat;
   renderECats();
-});
+},"eCats"));
 
 /* ========== 照片 ========== */
 async function fileToDataURL(file){
@@ -1352,9 +1637,7 @@ async function handleFiles(files){
       const old=p.photos?p.photos.slice():[];
       p.photos=old.concat(add);
       if(!persist()){p.photos=old;render();return}
-      render();
-      if(editingId===p.id)renderEPhotos(p);
-      toast("已加入 "+add.length+" 張照片");
+      render();toast("已加入 "+add.length+" 張照片");
     }
     photoTarget=null;
   }else{staged=staged.concat(add);renderStaged();}
@@ -1374,258 +1657,6 @@ on("btnShoot","click",()=>{photoTarget=null;const i=$("camIn");if(i)i.click();})
 on("btnPick","click",()=>{photoTarget=null;const i=$("pickIn");if(i)i.click();});
 on("camIn","change",function(){handleFiles(this.files);this.value="";});
 on("pickIn","change",function(){handleFiles(this.files);this.value="";});
-
-/* ========== 面板通用 ========== */
-function anySheetOpen(){
-  const r=$("recSheet"),e=$("editSheet");
-  return (r&&!r.hidden)||(e&&!e.hidden);
-}
-function showSheet(bdId,shId){
-  const bd=$(bdId),sh=$(shId);
-  if(!sh||sh.hidden)return false;
-  /* 關另一個 */
-  if(shId==="editSheet")hideSheet("recBd","recSheet");
-  else hideSheet("editBd","editSheet");
-  bd.hidden=false;sh.hidden=false;
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      bd.classList.add("open");sh.classList.add("open");
-    });
-  });
-  document.body.classList.add("locked");
-  return true;
-}
-function hideSheet(bdId,shId,done){
-  const bd=$(bdId),sh=$(shId);
-  if(!sh||sh.hidden)return;
-  sh.classList.remove("open");if(bd)bd.classList.remove("open");
-  setTimeout(function(){
-    sh.hidden=true;if(bd)bd.hidden=true;
-    if(!anySheetOpen())document.body.classList.remove("locked");
-    if(done)done();
-  },320);
-}
-
-/* ========== 新增面板 ========== */
-function openRecSheet(){
-  if(!showSheet("recBd","recSheet"))return;
-  if(validCat(defaultCat))selectedCat=defaultCat;
-  renderCats();
-  const m=$("mName");
-  if(m)setTimeout(function(){try{m.focus({preventScroll:true});}catch(e){}},340);
-}
-function closeRecSheet(){hideSheet("recBd","recSheet");}
-function maybeCloseRec(){
-  const k=$("keepOpen");
-  if(k&&k.checked)return;
-  closeRecSheet();
-}
-on("btnAddRec","click",openRecSheet);
-on("btnAddRec2","click",openRecSheet);
-on("recClose","click",closeRecSheet);
-on("recBd","click",closeRecSheet);
-
-/* ========== ★ 編輯面板 ========== */
-function renderEPhotos(p){
-  const box=$("ePhotos"),n=$("ePhotoNow");
-  if(!box)return;
-  const arr=(p&&p.photos)||[];
-  if(n)n.textContent=arr.length+" 張";
-  box.innerHTML=
-    arr.map((src,k)=>'<img class="ph" data-eph="'+k+'" src="'+src+'" alt="'+esc(p.name)+' 現場照 '+(k+1)+'" title="點一下刪除">').join("")+
-    '<button class="ph-add" id="eAddPh">'+
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>'+
-      (arr.length?"加照片":"＋ 照片")+'</button>';
-}
-on("ePhotos","click",function(e){
-  const add=e.target.closest("#eAddPh");
-  if(add){
-    if(!editingId)return;
-    photoTarget=editingId;
-    const i=$("camIn");if(i)i.click();
-    return;
-  }
-  const im=e.target.closest("[data-eph]");
-  if(!im||!editingId)return;
-  const p=points.find(x=>x.id===editingId);if(!p)return;
-  const k=+im.dataset.eph;
-  if(!confirm("刪除這張照片？"))return;
-  p.photos.splice(k,1);
-  if(!persist()){toast("刪除失敗");return}
-  renderEPhotos(p);render();toast("照片已刪除");
-});
-
-function openEditSheet(id){
-  const p=points.find(x=>x&&x.id===id);if(!p)return;
-  editingId=id;moreId=null;
-  editCat=validCat(p.cat)?p.cat:defaultCat;
-
-  const set=(i,v)=>{const e=$(i);if(e)e.value=v;};
-  set("eLat",fmt(p.lat));
-  set("eLng",fmt(p.lng));
-  set("eName",p.name||"");
-  set("eNote",p.note||"");
-  set("eAddr",p.addr||"");
-  const fx=$("editFix");if(fx)fx.textContent=fmt(p.lat)+", "+fmt(p.lng);
-  const og=$("editOrig");
-  if(og)og.innerHTML=
-    '<span><b>原座標</b> '+fmt(p.lat)+', '+fmt(p.lng)+'</span>'+
-    (p.acc?'<span><b>精度</b> ±'+Math.round(p.acc)+'m</span>':"")+
-    '<span><b>建立</b> '+when(p.ts)+'</span>';
-  updateUseLockedHint();
-  renderECats();
-  renderEPhotos(p);
-
-  if(!showSheet("editBd","editSheet"))return;
-  const n=$("eName");
-  if(n)setTimeout(function(){try{n.focus({preventScroll:true});n.select();}catch(e){}},340);
-  render();
-}
-function closeEditSheet(){
-  hideSheet("editBd","editSheet",function(){
-    editingId=null;editCat=null;render();
-  });
-}
-on("editClose","click",closeEditSheet);
-on("editBd","click",closeEditSheet);
-on("btnECancel","click",closeEditSheet);
-
-on("btnUseLocked","click",function(){
-  if(!current){toast("尚未鎖定座標：先在 GPS 條按「重新定位」");return}
-  const la=$("eLat"),ln=$("eLng");
-  if(la)la.value=fmt(current.lat);
-  if(ln)ln.value=fmt(current.lng);
-  const fx=$("editFix");
-  if(fx)fx.textContent=fmt(current.lat)+", "+fmt(current.lng);
-  toast("已帶入鎖定座標（按「儲存變更」生效）");
-});
-
-on("btnEAddr","click",async function(){
-  const inp=$("eAddr");if(!inp)return;
-  const la=$("eLat"),ln=$("eLng");
-  const lat=parseFloat(la?la.value:""),lng=parseFloat(ln?ln.value:"");
-  if(!isFinite(lat)||!isFinite(lng)){toast("請先填寫有效座標");return}
-  const to=withTimeout(12000);
-  this.disabled=true;this.textContent="查詢…";
-  try{
-    const t=await reverseGeocode(lat,lng,to.signal);
-    to.clear();
-    inp.value=t||"";
-    toast(t?"已帶入地址 ✓":"查無地址");
-  }catch(e){
-    to.clear();
-    toast((e&&e.name==="AbortError")?"地址查詢逾時（12 秒）":
-          "地址查詢失敗（"+(e.message||"網路錯誤")+"）");
-  }
-  this.disabled=false;this.textContent="補地址";
-});
-
-["eLat","eLng"].forEach(function(id){
-  on(id,"input",function(){
-    const la=$("eLat"),ln=$("eLng"),fx=$("editFix");
-    if(!fx)return;
-    const a=parseFloat(la?la.value:""),b=parseFloat(ln?ln.value:"");
-    fx.textContent=(isFinite(a)&&isFinite(b))
-      ?(fmt(a)+", "+fmt(b))
-      :"--.------, --.------";
-  });
-});
-
-function saveEditSheet(){
-  if(!editingId)return;
-  const p=points.find(x=>x.id===editingId);if(!p)return;
-
-  const la=$("eLat"),ln=$("eLng"),ni=$("eName"),no=$("eNote"),ai=$("eAddr");
-  const newLat=parseFloat(la?la.value:"");
-  const newLng=parseFloat(ln?ln.value:"");
-  if(!isFinite(newLat)||newLat<-90||newLat>90){toast("緯度需介於 -90 ～ 90");if(la)la.focus();return}
-  if(!isFinite(newLng)||newLng<-180||newLng>180){toast("經度需介於 -180 ～ 180");if(ln)ln.focus();return}
-
-  const newName=ni?ni.value.trim():"";
-  const newNote=no?no.value.trim():"";
-  const newAddr=ai?ai.value.trim():"";
-  const newCat=validCat(editCat)?editCat:(validCat(p.cat)?p.cat:defaultCat);
-  if(!newName){toast("名稱不可空白");if(ni)ni.focus();return}
-
-  const coordsChanged=(fmt(newLat)!==fmt(p.lat)||fmt(newLng)!==fmt(p.lng));
-  const addrTouched=(newAddr!==(p.addr||""));
-  const bak={name:p.name,note:p.note,cat:p.cat,addr:p.addr,lat:p.lat,lng:p.lng};
-
-  if(coordsChanged){p.lat=newLat;p.lng=newLng;}
-  p.name=newName;p.note=newNote;p.cat=newCat;
-  p.addr=(coordsChanged&&!addrTouched)?"":newAddr;
-
-  if(!persist()){Object.assign(p,bak);toast("儲存失敗");return}
-
-  closeEditSheet();
-  if(filter!=="all"&&p.cat!==filter)filter="all";
-
-  if(coordsChanged&&!addrTouched){
-    toast("已更新，正在重新取得地址…");
-    fetchAddr(p);
-  }else{
-    toast("已更新："+p.name+(coordsChanged?"（座標已修改）":""));
-  }
-}
-on("btnESave","click",saveEditSheet);
-
-/* ========== 鍵盤（面板內） ========== */
-function sheetKeys(e){
-  const sh=e.currentTarget;
-  if(sh.hidden)return;
-  if(e.key==="Escape"){
-    e.preventDefault();e.stopPropagation();
-    if(sh.id==="editSheet")closeEditSheet();else closeRecSheet();
-    return;
-  }
-  if(e.key==="Enter"&&e.target.tagName!=="TEXTAREA"&&!e.isComposing){
-    e.preventDefault();
-    if(sh.id==="editSheet")saveEditSheet();
-    else onRecordClick();
-    return;
-  }
-  if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){
-    e.preventDefault();
-    if(sh.id==="editSheet")saveEditSheet();
-    else onRecordClick();
-  }
-}
-["recSheet","editSheet"].forEach(function(id){
-  const sh=$(id);
-  if(sh)sh.addEventListener("keydown",sheetKeys);
-});
-
-(function(){
-  ["recBd","editBd","catModalBd","lb"].forEach(function(id){
-    const el=$(id);
-    if(el)el.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
-  });
-})();
-
-on("btnManual","click",function(){
-  const b=$("manualBox");if(!b)return;
-  b.hidden=!b.hidden;
-  this.textContent=b.hidden?"▸ 展開手動輸入":"▾ 收合手動輸入";
-});
-
-on("btnAddr","click",async function(){
-  const inp=$("mAddr");if(!inp)return;
-  if(!current){toast("先在 GPS 條按「重新定位」");return}
-  const lat=current.lat,lng=current.lng;
-  const to=withTimeout(12000);
-  this.disabled=true;this.textContent="查詢…";
-  try{
-    const t=await reverseGeocode(lat,lng,to.signal);
-    to.clear();
-    inp.value=t||"";
-    toast(t?"已帶入地址 ✓":"查無地址");
-  }catch(e){
-    to.clear();
-    toast((e&&e.name==="AbortError")?"地址查詢逾時（12 秒）":
-          "地址查詢失敗（"+(e.message||"網路錯誤")+"）");
-  }
-  this.disabled=false;this.textContent="取得";
-});
 
 /* ========== 搜尋 ========== */
 function onSearchInput(){
@@ -1663,7 +1694,7 @@ function addPoint(d){
   points.unshift(p);
   if(!persist()){points.shift();render();return false}
   clearComposer();render();toast("已記錄："+p.name+" · "+catOf(p.cat).name);
-  maybeCloseRec();
+  maybeCloseSheet();
   return true;
 }
 function commitRecord(){
@@ -1685,8 +1716,8 @@ function onRecordClick(){
   if(!current){pendingSave=true;setRecLabel();locate();toast("定位中，鎖定後自動記錄…");return;}
   commitRecord();
 }
-on("btnRecord","click",onRecordClick);
-on("btnSave","click",function(){
+on("btnRecord","click",safe(onRecordClick,"btnRecord"));
+on("btnSave","click",safe(function(){
   const la=$("mLat"),ln=$("mLng");
   const lat=parseFloat(la.value),lng=parseFloat(ln.value);
   if(!isFinite(lat)||lat<-90||lat>90){toast("緯度需介於 -90 ～ 90");la.focus();return}
@@ -1696,12 +1727,12 @@ on("btnSave","click",function(){
             addr:a?a.value.trim():"",
             cat:selectedCat,photos:staged.slice(),
             acc:current&&Math.abs(current.lat-lat)<1e-6&&Math.abs(current.lng-lng)<1e-6?current.acc:null});
-});
-on("btnFill","click",function(){
+},"btnSave"));
+on("btnFill","click",safe(function(){
   if(!current){toast("先按「重新定位」");return}
   const la=$("mLat"),ln=$("mLng");
   la.value=fmt(current.lat);ln.value=fmt(current.lng);toast("已帶入目前座標");
-});
+},"btnFill"));
 
 /* ========== 篩選 ========== */
 function counts(){
@@ -1721,11 +1752,11 @@ function renderFilters(){
   h+='<button class="fchip mgr" id="btnCatMgr" type="button">⚙ 分類管理</button>';
   box.innerHTML=h;
 }
-on("filters","click",e=>{
+on("filters","click",safe(e=>{
   if(e.target.closest("#btnCatMgr")){openCatModal();return}
   const b=e.target.closest("[data-f]");if(!b)return;
   filter=b.dataset.f;moreId=null;render();
-});
+},"filters"));
 
 /* ========== 渲染 ========== */
 function render(){
@@ -1747,6 +1778,10 @@ function render(){
 
   renderCats();renderFilters();updateStorageInfo();updateDbg();
 
+  if(editingId){
+    const ep=points.find(x=>x.id===editingId);
+    if(!ep)editingId=null;
+  }
   if(!list)return;
 
   if(!shown.length){
@@ -1820,36 +1855,41 @@ function render(){
 
 if(list){
   list.addEventListener("click",function(e){
-    const el=e.target.closest("[data-act]");if(!el)return;
-    const card=el.closest(".point");if(!card)return;
-    const id=card.dataset.id;
-    const idx=points.findIndex(p=>p&&p.id===id);if(idx<0)return;
-    const p=points[idx],act=el.dataset.act;
-    const text=fmt(p.lat)+", "+fmt(p.lng);
+    try{
+      const el=e.target.closest("[data-act]");if(!el)return;
+      const card=el.closest(".point");if(!card)return;
+      const id=card.dataset.id;
+      const idx=points.findIndex(p=>p&&p.id===id);if(idx<0)return;
+      const p=points[idx],act=el.dataset.act;
+      const text=fmt(p.lat)+", "+fmt(p.lng);
 
-    if(act==="copy"){copy(text,"已複製："+text);return}
-    if(act==="king"){openNaviKing(p);return}
-    if(act==="edit"){openEditSheet(id);return}   /* ★ 開漂浮編輯面板 */
-    if(act==="more"){moreId=(moreId===p.id?null:p.id);render();return}
-    if(act==="del"){
-      const np=(p.photos||[]).length;
-      if(confirm("刪除「"+p.name+"」"+(np?("（含 "+np+" 張照片）"):"")+"？")){
-        if(editingId===id)closeEditSheet();
-        if(moreId===id)moreId=null;
-        points.splice(idx,1);persist();render();toast("已刪除");
+      if(act==="copy"){copy(text,"已複製："+text);return}
+      if(act==="king"){openNaviKing(p);return}
+      if(act==="edit"){openEditSheet(id);return}
+      if(act==="more"){moreId=(moreId===p.id?null:p.id);render();return}
+      if(act==="del"){
+        const np=(p.photos||[]).length;
+        if(confirm("刪除「"+p.name+"」"+(np?("（含 "+np+" 張照片）"):"")+"？")){
+          if(editingId===id)closeEditSheet();
+          if(moreId===id)moreId=null;
+          points.splice(idx,1);persist();render();toast("已刪除");
+        }
+        return;
       }
-      return;
-    }
-    if(act==="addr"){fetchAddr(p);return}
-    if(act==="addph"){photoTarget=p.id;const i=$("camIn");if(i)i.click();return}
-    if(act==="view"){openLb(p.id,+el.dataset.i);return}
-    if(act==="share"){
-      const url="https://www.google.com/maps/search/?api=1&query="+text;
-      const payload={title:p.name,text:p.name+"\n"+catOf(p.cat).name+"\n"+text+
-        (p.addr?"\n"+p.addr:""),url:url};
-      if(navigator.share){navigator.share(payload).catch(()=>{})}
-      else copy(p.name+"\n"+text+"\n"+(p.addr?p.addr+"\n":"")+url,"已複製分享內容");
-      return;
+      if(act==="addr"){fetchAddr(p);return}
+      if(act==="addph"){photoTarget=p.id;const i=$("camIn");if(i)i.click();return}
+      if(act==="view"){openLb(p.id,+el.dataset.i);return}
+      if(act==="share"){
+        const url="https://www.google.com/maps/search/?api=1&query="+text;
+        const payload={title:p.name,text:p.name+"\n"+catOf(p.cat).name+"\n"+text+
+          (p.addr?"\n"+p.addr:""),url:url};
+        if(navigator.share){navigator.share(payload).catch(()=>{})}
+        else copy(p.name+"\n"+text+"\n"+(p.addr?p.addr+"\n":"")+url,"已複製分享內容");
+        return;
+      }
+    }catch(err){
+      if(window.__err)window.__err("list click："+((err&&err.stack)||err));
+      toast("點擊處理失敗："+((err&&err.message)||err));
     }
   });
 }
@@ -1859,7 +1899,7 @@ function openLb(pid,i){
   const p=points.find(x=>x&&x.id===pid);if(!p||!(p.photos||[]).length)return;
   lbState={id:pid,i:Math.max(0,Math.min(i,p.photos.length-1))};
   const lb=$("lb");if(!lb)return;
-  lb.hidden=false;paintLb();
+  lb.hidden=false;paintLb();lockBody();
 }
 function paintLb(){
   const p=points.find(x=>x&&x.id===lbState.id);
@@ -1874,20 +1914,20 @@ function paintLb(){
 }
 function closeLb(){
   const lb=$("lb");if(lb)lb.hidden=true;
+  lockBody();
 }
 on("lbClose","click",closeLb);
 on("lbPrev","click",()=>{lbState.i--;paintLb();});
 on("lbNext","click",()=>{lbState.i++;paintLb();});
 on("lb","click",e=>{if(e.target===$("lb"))closeLb();});
-on("lbDel","click",function(){
+on("lbDel","click",safe(function(){
   const p=points.find(x=>x&&x.id===lbState.id);if(!p)return;
   if(!confirm("刪除這張照片？"))return;
   p.photos.splice(lbState.i,1);
   if(!persist()){toast("刪除失敗");return}
   if(!p.photos.length)closeLb();else paintLb();
-  if(editingId===p.id)renderEPhotos(p);
   render();toast("照片已刪除");
-});
+},"lbDel"));
 document.addEventListener("keydown",e=>{
   const cm=$("catModal");
   if(cm&&!cm.hidden){
@@ -1901,9 +1941,10 @@ document.addEventListener("keydown",e=>{
     if(e.key==="ArrowRight"){lbState.i++;paintLb();}
     return;
   }
-  const rs=$("recSheet"),es=$("editSheet");
-  if(rs&&!rs.hidden)return;
+  const es=$("editSheet");
   if(es&&!es.hidden)return;
+  const s=$("sheet");
+  if(s&&!s.hidden)return;
   const t=e.target;
   const typing=t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable);
   if(e.key==="/"&&!typing){
@@ -1913,7 +1954,7 @@ document.addEventListener("keydown",e=>{
 });
 
 /* ========== 匯出 / 匯入 ========== */
-on("btnExport","click",function(){
+on("btnExport","click",safe(function(){
   if(!points.length){toast("沒有可匯出的紀錄");return}
   const data=points.filter(Boolean).map(p=>({
     name:p.name,cat:validCat(p.cat)?p.cat:"general",lat:p.lat,lng:p.lng,
@@ -1926,7 +1967,7 @@ on("btnExport","click",function(){
   document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),3000);
   toast("已匯出 "+data.length+" 筆（含分類定義）");
-});
+},"export"));
 on("btnImport","click",()=>{const i=$("fileIn");if(i)i.click();});
 on("fileIn","change",function(){
   const f=this.files[0];if(!f)return;
@@ -2025,7 +2066,7 @@ window.addEventListener("beforeinstallprompt",function(e){
   e.preventDefault();deferredPrompt=e;
   const b=$("btnInstall");if(b)b.hidden=false;
 });
-on("btnInstall","click",async function(){
+on("btnInstall","click",safe(async function(){
   if(!deferredPrompt){toast("請用 Chrome 開啟 HTTPS 網址後再試");return;}
   deferredPrompt.prompt();
   try{
@@ -2034,7 +2075,7 @@ on("btnInstall","click",async function(){
   }catch(e){}
   deferredPrompt=null;
   const b=$("btnInstall");if(b)b.hidden=true;
-});
+},"install"));
 window.addEventListener("appinstalled",function(){
   toast("已安裝到主畫面 ✓");
   const b=$("btnInstall");if(b)b.hidden=true;
