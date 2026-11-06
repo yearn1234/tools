@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-<meta name="theme-color" content="#0e100f" id="metaThcmw4bgzae83feme">
+<meta name="theme-color" content="#0e100f" id="metaTheme">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>座標記錄器 · COORD LOGGER</title>
@@ -110,18 +110,19 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .gps-coords{font-family:"DM Mono",monospace;font-weight:500;font-size:15px;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
 .gps-coords.idle{color:var(--ghost)}
-.gps-add{flex:none;background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
-  font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:12px;letter-spacing:.06em;
-  padding:8px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+
+/* ★ 橘色「＋新增卡片」按鈕（取代右上角＋鈕） */
+.gps-add-card{flex:none;background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
+  font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:12px;letter-spacing:.03em;
+  padding:9px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.35;
   transition:letter-spacing .25s ease,background .2s ease;
   touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.gps-add:hover{letter-spacing:.12em;background:var(--accent-soft)}
-.gps-add:active{transform:translateY(1px)}
-.gps-add svg{width:14px;height:14px;flex:none}
+.gps-add-card:hover{letter-spacing:.08em;background:var(--accent-soft)}
+.gps-add-card:active{transform:translateY(1px)}
+.gps-add-card svg{width:14px;height:14px;flex:none}
 @media(max-width:560px){
-  .gps-add span{display:none}
-  .gps-add{padding:9px 10px}
   .gps-coords{font-size:13px}
+  .gps-add-card{font-size:11.5px;padding:8px 11px}
 }
 .gps-detail{border-top:1px dashed var(--line)}
 .chip{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;border:1px solid var(--line);color:var(--muted);padding:3px 7px}
@@ -475,7 +476,10 @@ footer b{color:var(--ink);font-weight:500}
       <span class="chip">WGS-84</span>
       <button class="ghost-btn" id="btnLocate">重新定位</button>
       <button class="ghost-btn" id="btnWatch">持續定位</button>
-      <button class="ghost-btn" stroke="currentColor" id="btnAddRec" type="button">＋新增卡片(新增此座標文字記錄)</button>
+      <button class="gps-add-card" id="btnAddRec" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
+        新增卡片(新增此座標文字記錄)
+      </button>
     </div>
   </div>
 </header>
@@ -715,7 +719,7 @@ const PALETTE=[
 
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const VER="v16.1";
+const VER="v16.2";
 const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 const KING_PKGS=[
@@ -1157,25 +1161,23 @@ on("btnWatch","click",safe(async function(){
   }
 },"watch"));
 
-/* ========== ★ 面板開合（重寫：強制重排 + 除錯） ========== */
+/* ========== ★ 面板開合（強制重排 + 除錯） ========== */
 function lockBody(){
   const s=$("sheet"),e=$("editSheet"),l=$("lb"),c=$("catModal");
   const any=(s&&!s.hidden)||(e&&!e.hidden)||(l&&!l.hidden)||(c&&!c.hidden);
   document.body.style.overflow=any?"hidden":"";
 }
 
-/* 用 ID 操作，避免傳參傳錯；強制 reflow 讓瀏覽器先吃到 display */
 function showSheetById(bdId,shId){
   try{
     const bd=$(bdId),sh=$(shId);
     if(!bd)throw new Error("找不到背景 #"+bdId);
     if(!sh)throw new Error("找不到面板 #"+shId);
-    /* 已經開著就不要再開 */
     if(!sh.hidden&&sh.classList.contains("open"))return false;
 
     bd.hidden=false;
     sh.hidden=false;
-    void sh.offsetHeight;          /* 強制重排 */
+    void sh.offsetHeight;
     bd.classList.add("open");
     sh.classList.add("open");
     lockBody();
@@ -1211,10 +1213,9 @@ function hideSheetById(bdId,shId,after){
 
 /* ========== 新增面板 ========== */
 function openSheet(){
-  toast("開…"); /* 確認 handler 有觸發（下面會被蓋掉） */
+  toast("開…");
   const ok=showSheetById("sheetBd","sheet");
   if(!ok){
-    /* 若是「已開著」狀態卡住，強制重置再開一次 */
     const sh=$("sheet"),bd=$("sheetBd");
     if(sh&&bd){
       try{
@@ -1262,7 +1263,6 @@ function openEditSheet(id){
   const p=points.find(x=>x&&x.id===id);
   if(!p){toast("找不到這筆紀錄");return}
 
-  /* 若新增面板開著，先關 */
   const rec=$("sheet");
   if(rec&&!rec.hidden)hideSheetById("sheetBd","sheet");
 
@@ -1286,10 +1286,8 @@ function openEditSheet(id){
   updateUseLockedHint();
   renderECats();
 
-  /* 若狀態卡住，先重置 */
   const sh=$("editSheet"),bd=$("editBd");
   if(sh&&!sh.hidden&&sh.classList.contains("open")){
-    /* 已經開著就只更新內容 */
     toast("編輯面板已開啟");
     render();
     return;
@@ -1785,9 +1783,9 @@ function render(){
       : "此分類尚無紀錄";
     list.innerHTML='<div class="empty">'+
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>'+
-      '<p>'+(points.length?why:"尚無紀錄，按上方「＋ 新增紀錄」新增一筆")+'</p>'+
+      '<p>'+(points.length?why:"尚無紀錄，按「＋新增卡片(新增此座標文字記錄)」新增一筆")+'</p>'+
       '<small>'+(!points.length
-        ?"TAP ＋ NEW RECORD"
+        ?"TAP ＋ NEW CARD"
         :(searchQ.trim()?"TRY ANOTHER KEYWORD":"TRY ANOTHER CATEGORY"))+'</small></div>';
     return;
   }
