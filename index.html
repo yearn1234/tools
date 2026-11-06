@@ -124,11 +124,31 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .ghost-btn:hover{border-color:var(--accent);color:var(--accent)}
 .ghost-btn.on{border-color:var(--lock);color:var(--lock)}
 
-.wrap{max-width:760px;margin:0 auto;padding:20px 16px 130px;position:relative;z-index:1}
-.log-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:12px}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 130px;position:relative;z-index:1}
+.log-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:10px}
 .log-head h2{font-family:"Syne",sans-serif;font-size:12.5px;letter-spacing:.26em;font-weight:700}
 .log-head span{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
-.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+
+/* ★ 卡片搜尋 */
+.search-row{display:flex;gap:7px;margin-bottom:11px;align-items:center}
+.search-box{position:relative;flex:1;min-width:0}
+.search-box>svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;color:var(--placeholder);pointer-events:none}
+#searchIn{width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);
+  font-family:"Noto Sans TC",sans-serif;font-size:13.5px;padding:10px 34px 10px 34px;
+  border-radius:2px;outline:none;transition:.2s;-webkit-appearance:none;appearance:none}
+#searchIn::placeholder{color:var(--placeholder)}
+#searchIn::-webkit-search-cancel-button{-webkit-appearance:none}
+#searchIn:focus{border-color:var(--accent);background:var(--surface-3)}
+.search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:24px;height:24px;background:none;border:0;color:var(--muted);font-size:15px;
+  cursor:pointer;border-radius:2px;display:none;place-items:center;line-height:1}
+.search-clear.show{display:grid}
+.search-clear:hover{color:var(--accent)}
+.search-meta{font-family:"DM Mono",monospace;font-size:10px;color:var(--placeholder);
+  letter-spacing:.06em;white-space:nowrap}
+
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:13px;align-items:center}
 .fchip{font-size:11.5px;background:transparent;border:1px solid var(--line);color:var(--muted);
   padding:5px 9px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border-radius:2px;
   transition:.18s;font-family:"Noto Sans TC",sans-serif}
@@ -139,6 +159,7 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .fchip.on b{opacity:.6}
 .fchip.mgr{border-style:dashed;letter-spacing:.04em}
 .fchip.mgr:hover{border-color:var(--accent);color:var(--accent)}
+
 .empty{border:1px dashed var(--line);padding:44px 22px;text-align:center;color:var(--muted)}
 .empty svg{width:26px;height:26px;color:var(--ghost);margin-bottom:12px}
 .empty p{font-size:13px;letter-spacing:.06em}
@@ -214,11 +235,13 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;line-height:1.3}
 .btn-cancel:hover{border-color:var(--ink);color:var(--ink)}
 .edit-tip{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.1em;color:var(--placeholder);margin-top:9px}
 
+/* ★ FAB：dock 固定層 + env 三行後備 + visualViewport 同步 */
 .fab-dock{position:fixed;left:0;right:0;bottom:0;z-index:5;pointer-events:none;
   display:flex;justify-content:flex-end;
   padding:16px;
-  padding:16px calc(16px + env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) 16px;
-  transition:padding-bottom .15s linear}
+  padding:16px 16px 16px;
+  padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));
+  transition:padding-bottom .12s linear;will-change:padding-bottom}
 .fab{pointer-events:auto;background:var(--accent);color:var(--on-accent);border:0;border-radius:2px;
   padding:15px 19px;font-family:"Noto Sans TC",sans-serif;font-weight:700;font-size:14px;letter-spacing:.1em;
   display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;
@@ -329,7 +352,7 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .bar i{position:absolute;inset:0 auto 0 0;background:var(--lock);width:0;transition:width .4s ease}
 .bar i.hot{background:var(--accent)}
 
-/* ========== ★ 分類管理 ========== */
+/* ========== 分類管理 ========== */
 .modal{position:fixed;inset:0;z-index:15;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal-bd{position:absolute;inset:0;background:rgba(5,6,5,.78);touch-action:none;animation:fade .2s ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
@@ -347,7 +370,6 @@ textarea:focus{border-color:var(--accent);background:var(--surface-3)}
 .mp-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 4px}
 .mp-foot{padding:12px 16px 16px;border-top:1px solid var(--line);flex:none}
 .mp-foot .hint{margin-top:0}
-
 .cm-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line)}
 .cm-row:last-child{border-bottom:0}
 .cm-sw{position:relative;width:30px;height:30px;flex:none;border:1px solid var(--line-strong);border-radius:2px;overflow:hidden;cursor:pointer}
@@ -470,6 +492,20 @@ footer b{color:var(--ink);font-weight:500}
     <h2>FIELD LOG</h2>
     <span id="logMeta">NO ENTRIES</span>
   </div>
+
+  <!-- ★ 卡片搜尋 -->
+  <div class="search-row">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+      </svg>
+      <input id="searchIn" type="search" autocomplete="off" spellcheck="false"
+             placeholder="搜尋名稱、備註、地址、分類、座標…">
+      <button class="search-clear" id="searchClear" type="button" aria-label="清除搜尋">×</button>
+    </div>
+    <span class="search-meta" id="searchMeta"></span>
+  </div>
+
   <div class="filters" id="filters"></div>
   <div id="list"></div>
 </main>
@@ -570,7 +606,6 @@ footer b{color:var(--ink);font-weight:500}
   </div>
 </section>
 
-<!-- ★ 分類管理 -->
 <div class="modal" id="catModal" hidden role="dialog" aria-modal="true" aria-label="分類管理">
   <div class="modal-bd" id="catModalBd"></div>
   <div class="modal-panel">
@@ -621,7 +656,6 @@ footer b{color:var(--ink);font-weight:500}
 const $=id=>document.getElementById(id);
 const list=$("list");
 
-/* ★ 預設分類範本（首次載入時寫入，之後由使用者管理） */
 const DEFAULT_CATS=[
   {id:"general",name:"一般",    color:"#8b918a"},
   {id:"power",  name:"電力設施",color:"#ffb020"},
@@ -639,7 +673,7 @@ const PALETTE=[
 
 const KEY="coordlog.v2";
 const LEGACY="coordlog.v1";
-const VER="v12";
+const VER="v13";
 const MAXEDGE=900, QUALITY=.7, QUOTA=5;
 
 const KING_PKGS=[
@@ -649,10 +683,11 @@ const KING_PKGS=[
 ];
 
 let points=[];
-let cats=[];                 /* ★ 使用者分類清單 */
-let defaultCat="general";    /* ★ 預設分類 */
+let cats=[];
+let defaultCat="general";
 let selectedCat="general";
 let filter="all";
+let searchQ="";                 /* ★ 搜尋字串 */
 let editingId=null, moreId=null;
 let staged=[];
 let current=null;
@@ -673,7 +708,7 @@ let lastAddrAt=0, lastAddrLat=null, lastAddrLng=null;
 function on(id,ev,fn){
   const el=$(id);
   if(el)el.addEventListener(ev,fn);
-  else if(window.__err)window.__err("缺少元素 #"+id+"（HTML 與 JS 不匹配）");
+  else if(window.__err)window.__err("缺少元素 #"+id);
 }
 
 /* ========== 主題 ========== */
@@ -724,7 +759,6 @@ function ensureCats(){
   if(!cats.length){
     cats=DEFAULT_CATS.map(c=>({id:c.id,name:c.name,color:c.color}));
   }
-  /* 紀錄用到但清單沒有的分類 → 自動補建 */
   points.forEach(p=>{
     if(!p)return;
     let id=String(p.cat||"general");
@@ -749,6 +783,23 @@ function normalize(){
     if(typeof p.addr!=="string")p.addr="";
   });
   ensureCats();
+}
+
+/* ========== ★ 卡片搜尋比對 ========== */
+function matchSearch(p,q){
+  if(!q)return true;
+  const s=q.trim().toLowerCase();
+  if(!s)return true;
+  const cat=catOf(p.cat);
+  const hay=[
+    p.name||"",p.note||"",p.addr||"",
+    cat.name||"",
+    fmt(p.lat)+","+fmt(p.lng),
+    fmt(p.lat,4)+" "+fmt(p.lng,4),
+    when(p.ts)
+  ].join("\n").toLowerCase();
+  /* 空白分隔多關鍵字：全部都要命中 */
+  return s.split(/\s+/).every(function(k){return hay.indexOf(k)>=0;});
 }
 
 /* ========== 儲存層 ========== */
@@ -802,8 +853,6 @@ function readLegacyLS(){
 function applyState(state){
   points=(state&&Array.isArray(state.points))?state.points:[];
   points=points.filter(p=>p&&typeof p==="object");
-
-  /* ★ 分類：v4 有 cats 用之；否則從預設範本＋舊 custom 名稱遷移 */
   if(state&&Array.isArray(state.cats)&&state.cats.length){
     cats=state.cats.filter(c=>c&&typeof c==="object"&&c.id)
       .map(c=>({
@@ -1103,23 +1152,24 @@ on("gpsMain","click",function(e){
   if(c)c.textContent=d.hidden?"▾":"▴";
 });
 
-/* ========== FAB 定位同步 ========== */
+/* ========== ★ FAB 同步（三重保險） ========== */
 function syncFabBottom(){
   const dock=$("fabDock");if(!dock)return;
   const vv=window.visualViewport;
   if(!vv){dock.style.paddingBottom="";return;}
-  const inset=Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-  dock.style.paddingBottom="calc(16px + "+Math.round(inset)+"px + env(safe-area-inset-bottom, 0px))";
+  const inset=Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  dock.style.paddingBottom="calc(16px + "+inset+"px + env(safe-area-inset-bottom, 0px))";
 }
 if(window.visualViewport){
   window.visualViewport.addEventListener("resize",syncFabBottom);
   window.visualViewport.addEventListener("scroll",syncFabBottom);
 }
 window.addEventListener("resize",syncFabBottom);
-window.addEventListener("orientationchange",function(){setTimeout(syncFabBottom,120);});
+window.addEventListener("orientationchange",function(){setTimeout(syncFabBottom,150);});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(syncFabBottom);
 setTimeout(syncFabBottom,0);
 
-/* ========== ★ 分類管理 ========== */
+/* ========== 分類管理 ========== */
 function catUseCount(id){return points.reduce((n,p)=>n+(p&&p.cat===id?1:0),0);}
 
 function openCatModal(){
@@ -1132,9 +1182,9 @@ function closeCatModal(){
   const m=$("catModal");if(!m||m.hidden)return;
   m.hidden=true;
   document.body.classList.remove("modal-open");
-  render();   /* 套用改名／改色到卡片與篩選列 */
+  render();
 }
-//on("btnCatMgr","click",openCatModal);
+/* ★ 修掉：btnCatMgr 是動態產生的，不能在此時綁 → 全走 #filters 委派 */
 on("btnCatMgr2","click",openCatModal);
 on("catModalClose","click",closeCatModal);
 on("catModalBd","click",closeCatModal);
@@ -1162,7 +1212,6 @@ on("catMgrList","input",function(e){
   const c=cats.find(x=>x.id===row.dataset.id);if(!c)return;
   if(e.target.dataset.act==="color"){
     c.color=e.target.value;
-    /* 即時只更新色票外框，完整 render 等關閉時 */
     const sw=row.querySelector(".cm-sw");
     if(sw)sw.style.background=c.color;
   }
@@ -1220,7 +1269,6 @@ on("catMgrList","click",function(e){
     if(defaultCat===id)defaultCat=cats[0].id;
     if(selectedCat===id)selectedCat=defaultCat;
     if(filter===id)filter="all";
-    if(editingId){/* 編輯中不變，render 會補 */}
     persist();renderCatMgr();
     toast("已刪除分類"+(n?("，"+n+" 筆改掛「"+fallback.name+"」"):""));
     return;
@@ -1247,7 +1295,6 @@ function addCatFromInput(){
   inp.focus();
 }
 
-/* ========== 分類 chip（記錄面板） ========== */
 function renderCats(){
   const box=$("cats");if(!box)return;
   box.innerHTML=cats.map(c=>{
@@ -1322,7 +1369,6 @@ on("pickIn","change",function(){handleFiles(this.files);this.value="";});
 function openSheet(){
   const s=$("sheet"),b=$("sheetBd");
   if(!s||!s.hidden)return;
-  /* 開面板時跳到預設分類 */
   if(validCat(defaultCat))selectedCat=defaultCat;
   renderCats();
   b.hidden=false;s.hidden=false;
@@ -1355,6 +1401,7 @@ on("fab","click",openSheet);
 on("sheetClose","click",closeSheet);
 on("sheetBd","click",closeSheet);
 
+/* ★ 不鎖 body 捲軸（避免版面位移），改 backdrop 擋捲動 */
 (function(){
   const bd=$("sheetBd");
   if(bd)bd.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
@@ -1370,7 +1417,6 @@ on("btnManual","click",function(){
   this.textContent=b.hidden?"▸ 展開手動輸入":"▾ 收合手動輸入";
 });
 
-/* ========== 表單「取得」地址 ========== */
 on("btnAddr","click",async function(){
   const inp=$("mAddr");if(!inp)return;
   if(!current){toast("先在 GPS 條按「重新定位」");return}
@@ -1389,6 +1435,29 @@ on("btnAddr","click",async function(){
   }
   this.disabled=false;this.textContent="取得";
 });
+
+/* ========== ★ 搜尋 ========== */
+function onSearchInput(){
+  const inp=$("searchIn");if(!inp)return;
+  searchQ=inp.value;
+  const clear=$("searchClear");
+  if(clear)clear.classList.toggle("show",!!searchQ.trim());
+  editingId=null;moreId=null;
+  render();
+}
+on("searchIn","input",onSearchInput);
+on("searchIn","search",onSearchInput);
+on("searchIn","keydown",function(e){
+  if(e.key==="Escape"){e.preventDefault();clearSearch();}
+});
+on("searchClear","click",clearSearch);
+function clearSearch(){
+  const inp=$("searchIn");if(!inp)return;
+  inp.value="";searchQ="";
+  const clear=$("searchClear");if(clear)clear.classList.remove("show");
+  render();
+  inp.focus();
+}
 
 /* ========== 新增 ========== */
 function clearComposer(){
@@ -1530,20 +1599,40 @@ on("filters","click",e=>{
 /* ========== 渲染 ========== */
 function render(){
   const c1=$("count");if(c1)c1.textContent=points.length;
-  const lm=$("logMeta");if(lm)lm.textContent=points.length?(points.length+" ENTRIES"):"NO ENTRIES";
+
+  /* ★ 先分類、再搜尋（兩條件 AND） */
+  const byCat=points.filter(p=>p&&(filter==="all"||p.cat===filter));
+  const shown=byCat.filter(p=>matchSearch(p,searchQ));
+
+  const sm=$("searchMeta");
+  if(sm)sm.textContent=searchQ.trim()?("搜尋 "+shown.length+" 筆"):"";
+
+  const lm=$("logMeta");
+  if(lm){
+    const filtered=(shown.length!==points.length);
+    lm.textContent=!points.length?"NO ENTRIES"
+      :(filtered?(shown.length+" / "+points.length+" ENTRIES")
+                :(points.length+" ENTRIES"));
+  }
+
   renderCats();renderFilters();updateStorageInfo();updateDbg();
 
   if(editingId){
     const ep=points.find(x=>x.id===editingId);
-    if(!ep||(filter!=="all"&&ep.cat!==filter))editingId=null;
+    if(!ep||shown.indexOf(ep)<0)editingId=null;
   }
   if(!list)return;
-  const shown=points.filter(p=>p&&(filter==="all"||p.cat===filter));
+
   if(!shown.length){
+    const why=searchQ.trim()
+      ? "沒有符合「"+esc(searchQ.trim())+"」的紀錄"
+      : "此分類尚無紀錄";
     list.innerHTML='<div class="empty">'+
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>'+
-      '<p>'+(points.length?"此分類尚無紀錄":"尚無紀錄，按右下角「＋ 記錄」新增一筆")+'</p>'+
-      '<small>'+(points.length?"TRY ANOTHER CATEGORY":"TAP ＋ TO LOG A POINT")+'</small></div>';
+      '<p>'+(points.length?why:"尚無紀錄，按右下角「＋ 記錄」新增一筆")+'</p>'+
+      '<small>'+(!points.length
+        ?"TAP ＋ TO LOG A POINT"
+        :(searchQ.trim()?"TRY ANOTHER KEYWORD":"TRY ANOTHER CATEGORY"))+'</small></div>';
     return;
   }
   list.innerHTML=shown.map((p,i)=>{
@@ -1740,7 +1829,14 @@ document.addEventListener("keydown",e=>{
     return;
   }
   const s=$("sheet");
-  if(e.key==="Escape"&&s&&!s.hidden)closeSheet();
+  if(e.key==="Escape"&&s&&!s.hidden){closeSheet();return;}
+  /* 焦點不在輸入框時，按 / 跳到搜尋 */
+  const t=e.target;
+  const typing=t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable);
+  if(e.key==="/"&&!typing){
+    const inp=$("searchIn");
+    if(inp){e.preventDefault();inp.focus();inp.select();}
+  }
 });
 
 /* ========== 匯出 / 匯入 ========== */
@@ -1767,7 +1863,6 @@ on("fileIn","change",function(){
       const raw=JSON.parse(rd.result);
       const arr=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.points)?raw.points:null);
       if(!arr)throw new Error("格式不符");
-      /* 匯入分類定義（若有） */
       if(raw&&Array.isArray(raw.cats)&&raw.cats.length){
         raw.cats.filter(c=>c&&c.id).forEach(function(c){
           const id=String(c.id);
