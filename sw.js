@@ -1,6 +1,5 @@
-/* coord logger · sw.js — 標籤版 v17.0 */
 /* 改版時請同步修改 VERSION，否則舊快取不會被清掉 */
-const VERSION = "coordlog-v17.0-tag";
+const VERSION = "coordlog-v19.1-tag";
 const STATIC_CACHE = VERSION + "-static";
 const FONT_CACHE = VERSION + "-fonts";
 const PAGE_CACHE = VERSION + "-pages";
