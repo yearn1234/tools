@@ -816,30 +816,119 @@ on("lbDel",safe(()=>{const p=pts.find(x=>x&&x.id===lbS.id);if(!p)return;if(!conf
 
 document.addEventListener("keydown",e=>{if(!$("lb").hidden){if(e.key==="Escape")closeLb();if(e.key==="ArrowLeft"){lbS.i--;paintLb()}if(e.key==="ArrowRight"){lbS.i++;paintLb()}return}if(!$("editArea").hidden||!$("recArea").hidden)return;const t=e.target,typing=t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable);if(e.key==="/"&&!typing){e.preventDefault();$("searchIn").focus()}});
 
-/* ── 匯入 ── */
-on("btnImport",()=>$("fileIn").click());
-on("fileIn",async function(){const f=this.files[0];if(!f)return;this.value="";
-  const rd=new FileReader();
-  rd.onload=async function(){try{const raw=JSON.parse(rd.result);const arr=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.points)?raw.points:null);if(!arr)throw Error("格式不符");
-    const defs=raw&&(raw.tags||raw.cats);if(Array.isArray(defs)&&defs.length)defs.filter(c=>c&&c.id).forEach(c=>{const id=String(c.id);if(!tags.some(x=>x.id===id))tags.push({id,name:String(c.name||id).slice(0,12),color:/^#[0-9a-fA-F]{6}$/.test(c.color||"")?c.color:nxC()})});
-    const dt=raw&&(raw.defaultTag||raw.defaultCat);if(typeof dt==="string"&&dt&&tags.some(t=>t.id===dt))defTag=dt;
-    let n=0;
-    for(const o of arr){
-      const a=parseFloat(o.lat!=null?o.lat:o.LAT),b=parseFloat(o.lng!=null?o.lng:o.LNG);
-      if(!isFinite(a)||!isFinite(b)||Math.abs(a)>90||Math.abs(b)>180)continue;
-      let tg=Array.isArray(o.tags)?o.tags.filter(t=>typeof t==="string"&&t):(typeof o.cat==="string"&&o.cat?[o.cat]:[]);if(!tg.length)tg=[defTag];
-      const photos=[];
-      for(const s of (Array.isArray(o.photos)?o.photos:[])){
-        if(typeof s!=="string")continue;
-        if(s.startsWith("data:image")&&db){try{const id="p"+uid();await putPh(id,dataURLToBlob(s));photos.push(id);if(++n%10===0)await sleep(0)}catch(e){photos.push(s)}}
-        else if(s.startsWith("data:")||s.startsWith("http"))photos.push(s);
-      }
-      pts.unshift({id:uid(),tags:tg,name:typeof o.name==="string"&&o.name.trim()?o.name:"匯入地點",note:typeof o.note==="string"?o.note:"",addr:typeof o.addr==="string"?o.addr:"",lat:a,lng:b,acc:null,photos,ts:o.time?Date.parse(o.time)||Date.now():Date.now()});
-      n++;
+/* ── 匯入（.txt/.json/.csv） ── */
+function parseCSVLine(line){
+  const out=[];let cur="",q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(q){
+      if(c==='"'){if(line[i+1]==='"'){cur+='"';i++}else q=false}
+      else cur+=c;
+    }else{
+      if(c==='"')q=true;
+      else if(c===","){out.push(cur);cur=""}
+      else cur+=c;
     }
-    norm();if(!persist())return toast("匯入失敗");moreId=null;ftags=[];noAnim=true;render();noAnim=false;toast(n?"已匯入 "+n+" 筆":"格式不符","ok")
-  }catch(e){toast("匯入失敗："+e.message)}};
-  rd.readAsText(f);
+  }
+  out.push(cur);return out;
+}
+function csvToRows(text){
+  const lines=text.replace(/^\ufeff/,"").split(/\r?\n/).filter(l=>l.trim().length);
+  if(lines.length<2)throw Error("CSV 沒有資料列");
+  const head=parseCSVLine(lines[0]).map(s=>s.trim());
+  const col=names=>{for(const n of names){const i=head.findIndex(h=>h===n);if(i>=0)return i}return -1};
+  const cN=col(["名稱"]),cLat=col(["緯度"]),cLng=col(["經度"]),
+        cT=col(["標籤"]),cA=col(["地址"]),cNo=col(["備註"]),cTm=col(["建立時間"]);
+  if(cLat<0||cLng<0)throw Error("找不到緯度/經度欄（需含「緯度」「經度」表頭）");
+  const out=[];
+  for(let i=1;i<lines.length;i++){
+    const r=parseCSVLine(lines[i]);
+    const a=parseFloat(r[cLat]),b=parseFloat(r[cLng]);
+    if(!isFinite(a)||!isFinite(b)||Math.abs(a)>90||Math.abs(b)>180)continue;
+    out.push({
+      name:cN>=0?(r[cN]||"").trim():"",
+      lat:a,lng:b,
+      tags:cT>=0?r[cT].split(/[|、,]/).map(s=>s.trim()).filter(Boolean):[],
+      addr:cA>=0?(r[cA]||"").trim():"",
+      note:cNo>=0?(r[cNo]||"").trim():"",
+      time:cTm>=0?(r[cTm]||"").trim():""
+    });
+  }
+  if(!out.length)throw Error("沒有可匯入的有效座標列");
+  return out;
+}
+function tagIdsByName(names){
+  return names.map(n=>{
+    let t=tags.find(c=>c.name===n);
+    if(!t){t={id:"t"+uid(),name:n.slice(0,12),color:nxC()};tags.push(t)}
+    return t.id;
+  });
+}
+function tsOf(s){if(!s)return Date.now();const t=Date.parse(s.replace(/\//g,"-"));return isFinite(t)?t:Date.now()}
+
+async function importCore(arr){
+  let n=0;
+  for(const o of arr){
+    const a=parseFloat(o.lat!=null?o.lat:o.LAT),b=parseFloat(o.lng!=null?o.lng:o.LNG);
+    if(!isFinite(a)||!isFinite(b)||Math.abs(a)>90||Math.abs(b)>180)continue;
+    let tg=Array.isArray(o.tags)?o.tags.filter(t=>typeof t==="string"&&t):(typeof o.cat==="string"&&o.cat?[o.cat]:[]);
+    tg=(Array.isArray(o.tagNames)&&o.tagNames.length)?tagIdsByName(o.tagNames):tg;
+    if(!tg.length)tg=[defTag];
+    tg=tg.filter(t=>tags.some(c=>c.id===t));if(!tg.length)tg=[defTag];
+    const photos=[];
+    for(const s of (Array.isArray(o.photos)?o.photos:[])){
+      if(typeof s!=="string")continue;
+      if(s.startsWith("data:image")&&db){
+        try{const id="p"+uid();await putPh(id,dataURLToBlob(s));photos.push(id);if(++n%10===0)await sleep(0)}
+        catch(e){photos.push(s)}
+      }else if(s.startsWith("data:")||s.startsWith("http"))photos.push(s);
+    }
+    pts.unshift({id:uid(),tags:tg,
+      name:(typeof o.name==="string"&&o.name.trim())?o.name:"匯入地點",
+      note:typeof o.note==="string"?o.note:"",
+      addr:typeof o.addr==="string"?o.addr:"",
+      lat:a,lng:b,acc:null,photos,
+      ts:o.time?tsOf(o.time):Date.now()});
+    n++;
+  }
+  if(!n)throw Error("沒有可匯入的有效座標");
+  norm();
+  if(!persist())throw Error("儲存失敗");
+  moreId=null;ftags=[];
+  noAnim=true;render();noAnim=false;
+  toast("已匯入 "+n+" 筆 ✓","ok");
+}
+
+function readFile(f,cb){const rd=new FileReader();rd.onload=()=>cb(String(rd.result||""));rd.onerror=()=>toast("讀取檔案失敗");rd.readAsText(f)}
+
+on("btnImport",()=>$("fileIn").click());
+on("fileIn","change",async function(){
+  const f=this.files[0];if(!f)return;
+  this.value="";
+  const name=(f.name||"").toLowerCase();
+  const isCsv=name.endsWith(".csv")||f.type==="text/csv";
+  readFile(f,async txt=>{
+    try{
+      if(isCsv){
+        await importCore(csvToRows(txt).map(r=>({name:r.name,lat:r.lat,lng:r.lng,tagNames:r.tags,addr:r.addr,note:r.note,time:r.time})));
+        return;
+      }
+      const raw=JSON.parse(txt.replace(/^\ufeff/,""));
+      const arr=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.points)?raw.points:null);
+      if(!arr)throw Error("格式不符（需 JSON 或 CSV）");
+      const defs=raw&&(raw.tags||raw.cats);
+      if(Array.isArray(defs)&&defs.length)defs.filter(c=>c&&c.id).forEach(c=>{
+        const id=String(c.id);
+        if(!tags.some(x=>x.id===id))tags.push({id,name:String(c.name||id).slice(0,12),color:/^#[0-9a-fA-F]{6}$/.test(c.color||"")?c.color:nxC()});
+      });
+      const dt=raw&&(raw.defaultTag||raw.defaultCat);
+      if(typeof dt==="string"&&dt&&tags.some(t=>t.id===dt))defTag=dt;
+      await importCore(arr);
+    }catch(e){
+      if(window.__err)window.__err("import："+((e&&e.stack)||e));
+      toast("匯入失敗："+((e&&e.message)||e));
+    }
+  });
 });
 
 /* ── PWA ── */
