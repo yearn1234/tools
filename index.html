@@ -405,7 +405,7 @@ let lbS={id:null,i:0},db=null,storeMode="載入中",bytes=0,wake=null,sw="SW 未
 let pend=false,locating=false,lastLoc=0;
 
 /* ── 基礎 ── */
-function on(id,ev,fn){const e=$(id);if(e)e.addEventListener(ev,fn);else if(window.__err)window.__err("缺 #"+id)}
+function on(id,ev,fn){const e=$(id);if(!e){if(window.__err)window.__err("缺 #"+id);return}if(typeof ev==="function"){fn=ev;ev="click"}if(typeof fn!=="function"){if(window.__err)window.__err("on("+id+") 缺監聽函式");return}e.addEventListener(ev,fn)}
 function safe(fn,lb){return function(e){try{fn.call(this,e)}catch(err){if(window.__err)window.__err("["+lb+"] "+((err&&err.stack)||err));toast("操作失敗")}}}
 function theme(){return document.documentElement.dataset.theme==="light"?"light":"dark"}
 function dbg(m){const d=$("dbg");if(d)d.textContent=(m?m+" · ":"")+" "+VER+" ✓ · "+pts.length+"筆 · "+tags.length+"標籤 · "+(theme()==="light"?"亮":"暗")+" · "+storeMode+" · "+sw+(location.protocol==="file:"?" · file://":"")}
