@@ -1,5 +1,5 @@
 /* 改版時請同步修改 VERSION，否則舊快取不會被清掉 */
-const VERSION = "coordlog-v20-tag";
+const VERSION = "coordlog-v21-tag";
 const STATIC_CACHE = VERSION + "-static";
 const FONT_CACHE = VERSION + "-fonts";
 const PAGE_CACHE = VERSION + "-pages";
