@@ -580,6 +580,26 @@ function sheetKeydown(e){const sh=e.currentTarget;if(sh.hidden)return;try{if(e.k
 
 on("btnAddr","click",safe(async function(){const inp=$("mAddr");if(!inp)return;if(!current){toast("先在上方定位");return}const to=withTimeout(12000);this.disabled=true;this.textContent="查詢…";try{const t=await reverseGeocode(current.lat,current.lng,to.signal);to.clear();inp.value=t||"";toast(t?"已帶入 ✓":"查無地址")}catch(e){to.clear();toast("查詢失敗")}this.disabled=false;this.textContent="取得"},"addr"));
 
+on("btnEAddr","click",safe(async function(){
+  const inp=$("eAddr");if(!inp)return;
+  const la=$("eLat"),ln=$("eLng");
+  const lat=parseFloat(la?la.value:""),lng=parseFloat(ln?ln.value:"");
+  if(!isFinite(lat)||!isFinite(lng)){toast("請先填有效座標");return}
+  if(lat<-90||lat>90||lng<-180||lng>180){toast("座標超出範圍");return}
+  const to=withTimeout(12000);
+  this.disabled=true;this.textContent="查詢…";
+  try{
+    const t=await reverseGeocode(lat,lng,to.signal);
+    to.clear();
+    inp.value=t||"";
+    toast(t?"已帶入地址 ✓":"查無地址");
+  }catch(e){
+    to.clear();
+    toast(e&&e.name==="AbortError"?"地址查詢逾時":"地址查詢失敗");
+  }
+  this.disabled=false;this.textContent="補地址";
+},"eaddr"));
+
 function tagUseCount(id){return points.reduce((n,p)=>n+((p&&tagsOf(p).indexOf(id)>=0)?1:0),0)}
 function renderTagMgr(){const box=$("tagMgrList");if(!box)return;box.innerHTML=tags.map((c,i)=>{const n=tagUseCount(c.id);const isDef=(c.id===defaultTag);const last=(tags.length<=1);return '<div class="cm-row" data-id="'+esc(c.id)+'"><span class="cm-sw" style="background:'+esc(c.color)+'"><input type="color" value="'+esc(c.color)+'" data-act="color"></span><input class="cm-name" type="text" value="'+esc(c.name)+'" maxlength="12" data-act="name"><span class="cm-n">'+n+' 筆</span><button class="cm-ib star'+(isDef?" on":"")+'" data-act="def"'+(isDef?" disabled":"")+'>★</button><button class="cm-ib" data-act="up"'+(i===0?" disabled":"")+'>↑</button><button class="cm-ib" data-act="down"'+(i===tags.length-1?" disabled":"")+'>↓</button><button class="cm-ib del" data-act="del"'+(last?" disabled":"")+'>✕</button></div>'}).join("")}
 on("tagMgrList","input",function(e){const row=e.target.closest(".cm-row");if(!row)return;const c=tags.find(x=>x.id===row.dataset.id);if(!c)return;if(e.target.dataset.act==="color"){c.color=e.target.value;const sw=row.querySelector(".cm-sw");if(sw)sw.style.background=c.color}if(e.target.dataset.act==="name"){c.name=e.target.value.slice(0,12)}});
