@@ -154,7 +154,8 @@ h1{font-size:15px;font-weight:700;letter-spacing:.2em;white-space:nowrap;overflo
 .batchbar .bc{font-family:"DM Mono",monospace;font-size:12px;color:var(--accent);font-weight:500;min-width:64px}
 .batch-tags{display:flex;flex-wrap:wrap;gap:5px;flex:1;min-width:140px}
 .batch-tags .fchip{padding:4px 8px;font-size:11px}
-.batchbar .btn{padding:7px 10px;font-size:11.5px}
+.batch-acts{display:flex;flex-wrap:wrap;gap:8px;flex:1 1 100%;width:100%;padding-top:8px;border-top:1px dashed var(--line);justify-content:flex-start}
+.batch-acts .btn{flex:0 1 auto;min-width:64px;justify-content:center}
 .btn.danger{border-color:#ff4d6d;color:#ff4d6d}.btn.danger:hover{background:#ff4d6d;color:#fff;border-color:#ff4d6d}
 
 .sec-label{font-family:"DM Mono",monospace;font-size:9.5px;letter-spacing:.22em;color:var(--muted);margin-top:17px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -263,7 +264,7 @@ footer b{color:var(--ink);font-weight:500}#dbg{display:block;margin-top:6px;colo
       <button class="icb theme" id="btnTheme">亮色</button>
       <button class="icb" id="btnExport" title="匯出目前顯示（.txt）">匯出</button>
       <button class="icb" id="btnImport">匯入</button>
-      <button class="icb danger" id="btnDelAll">刪除全部</button>
+      <button class="icb danger" id="btnDelAll">刪除</button>
       <input type="file" id="fileIn" accept=".txt,.csv,application/json" hidden>
     </div>
   </div>
@@ -404,10 +405,12 @@ footer b{color:var(--ink);font-weight:500}#dbg{display:block;margin-top:6px;colo
 <div class="batchbar" id="batchBar" hidden>
   <span class="bc" id="batchCnt">0 選取</span>
   <div class="batch-tags" id="batchTags"></div>
-  <button class="btn" id="batchExport">匯出</button>
-  <button class="btn" id="batchCsv">CSV</button>
-  <button class="btn danger" id="batchDel">刪除</button>
-  <button class="btn" id="batchCancel">取消</button>
+  <div class="batch-acts">
+    <button class="btn" id="batchExport">匯出</button>
+    <button class="btn" id="batchCsv">CSV</button>
+    <button class="btn danger" id="batchDel">刪除</button>
+    <button class="btn" id="batchCancel">取消</button>
+  </div>
 </div>
 
 <div class="lb" id="lb" hidden>
@@ -428,7 +431,7 @@ footer b{color:var(--ink);font-weight:500}#dbg{display:block;margin-top:6px;colo
 const $=id=>document.getElementById(id),list=$("list");
 const DEF=[["general","一般座標","#8b918a"]];
 const PAL=["#8b918a","#ffb020","#4da3ff","#ff5f1f","#5cb800","#ff4d6d","#a855f7","#00c2c7","#e8c547","#f06292","#7986cb","#8d6e63","#26a69a","#ec407a","#5c6bc0","#9ccc65"];
-const KEY="coordlog.v2",LEGACY="coordlog.v1",VER="v22.0-opt",EDGE=900,QUAL=.7,QUOTA=5;
+const KEY="coordlog.v2",LEGACY="coordlog.v1",VER="v22.1-opt",EDGE=900,QUAL=.7,QUOTA=5;
 const KING=["com.kingwaytek.naviking3d","com.kingwaytek.naviking.telemetrics","com.kingwaytek.naviking3d.google.std"];
 
 let pts=[],tags=[],defTag="general",sel=[],etags=[],ftags=[];
@@ -438,7 +441,6 @@ let pend=false,locating=false,lastLoc=0;
 let batch=false,picked=new Set(),noAnim=false,sT=null,firstPaint=true,needListAnim=false;
 let map=null,mapLyr=null,mapSig="";
 
-/* rAF 合併渲染：避免同幀多次 render */
 let rafId=0;
 function scheduleRender(mode){
   if(mode==="list")needListAnim=needListAnim||false;
@@ -447,7 +449,6 @@ function scheduleRender(mode){
   rafId=requestAnimationFrame(()=>{rafId=0;render()});
 }
 
-/* ── 基礎 ── */
 function on(id,ev,fn){const e=$(id);if(!e){if(window.__err)window.__err("缺 #"+id);return}if(typeof ev==="function"){fn=ev;ev="click"}if(typeof fn!=="function"){if(window.__err)window.__err("on("+id+") 缺監聽函式");return}e.addEventListener(ev,fn)}
 function safe(fn,lb){return function(e){try{fn.call(this,e)}catch(err){if(window.__err)window.__err("["+lb+"] "+((err&&err.stack)||err));toast("操作失敗")}}}
 function theme(){return document.documentElement.dataset.theme==="light"?"light":"dark"}
@@ -471,7 +472,6 @@ function ensure(){if(!tags.length)tags=DEF.map(([id,name,color])=>({id,name,colo
 function norm(){pts.forEach(p=>{if(!p||typeof p!=="object")return;if(!Array.isArray(p.tags)){const l=typeof p.cat==="string"&&p.cat?p.cat:null;p.tags=l?[l]:[]}p.tags=p.tags.filter(t=>typeof t==="string"&&t);try{delete p.cat}catch(e){}if(!Array.isArray(p.photos))p.photos=[];if(typeof p.name!=="string"||!p.name.trim())p.name="未命名地點";if(typeof p.note!=="string")p.note="";if(typeof p.addr!=="string")p.addr=""});ensure()}
 function match(p,s){if(!s)return true;s=s.trim().toLowerCase();if(!s)return true;const h=[p.name||"",p.note||"",p.addr||"",tOf(p).map(id=>tagOf(id).name).join(" "),fmt(p.lat)+","+fmt(p.lng),when(p.ts)].join("\n").toLowerCase();return s.split(/\s+/).every(k=>h.indexOf(k)>=0)}
 
-/* ══════ ① 照片 Blob 存儲 ══════ */
 const phBlob=new Map(),phUrl=new Map();
 function isLegacy(s){return typeof s==="string"&&(s.startsWith("data:")||s.startsWith("http"))}
 function phUrlOf(id){
@@ -521,7 +521,6 @@ async function migratePhotos(){
 }
 function photoUsed(id){return pts.some(p=>p&&Array.isArray(p.photos)&&p.photos.indexOf(id)>=0)}
 
-/* ══════ 儲存 ══════ */
 function idbOpen(){return new Promise((res,rej)=>{if(!("indexedDB" in window))return rej(Error("no idb"));let r;try{r=indexedDB.open("coordlog",2)}catch(e){return rej(e)}
   r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains("kv"))d.createObjectStore("kv");if(!d.objectStoreNames.contains("ph"))d.createObjectStore("ph")};
   r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error||Error("fail"))})}
@@ -534,7 +533,6 @@ function lsRead(){const r=k=>{try{return JSON.parse(localStorage.getItem(k)||"nu
 function applyState(s){pts=(s&&Array.isArray(s.points))?s.points.filter(p=>p&&typeof p==="object"):[];const rt=s?(s.tags||s.cats):null;tags=(Array.isArray(rt)&&rt.length)?rt.filter(c=>c&&c.id).map(c=>({id:String(c.id),name:String(c.name||c.id).slice(0,12),color:/^#[0-9a-fA-F]{6}$/.test(c.color||"")?c.color:"#8b918a"})):DEF.map(([id,name,color])=>({id,name,color}));if(tags.length===DEF.length&&s&&typeof s.custom==="string"&&s.custom.trim()){const cu=tags.find(c=>c.id==="custom");if(cu)cu.name=s.custom.trim().slice(0,12)}const dt=s?(s.defaultTag||s.defaultCat):null;defTag=typeof dt==="string"&&dt?dt:"general";sel=[defTag];etags=[defTag];ftags=[];norm()}
 async function initStore(){try{db=await idbOpen();storeMode="IndexedDB";let s=null;try{s=await idbGet()}catch(e){}if(!s){s=lsRead();if(s)try{await idbPut(s)}catch(e){}}applyState(s);await migratePhotos()}catch(e){db=null;storeMode="localStorage";applyState(lsRead())}}
 
-/* 持久化：同幀合併 + 內容指紋跳過重複寫入 */
 let lastPersistSig="",persistRaf=0;
 function stateSig(){
   try{return JSON.stringify({p:pts.map(p=>[p.id,p.name,p.note,p.addr,p.lat,p.lng,p.ts,p.acc,p.tags,p.photos]),t:tags,d:defTag})}
@@ -558,9 +556,8 @@ function persist(){
 let infoRaf=0;
 function scheduleInfo(){if(infoRaf)return;infoRaf=requestAnimationFrame(()=>{infoRaf=0;info()})}
 async function info(){const mt=$("meterTxt"),f=$("meterFill");if(db&&navigator.storage&&navigator.storage.estimate){try{const{usage:u,quota:q}=await navigator.storage.estimate();const um=u/1048576,qm=q/1048576;if(mt)mt.textContent=um.toFixed(2)+" MB / "+(qm>=1024?(qm/1024).toFixed(1)+" GB":qm.toFixed(0)+" MB");if(f){const p=q>0?u/q*100:0;f.style.width=Math.min(100,p).toFixed(1)+"%";f.classList.toggle("hot",p>80)}return}catch(e){}}const mb=bytes/1048576;if(mt)mt.textContent=db?mb.toFixed(2)+" MB":mb.toFixed(2)+" / "+QUOTA+" MB";if(f){const p=db?Math.min(100,mb*2):mb/QUOTA*100;f.style.width=p.toFixed(1)+"%";f.classList.toggle("hot",!db&&p>80)}}
-function copy(t,m){const done=()=>toast(m||"已複製");if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(done).catch(fb);else fb();function fb(){const ta=document.createElement("textarea");ta.value=t;ta.cssText="position:fixed;opacity:0";ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done()}catch(e){toast("複製失敗")}ta.remove()}}
+function copy(t,m){const done=()=>toast(m||"已複製");if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(done).catch(fb);else fb();function fb(){const ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done()}catch(e){toast("複製失敗")}ta.remove()}}
 
-/* ── 地址（記憶體快取 + 1 rps 節流） ── */
 const addrCache=new Map();
 let geoQueue=[],geoBusy=false;
 function geoKey(lat,lng){return fmt(lat)+"|"+fmt(lng)}
@@ -581,15 +578,12 @@ function geoCached(lat,lng){
 async function fetchAddr(p){p._loading=true;render();const t=to(12000);try{const a=await geoCached(p.lat,p.lng);t.clear();p.addr=a;p._loading=false;persist();render();toast(a?"已取得地址 ✓":"查無地址")}catch(e){t.clear();p._loading=false;render();toast(e&&e.name==="AbortError"?"地址查詢逾時":"地址查詢失敗")}}
 async function lookupAddr(lat,lng,inp,btn,txt){const t=to(12000);btn.disabled=true;btn.textContent="查詢…";try{const a=await geoCached(lat,lng);t.clear();inp.value=a||"";toast(a?"已帶入地址 ✓":"查無地址")}catch(e){t.clear();toast("地址查詢失敗")}btn.disabled=false;btn.textContent=txt}
 
-/* ── 導航王 ── */
 function naviKing(p){const la=fmt(p.lat),lg=fmt(p.lng),c=la+", "+lg;copy(c,"座標已複製："+c);if(!/Android/i.test(navigator.userAgent)){setTimeout(()=>toast("請開啟導航王貼上 "+c),350);return}let i=0;(function step(){if(i>=KING.length){if(document.visibilityState==="visible")toast("未能跳轉導航王，座標已複製");return}try{const a=document.createElement("a");a.href="intent:geo:0,0?q="+la+","+lg+"#Intent;action=android.intent.action.VIEW;package="+KING[i]+";end";document.body.appendChild(a);a.click();a.remove()}catch(e){}i++;setTimeout(()=>{document.visibilityState==="hidden"?toast("已開啟導航王 ✓"):step()},1000)})();setTimeout(()=>toast("座標已複製 ✓ 開啟導航王…"),350);setTimeout(step,500)}
 
-/* ── 螢幕常亮 ── */
 async function startWake(){try{if(!("wakeLock" in navigator))return false;wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>wake=null);return true}catch(e){return false}}
 function stopWake(){if(wake){try{wake.release()}catch(e){}wake=null}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&!wake)startWake()});
 
-/* ── 定位橫幅 ── */
 function banners(){const s=cur?(cur._err?"error":"located"):(locating?"locating":"idle");const stt=cur?(cur._err?"定位失敗":"定位完成 ✓"):(locating?"定位中…":"待命 — 按「重新定位」開始");const co=cur?fmt(cur.lat)+", "+fmt(cur.lng):"--.------, --.------";const de=cur?"精度 "+(cur.acc?Math.round(cur.acc)+"m":"--")+" · 海拔 "+(cur.alt!=null?Math.round(cur.alt)+"m":"--"):"";["rec","edit"].forEach(k=>{const b=$(k+"GpsBanner");if(b)b.className="gps-banner "+s;const a=$(k+"GbState"),c=$(k+"GbCoords"),d=$(k+"GbDetail");if(a)a.textContent=stt;if(c)c.textContent=co;if(d)d.textContent=de})}
 function onPos(e){const c=e.coords;locating=false;cur={lat:c.latitude,lng:c.longitude,acc:c.accuracy,alt:c.altitude,head:c.heading,ts:Date.now()};lastLoc=Date.now();toast("定位完成 ✓","ok");["mLat","mLng"].forEach(id=>{const el=$(id);if(el&&!el.value)el.value=id==="mLat"?fmt(c.latitude):fmt(c.longitude)});banners();if(pend){pend=false;setRecLabel();commit()}}
 function onErr(err){locating=false;let m="定位失敗";if(err){m=err.code===1?"定位被拒絕":err.code===2?"無位置訊號":err.code===3?"定位逾時":"定位失敗";if(err.message)m+=" · "+err.message}if(location.protocol==="file:")m+="（file:// 可能封鎖定位）";toast(m);if(cur)cur._err=true;banners();if(pend){pend=false;setRecLabel()}}
@@ -600,7 +594,6 @@ on("recLocateBtn",()=>locate(true));on("editLocateBtn",()=>locate(true));
 on("recFillBtn",fillRec);on("btnFill",fillRec);
 on("editFillBtn",fillEd);on("btnUseLocked",fillEd);
 
-/* ── 作業區 ── */
 function show(id){["recArea","editArea","tagArea","mapArea"].forEach(x=>{const a=$(x);if(a)a.hidden=x!==id});const el=$(id);el.hidden=false;el.scrollIntoView({behavior:"smooth",block:"start"});banners();if(id==="mapArea")initMap()}
 function hide(id){const el=$(id);if(el)el.hidden=true}
 on("btnAddRec",()=>{show("recArea");afterOpen()});
@@ -618,7 +611,6 @@ function keyIn(e){const sh=e.currentTarget;if(sh.hidden)return;try{if(e.key==="E
 on("btnAddr",async function(){if(!cur)return toast("先在上方定位");await lookupAddr(cur.lat,cur.lng,$("mAddr"),this,"取得")});
 on("btnEAddr",async function(){const la=parseFloat($("eLat").value),lg=parseFloat($("eLng").value);if(!isFinite(la)||!isFinite(lg)||Math.abs(la)>90||Math.abs(lg)>180)return toast("請先填有效座標");await lookupAddr(la,lg,$("eAddr"),this,"補地址")});
 
-/* ── 標籤 ── */
 function cnt(id){return pts.reduce((n,p)=>n+(p&&tOf(p).indexOf(id)>=0?1:0),0)}
 function renderTagMgr(){const b=$("tagMgrList");if(!b)return;b.innerHTML=tags.map((c,i)=>{const n=cnt(c.id),d=c.id===defTag,last=tags.length<=1;return'<div class="cm-row" data-id="'+esc(c.id)+'"><span class="cm-sw" style="background:'+esc(c.color)+'"><input type="color" value="'+esc(c.color)+'" data-act="color"></span><input class="cm-name" type="text" value="'+esc(c.name)+'" maxlength="12" data-act="name"><span class="cm-n">'+n+' 筆</span><button class="cm-ib star'+(d?" on":"")+'" data-act="def"'+(d?" disabled":"")+'>★</button><button class="cm-ib" data-act="up"'+(i?"":" disabled")+'>↑</button><button class="cm-ib" data-act="down"'+(i===tags.length-1?" disabled":"")+'>↓</button><button class="cm-ib del" data-act="del"'+(last?" disabled":"")+'>✕</button></div>'}).join("")}
 on("tagMgrList","input",e=>{const r=e.target.closest(".cm-row");if(!r)return;const c=tags.find(x=>x.id===r.dataset.id);if(!c)return;if(e.target.dataset.act==="color"){c.color=e.target.value;const sw=r.querySelector(".cm-sw");if(sw)sw.style.background=c.color}if(e.target.dataset.act==="name")c.name=e.target.value.slice(0,12)});
@@ -635,7 +627,6 @@ on("cats","click",e=>{const b=e.target.closest("[data-tsel]");if(!b)return;const
 function renderETags(){const b=$("eCats");if(!b)return;b.innerHTML=tags.map(c=>'<button type="button" class="cat'+(etags.indexOf(c.id)>=0?" on":"")+'" data-etag="'+esc(c.id)+'" '+st(c)+'><i></i>'+esc(c.name)+'</button>').join("")}
 on("eCats","click",e=>{const b=e.target.closest("[data-etag]");if(!b)return;const id=b.dataset.etag,i=etags.indexOf(id);i>=0?etags.splice(i,1):etags.push(id);renderETags()});
 
-/* ── 照片（Blob） ── */
 async function handle(files){if(!files||!files.length)return;const add=[];for(const f of files){if(!f.type.startsWith("image/"))continue;try{add.push(await fileToPhId(f))}catch(e){}}if(!add.length)return;
 if(phTgt){const p=pts.find(x=>x.id===phTgt);if(p){const old=(p.photos||[]).slice();p.photos=old.concat(add);if(!persist()){p.photos=old;render();return}render();toast("已加入 "+add.length+" 張")}phTgt=null}
 else{shot=shot.concat(add);renderShot()}}
@@ -644,14 +635,12 @@ on("staged",e=>{const b=e.target.closest("[data-st]");if(!b)return;const id=shot
 on("btnShoot",()=>{phTgt=null;$("camIn").click()});on("btnPick",()=>{phTgt=null;$("pickIn").click()});
 on("camIn","change",function(){handle(this.files);this.value=""});on("pickIn","change",function(){handle(this.files);this.value=""});
 
-/* ── 搜尋（debounce） ── */
 function onS(){const i=$("searchIn");q=i.value;const c=$("searchClear");if(c)c.classList.toggle("show",!!q.trim());moreId=null;clearTimeout(sT);sT=setTimeout(()=>{needListAnim=false;render()},140)}
 on("searchIn","input",onS);on("searchIn","search",onS);
 on("searchIn","keydown",e=>{if(e.key==="Escape"){e.preventDefault();clrS()}});
 on("searchClear",clrS);
 function clrS(){const i=$("searchIn");i.value="";q="";$("searchClear").classList.remove("show");clearTimeout(sT);needListAnim=false;render();i.focus()}
 
-/* ── 新增 / 編輯 ── */
 function clearComp(){["mName","mNote","mAddr"].forEach(id=>{const e=$(id);if(e)e.value=""});shot.forEach(id=>{if(!photoUsed(id))delPh(id)});shot=[];renderShot()}
 function addPt(d){let tg=Array.isArray(d.tags)?d.tags.filter(t=>typeof t==="string"&&tags.some(c=>c.id===t)):[];if(!tg.length)tg=[defTag];const p=Object.assign({id:uid(),photos:[],addr:"",note:"",acc:null,ts:Date.now()},d,{tags:tg});try{delete p.cat}catch(e){}if(!p.name)p.name="未命名地點 "+(pts.length+1);pts.unshift(p);if(!persist()){pts.shift();render();return false}clearComp();needListAnim=true;render();toast("存檔完成 ✓："+p.name,"ok");const k=$("keepOpen");if(!k||!k.checked)hide("recArea");else{const m=$("mName");if(m)m.focus()}return true}
 function commit(){addPt({lat:cur.lat,lng:cur.lng,acc:cur.acc,name:$("mName").value.trim(),note:$("mNote").value.trim(),addr:$("mAddr").value.trim(),tags:sel.slice(),photos:shot.slice()})}
@@ -664,7 +653,6 @@ on("btnRecord",onRec);on("btnSave",saveManual);
 function saveEd(){if(!editId)return toast("沒有編輯中的紀錄");const p=pts.find(x=>x.id===editId);if(!p)return toast("紀錄不存在");const a=parseFloat($("eLat").value),b=parseFloat($("eLng").value);if(!isFinite(a)||Math.abs(a)>90)return toast("緯度 -90~90");if(!isFinite(b)||Math.abs(b)>180)return toast("經度 -180~180");const n=$("eName").value.trim();if(!n)return toast("名稱不可空白");const no=$("eNote").value.trim(),ad=$("eAddr").value.trim();let tg=clean(etags).length?clean(etags):[defTag];const cC=fmt(a)!==fmt(p.lat)||fmt(b)!==fmt(p.lng),aT=ad!==(p.addr||"");const bak={name:p.name,note:p.note,tags:p.tags.slice(),addr:p.addr,lat:p.lat,lng:p.lng};if(cC){p.lat=a;p.lng=b}p.name=n;p.note=no;p.tags=tg;p.addr=cC&&!aT?"":ad;lastPersistSig="";if(!persist()){Object.assign(p,bak);return toast("儲存失敗")}hide("editArea");editId=null;if(ftags.length&&!tg.some(t=>ftags.indexOf(t)>=0))ftags=[];needListAnim=false;if(cC&&!aT){toast("儲存完成 ✓ 正在取得地址…","ok");fetchAddr(p)}else toast("儲存完成 ✓："+n,"ok")}
 on("btnESave",saveEd);
 
-/* ── 篩選 ── */
 function counts(){const m={all:pts.length};pts.forEach(p=>{if(p)tOf(p).forEach(t=>m[t]=(m[t]||0)+1)});return m}
 function renderF(){const b=$("filters");if(!b)return;const m=counts();let h='<button class="fchip'+(ftags.length?"":" on")+'" data-f="__all">全部 <b>'+m.all+'</b></button>';h+=tags.map(c=>{const n=m[c.id]||0,on=ftags.indexOf(c.id)>=0;if(!n&&!on)return"";return'<button class="fchip'+(on?" on":"")+'" data-f="'+esc(c.id)+'" '+st(c)+'><i></i>'+esc(c.name)+' <b>'+n+'</b></button>'}).join("");h+='<button class="fchip mgr" id="btnTagMgr">⚙ 標籤管理</button>';b.innerHTML=h;const hint=$("filterHint");if(hint){hint.hidden=!ftags.length;if(!hint.hidden)hint.textContent="篩選中（任一符合）："+ftags.map(id=>tagOf(id).name).join(" ＋ ")+" — 再點取消"}}
 on("filters",e=>{if(e.target.closest("#btnTagMgr")){show("tagArea");renderTagMgr();return}const b=e.target.closest("[data-f]");if(!b)return;const f=b.dataset.f;if(f==="__all")ftags=[];else{const i=ftags.indexOf(f);i>=0?ftags.splice(i,1):ftags.push(f)}moreId=null;needListAnim=false;render()});
@@ -672,7 +660,6 @@ on("btnDelAll",()=>{if(!pts.length)return toast("沒有紀錄");if(!confirm("確
 
 function shownList(){const by=pts.filter(p=>!p?false:(!ftags.length||tOf(p).some(t=>ftags.indexOf(t)>=0)));return by.filter(p=>match(p,q))}
 
-/* ══════ ③ 匯出（批次/單筆/CSV）＋ 不凍結 ══════ */
 async function packPhotos(p){
   const out=[];let n=0;
   for(const pid of (p.photos||[])){
@@ -719,7 +706,6 @@ function exportCsv(arr,label){
 }
 on("btnExport",exportBatch);
 
-/* ══════ ③ 批次選取 ══════ */
 function renderBatch(){
   const bar=$("batchBar");
   if(!bar)return;
@@ -745,7 +731,6 @@ if(list)list.addEventListener("change",e=>{
   $("batchCnt").textContent=picked.size+" 選取";
 });
 
-/* ══════ ④ 地圖 ══════ */
 function initMap(){
   if(typeof L==="undefined"){toast("地圖函式庫載入失敗（需網路）");return}
   if(map){refreshMap(true);setTimeout(()=>map.invalidateSize(),210);return}
@@ -775,7 +760,6 @@ function refreshMap(force){
   try{map.fitBounds(latlngs,{padding:[36,36],maxZoom:16})}catch(e){}
 }
 
-/* ── 渲染 ── */
 function render(){
   const c1=$("count");if(c1)c1.textContent=pts.length;
   const shown=shownList();
@@ -797,7 +781,7 @@ function render(){
         const meta=[when(p.ts)];if(p.acc)meta.push('<span class="acc">±'+Math.round(p.acc)+'m</span>');if(np)meta.push('📷 '+np);if(ed)meta.push('<span style="color:var(--lock)">編輯中…</span>');
         const pick=batch?'<input type="checkbox" class="p-pick" data-pick'+(picked.has(p.id)?" checked":"")+'>':"";
         const top='<div class="p-top">'+pick+'<div class="p-idx">'+String(pts.indexOf(p)+1).padStart(2,"0")+'</div><div class="p-id"><h3>'+esc(p.name)+'</h3><div class="ptags">'+chips+'</div><div class="p-meta">'+meta.join(" · ")+'</div>'+(p.note?'<div class="p-note">'+esc(p.note)+'</div>':'')+'</div>'+(batch?"":'<button class="p-edit" data-act="edit" title="編輯">✎</button><button class="p-del" data-act="del" title="刪除">×</button>')+'</div>';
-        const acts=batch?"":'<div class="p-acts"><a class="btn acc" href="https://www.google.com/maps/dir/?api=1&destination='+la+','+ln+'&travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a><button class="btn king" data-act="king">導航王</button><button class="btn edit" data-act="edit">編輯</button><button class="btn" data-act="more">'+(mo?"▾ 收合":"⋯ 更多")+'</button></div><div class="p-more"'+(mo?"":" hidden")+'><a class="btn" href="https://www.google.com/maps/search/?api=1&query='+la+','+ln+'" target="_blank" rel="noopener">Google 地圖</a><button class="btn" data-act="addr">補地址</button><button class="btn" data-act="exp">匯出這筆</button><button class="btn" data-act="share">分享</button></div>';
+        const acts=batch?"":'<div class="p-acts"><a class="btn acc" href="https://www.google.com/maps/dir/?api=1&destination='+la+','+ln+'&travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>導航</a><button class="btn king" data-act="king">導航王</button><button class="btn edit" data-act="edit">編輯資料</button><button class="btn" data-act="more">'+(mo?"▾ 收合":" 更多")+'</button></div><div class="p-more"'+(mo?"":" hidden")+'><a class="btn" href="https://www.google.com/maps/search/?api=1&query='+la+','+ln+'" target="_blank" rel="noopener">Google 地圖</a><button class="btn" data-act="addr">補上地址</button><button class="btn" data-act="exp">單筆匯出</button><button class="btn" data-act="share">分享</button></div>';
         const fi=pts.indexOf(p);
         const ord=batch?"":'<div class="p-ord"><button class="btn sm" data-act="up"'+(fi?"":" disabled")+'>↑ 上移</button><button class="btn sm" data-act="down"'+(fi>=pts.length-1?" disabled":"")+'>↓ 下移</button></div>';
         return'<article class="'+cls+'" data-id="'+p.id+'" '+st(c0,d)+'>'+top+'<button class="p-coords" data-act="copy" title="點一下複製座標">'+la+', '+ln+'</button>'+addr+ph+acts+ord+'</article>';
@@ -808,7 +792,6 @@ function render(){
   if(map&&!$("mapArea").hidden)refreshMap();
 }
 
-/* ══════ ② 排序：DOM 交換（不重建） ══════ */
 function movePt(id,dir){
   const fi=pts.findIndex(p=>p&&p.id===id);if(fi<0)return;
   const ti=dir==="up"?fi-1:fi+1;
@@ -847,7 +830,6 @@ if(a==="view")return openLb(p.id,+el.dataset.i);
 if(a==="share"){const url="https://www.google.com/maps/search/?api=1&query="+txt,tg=tOf(p).map(x=>tagOf(x).name).join("、");const pay={title:p.name,text:p.name+(tg?"\n"+tg:"")+"\n"+txt+(p.addr?"\n"+p.addr:""),url};if(navigator.share)navigator.share(pay).catch(()=>{});else copy(p.name+"\n"+txt+"\n"+(p.addr?p.addr+"\n":"")+url,"已複製分享內容")}
 }catch(err){if(window.__err)window.__err("list："+((err&&err.stack)||err))}});
 
-/* ── 燈箱 ── */
 const Z={s:1,x:0,y:0},ZMIN=1,ZMAX=6,ptrs=new Map();
 let g0={d:1,s:1,x:0,y:0,mx:0,my:0},lastTap=0,lastTx=0,lastTy=0;
 function clampZ(){const img=$("lbImg");if(!img)return;const w=img.offsetWidth*Z.s,h=img.offsetHeight*Z.s,vw=innerWidth-40,vh=Math.round(innerHeight*.7);const ox=Math.max(0,(w-vw)/2),oy=Math.max(0,(h-vh)/2);Z.x=Math.max(-ox,Math.min(ox,Z.x));Z.y=Math.max(-oy,Math.min(oy,Z.y))}
@@ -868,7 +850,6 @@ on("lbDel",safe(()=>{const p=pts.find(x=>x&&x.id===lbS.id);if(!p)return;if(!conf
 
 document.addEventListener("keydown",e=>{if(!$("lb").hidden){if(e.key==="Escape")closeLb();if(e.key==="ArrowLeft"){lbS.i--;paintLb()}if(e.key==="ArrowRight"){lbS.i++;paintLb()}return}if(!$("editArea").hidden||!$("recArea").hidden)return;const t=e.target,typing=t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.isContentEditable);if(e.key==="/"&&!typing){e.preventDefault();$("searchIn").focus()}});
 
-/* ── 匯入（.txt/.json/.csv） ── */
 function parseCSVLine(line){
   const out=[];let cur="",q=false;
   for(let i=0;i<line.length;i++){
@@ -984,7 +965,6 @@ on("fileIn","change",async function(){
   });
 });
 
-/* ── PWA ── */
 function icon(sz){const cv=document.createElement("canvas");cv.width=cv.height=sz;const g=cv.getContext("2d");g.fillStyle="#0e100f";g.fillRect(0,0,sz,sz);const c=sz/2,r=sz*.28,lw=Math.max(2,Math.round(sz*.035));g.strokeStyle="#ff5f1f";g.lineWidth=lw;g.lineCap="round";g.beginPath();g.arc(c,c,r,0,7);g.stroke();g.beginPath();g.arc(c,c,r*.4,0,7);g.stroke();g.beginPath();g.moveTo(c,c-r*1.55);g.lineTo(c,c-r*.72);g.moveTo(c,c+r*.72);g.lineTo(c,c+r*1.55);g.moveTo(c-r*1.55,c);g.lineTo(c-r*.72,c);g.moveTo(c+r*.72,c);g.lineTo(c+r*1.55,c);g.stroke();g.fillStyle="#ff5f1f";g.beginPath();g.arc(c,c,r*.16,0,7);g.fill();return cv.toDataURL("image/png")}
 function manifest(){try{const u=location.href.split("#")[0].split("?")[0],dir=u.substring(0,u.lastIndexOf("/")+1);const m={name:"座標記錄器 COORD LOGGER",short_name:"座標記錄器",start_url:u,scope:dir,display:"standalone",orientation:"portrait",background_color:"#0e100f",theme_color:"#0e100f",lang:"zh-Hant",icons:[{src:icon(192),sizes:"192x192",type:"image/png"},{src:icon(512),sizes:"512x512",type:"image/png",purpose:"any"},{src:icon(512),sizes:"512x512",type:"image/png",purpose:"maskable"}]};let l=document.querySelector('link[rel="manifest"]');if(!l){l=document.createElement("link");l.rel="manifest";document.head.appendChild(l)}l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}))}catch(e){}}
 function regSW(){if(!("serviceWorker" in navigator)){sw="SW 不支援";return dbg()}if(location.protocol!=="https:"&&location.protocol!=="http:"){sw="SW 需 https";return dbg()}navigator.serviceWorker.register("sw.js",{scope:"./"}).then(()=>{sw="SW 已啟用";dbg()}).catch(()=>{sw="SW 失敗";dbg()})}
@@ -992,7 +972,6 @@ addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;$("btnInstall
 on("btnInstall",async()=>{if(!dp)return toast("請用 HTTPS");dp.prompt();try{const r=await dp.userChoice;if(r&&r.outcome==="accepted")toast("已加入主畫面 ✓")}catch(e){}dp=null;$("btnInstall").hidden=true});
 addEventListener("appinstalled",()=>{toast("已安裝 ✓");$("btnInstall").hidden=true});
 
-/* ── init ── */
 (async()=>{try{await initStore()}catch(e){applyState(null);storeMode="localStorage"}try{renderTags();renderShot();render()}catch(e){if(window.__err)window.__err("render："+e.message)}try{await info()}catch(e){}try{manifest();regSW()}catch(e){}if(pts.length)toast("已載入 "+pts.length+" 筆");banners()})();
 })();
 </script>
